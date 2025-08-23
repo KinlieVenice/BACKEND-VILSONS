@@ -1,0 +1,320 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum PostStatus {
+  pending
+  approved
+  published
+  rejected
+}
+
+model User {
+  id           String   @id @default(uuid())
+  // pending once approved, new content will be copied to original creation to retain the id, post_id will be used as reference
+  postId String?
+  post User? @relation("Post", fields: [postId], references: [id])
+  posts User[] @relation("Post")
+  postStatus PostStatus
+  
+  name         String   @db.VarChar(100)
+  phone        String   @db.VarChar(13)
+  email        String   @unique @db.VarChar(100)
+  password     String   @db.VarChar(255)
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdById  String?
+  createdBy    User?     @relation("CreatedBy", fields: [createdById], references: [id])
+  createdUsers User[]   @relation("CreatedBy")
+
+  editedById   String?
+  editedBy     User?     @relation("EditedBy", fields: [editedById], references: [id])
+  editedUsers  User[]   @relation("EditedBy")
+
+  admins      Admin[]
+  customers   Customer[]
+  contractors Contractor[]
+  employees   Employee[]
+  activities  Activity[]
+
+  createdBranches Branch[] @relation("CreatedBy")
+  editedBranches  Branch[] @relation("EditedBy")
+
+  createdTrucks Truck[] @relation("CreatedBy")
+
+  editedTruckOwnership TruckOwnership[]
+
+  createdContractorPay ContractorPay[] @relation("CreatedBy")
+  editedContractorPay  ContractorPay[] @relation("EditedBy")
+
+  createdEmployeeSalary EmployeeSalary[] @relation("CreatedBy")
+  editedEmployeeSalary  EmployeeSalary[] @relation("EditedBy")
+
+  createdTransaction Transaction[] @relation("CreatedBy")
+  editedTransaction  Transaction[] @relation("EditedBy")
+
+  createdOtherIncome OtherIncome[] @relation("CreatedBy")
+  editedOtherIncome  OtherIncome[] @relation("EditedBy")
+
+  createdEquipment Equipment[] @relation("CreatedBy")
+  editedEquipment  Equipment[] @relation("EditedBy")
+
+  createdJobOrder JobOrder[] @relation("CreatedBy")
+  editedJobOrder  JobOrder[] @relation("EditedBy")
+
+  createdOverheadExpenses OverheadExpenses[] @relation("CreatedBy")
+  editedOverheadExpenses  OverheadExpenses[] @relation("EditedBy")
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+}
+
+model Customer {
+  id     String           @id @default(uuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+  trucks TruckOwnership[]
+}
+
+model Contractor {
+  id         String  @id @default(uuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id])
+  commission Decimal @db.Decimal(3, 2)
+
+  contractorPay ContractorPay[]
+  JobOrder      JobOrder[]
+}
+
+model Employee {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  employeeSalary EmployeeSalary[]
+}
+
+model Branch {
+  id          String   @id @default(uuid())
+  postId String?
+  post Branch? @relation("Post", fields: [postId], references: [id])
+  posts Branch[] @relation("Post")
+  postStatus PostStatus
+
+  name        String   @db.VarChar(100)
+  description String
+  address     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  editedById       String
+  editedBy         User               @relation("EditedBy", fields: [editedById], references: [id])
+
+  OtherIncome      OtherIncome[]
+  Equipment        Equipment[]
+  JobOrder         JobOrder[]
+  OverheadExpenses OverheadExpenses[]
+}
+
+model Truck {
+  id        String           @id @default(uuid())
+  plate     String           @db.VarChar(10)
+  make      String           @db.VarChar(20)
+  model     String           @db.VarChar(20)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  owners    TruckOwnership[]
+
+  createdById String
+  createdBy   User       @relation("CreatedBy", fields: [createdById], references: [id])
+  JobOrder    JobOrder[]
+}
+
+model TruckOwnership {
+  id        String    @id @default(uuid())
+  startDate DateTime
+  endDate   DateTime?
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id])
+
+  editedById String
+  editedBy   User   @relation(fields: [editedById], references: [id])
+}
+
+enum PaymentType {
+  regular
+  advance
+}
+
+model ContractorPay {
+  id String @id @default(uuid())
+
+  contractorId String
+  contractor   Contractor @relation(fields: [contractorId], references: [id])
+
+  type   PaymentType
+  amount Decimal     @db.Decimal(13, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  editedById String
+  editedBy   User   @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model PayComponent {
+  id             String           @id @default(uuid())
+  name           String           @db.VarChar(20)
+  employeeSalary EmployeeSalary[]
+}
+
+model EmployeeSalary {
+  id String @id @default(uuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  componentId String
+  component   PayComponent @relation(fields: [componentId], references: [id])
+
+  type   PaymentType @default(regular)
+  amount Decimal     @db.Decimal(13, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  editedById String
+  editedBy   User   @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  // job_order_id String   @unique
+  name      String   @db.VarChar(100)
+  mop       String   @db.VarChar(20)
+  amount    Decimal  @db.Decimal(13, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  editedById String
+  editedBy   User   @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model OtherIncome {
+  id          String   @id @default(uuid())
+  description String
+  amount      Decimal  @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+  editedById  String
+  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model Equipment {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(100)
+  quantity  Int
+  price     Decimal  @db.Decimal(13, 2)
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+  editedById  String
+  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model Material {
+  id String @id @default(uuid())
+}
+
+enum OrderStatus {
+  unassigned
+  ongoing
+  completed
+  forRelease
+}
+
+model JobOrder {
+  id             String      @id @default(uuid())
+  jobOrderCode   String      @unique
+  truckId        String
+  truck          Truck       @relation(fields: [truckId], references: [id])
+  contractorId   String
+  contractor     Contractor  @relation(fields: [contractorId], references: [id])
+  status         OrderStatus
+  description    String
+  labor          Decimal     @db.Decimal(13, 2)
+  branchId       String
+  branch         Branch      @relation(fields: [branchId], references: [id])
+  createdAt      DateTime    @default(now())
+  completionDate DateTime?
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+  editedById  String
+  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model OverheadExpenses {
+  id          String  @id @default(uuid())
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch  @relation(fields: [branchId], references: [id])
+  createdAt      DateTime    @default(now())
+  completionDate DateTime?
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+  editedById  String
+  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+}
