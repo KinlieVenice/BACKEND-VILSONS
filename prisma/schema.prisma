@@ -14,7 +14,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PostStatus {
+enum ApprovalStatus {
   pending
   approved
   published
@@ -22,147 +22,154 @@ enum PostStatus {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  // pending once approved, new content will be copied to original creation to retain the id, post_id will be used as reference
-  postId String?
-  post User? @relation("Post", fields: [postId], references: [id])
-  posts User[] @relation("Post")
-  postStatus PostStatus
-  
-  name         String   @db.VarChar(100)
-  phone        String   @db.VarChar(13)
-  email        String   @unique @db.VarChar(100)
-  password     String   @db.VarChar(255)
-  description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @default(now())
   createdById  String?
-  createdBy    User?     @relation("CreatedBy", fields: [createdById], references: [id])
-  createdUsers User[]   @relation("CreatedBy")
+  admins       Admin[]
+  customers    Customer[]
+  contractors  Contractor[]
+  employees    Employee[]
+  activityLogs ActivityLog[]
+  roles        UserRole[]
 
-  editedById   String?
-  editedBy     User?     @relation("EditedBy", fields: [editedById], references: [id])
-  editedUsers  User[]   @relation("EditedBy")
+  createdBy    User?         @relation("CreatedBy", fields: [createdById], references: [id])
+  createdUsers User[]        @relation("CreatedBy")
+  userVersions UserVersion[] @relation("Version")
 
-  admins      Admin[]
-  customers   Customer[]
-  contractors Contractor[]
-  employees   Employee[]
-  activities  Activity[]
+  updatedUsers UserVersion[] @relation("UpdatedBy")
 
-  createdBranches Branch[] @relation("CreatedBy")
-  editedBranches  Branch[] @relation("EditedBy")
+  createdBranches Branch[]        @relation("CreatedBy")
+  updatedBranches BranchVersion[] @relation("UpdatedBy")
 
-  createdTrucks Truck[] @relation("CreatedBy")
+  createdTrucks             Truck[]          @relation("CreatedBy")
+  transferredTruckOwnership TruckOwnership[] @relation("TransferredBy")
 
-  editedTruckOwnership TruckOwnership[]
+  createdContractorPay ContractorPay[]        @relation("CreatedBy")
+  updatedContractorPay ContractorPayVersion[] @relation("UpdatedBy")
 
-  createdContractorPay ContractorPay[] @relation("CreatedBy")
-  editedContractorPay  ContractorPay[] @relation("EditedBy")
+  createdEmployeeSalary EmployeeSalary[]        @relation("CreatedBy")
+  updatedEmployeeSalary EmployeeSalaryVersion[] @relation("UpdatedBy")
 
-  createdEmployeeSalary EmployeeSalary[] @relation("CreatedBy")
-  editedEmployeeSalary  EmployeeSalary[] @relation("EditedBy")
+  createdTransaction Transaction[]        @relation("CreatedBy")
+  updatedTransaction TransactionVersion[] @relation("UpdatedBy")
 
-  createdTransaction Transaction[] @relation("CreatedBy")
-  editedTransaction  Transaction[] @relation("EditedBy")
+  createdOtherIncome OtherIncome[]        @relation("CreatedBy")
+  updatedOtherIncome OtherIncomeVersion[] @relation("UpdatedBy")
 
-  createdOtherIncome OtherIncome[] @relation("CreatedBy")
-  editedOtherIncome  OtherIncome[] @relation("EditedBy")
+  createdEquipment Equipment[]        @relation("CreatedBy")
+  updatedEquipment EquipmentVersion[] @relation("UpdatedBy")
 
-  createdEquipment Equipment[] @relation("CreatedBy")
-  editedEquipment  Equipment[] @relation("EditedBy")
+  createdJobOrder JobOrder[]        @relation("CreatedBy")
+  updatedJobOrder JobOrderVersion[] @relation("UpdatedBy")
 
-  createdJobOrder JobOrder[] @relation("CreatedBy")
-  editedJobOrder  JobOrder[] @relation("EditedBy")
+  createdOverheadExpenses OverheadExpenses[]        @relation("CreatedBy")
+  updatedOverheadExpenses OverheadExpensesVersion[] @relation("UpdatedBy")
 
-  createdOverheadExpenses OverheadExpenses[] @relation("CreatedBy")
-  editedOverheadExpenses  OverheadExpenses[] @relation("EditedBy")
+  createdRole Role[] @relation("CreatedBy")
+}
+
+model UserVersion {
+  id             String         @id @default(uuid())
+  userId         String?
+  approvalStatus ApprovalStatus
+
+  name        String @db.VarChar(100)
+  phone       String @db.VarChar(13)
+  email       String @unique @db.VarChar(100)
+  hashPwd     String @db.VarChar(255)
+  description String
+
+  updatedAt   DateTime? @updatedAt
+  updatedById String?
+  user        User?     @relation("Version", fields: [userId], references: [id])
+  updatedBy   User?     @relation("UpdatedBy", fields: [updatedById], references: [id])
 }
 
 model Admin {
   id     String @id @default(uuid())
   userId String
   user   User   @relation(fields: [userId], references: [id])
-
 }
 
 model Customer {
   id     String           @id @default(uuid())
   userId String
-  user   User             @relation(fields: [userId], references: [id])
   trucks TruckOwnership[]
+  user   User             @relation(fields: [userId], references: [id])
 }
 
 model Contractor {
   id         String  @id @default(uuid())
   userId     String
-  user       User    @relation(fields: [userId], references: [id])
-  commission Decimal @db.Decimal(3, 2)
+  commission Decimal @db.Decimal(13, 2)
 
   contractorPay ContractorPay[]
   JobOrder      JobOrder[]
+  user          User            @relation(fields: [userId], references: [id])
 }
 
 model Employee {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  id             String           @id @default(uuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id])
   employeeSalary EmployeeSalary[]
 }
 
 model Branch {
   id          String   @id @default(uuid())
-  postId String?
-  post Branch? @relation("Post", fields: [postId], references: [id])
-  posts Branch[] @relation("Post")
-  postStatus PostStatus
-
-  name        String   @db.VarChar(100)
-  description String
-  address     String
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
   createdById String
-  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
 
-  editedById       String
-  editedBy         User               @relation("EditedBy", fields: [editedById], references: [id])
-
-  OtherIncome      OtherIncome[]
-  Equipment        Equipment[]
+  OtherIncome      OtherIncomeVersion[]
+  Equipment        EquipmentVersion[]
   JobOrder         JobOrder[]
-  OverheadExpenses OverheadExpenses[]
+  OverheadExpenses OverheadExpensesVersion[]
+
+  versions  BranchVersion[]
+  createdBy User            @relation("CreatedBy", fields: [createdById], references: [id])
+}
+
+model BranchVersion {
+  id             String         @id @default(uuid())
+  branchId       String?
+  name           String         @db.VarChar(100)
+  description    String
+  address        String
+  approvalStatus ApprovalStatus
+  updatedAt      DateTime       @updatedAt
+  updatedById    String?
+
+  branch    Branch? @relation(fields: [branchId], references: [id])
+  updatedBy User?   @relation("UpdatedBy", fields: [updatedById], references: [id])
 }
 
 model Truck {
-  id        String           @id @default(uuid())
-  plate     String           @db.VarChar(10)
-  make      String           @db.VarChar(20)
-  model     String           @db.VarChar(20)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  owners    TruckOwnership[]
-
+  id          String   @id @default(uuid())
+  plate       String   @db.VarChar(10)
+  make        String   @db.VarChar(20)
+  model       String   @db.VarChar(20)
+  createdAt   DateTime @default(now())
   createdById String
-  createdBy   User       @relation("CreatedBy", fields: [createdById], references: [id])
-  JobOrder    JobOrder[]
+
+  owners    TruckOwnership[]
+  jobOrders JobOrder[]
+
+  createdBy User @relation("CreatedBy", fields: [createdById], references: [id])
 }
 
 model TruckOwnership {
-  id        String    @id @default(uuid())
-  startDate DateTime
-  endDate   DateTime?
+  id      String @id @default(uuid())
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id])
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
 
-  truckId String
-  truck   Truck  @relation(fields: [truckId], references: [id])
+  transferredById String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredById], references: [id])
 
-  editedById String
-  editedBy   User   @relation(fields: [editedById], references: [id])
+  startDate DateTime  @default(now())
+  endDate   DateTime?
 }
 
 enum PaymentType {
@@ -176,23 +183,31 @@ model ContractorPay {
   contractorId String
   contractor   Contractor @relation(fields: [contractorId], references: [id])
 
-  type   PaymentType
-  amount Decimal     @db.Decimal(13, 2)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt   DateTime @default(now())
   createdById String
-  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+  createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
 
-  editedById String
-  editedBy   User   @relation("EditedBy", fields: [editedById], references: [id])
+  versions ContractorPayVersion[]
+}
+
+model ContractorPayVersion {
+  id              String         @id @default(uuid())
+  contractorPayId String?
+  approvalStatus  ApprovalStatus
+  type            PaymentType
+  amount          Decimal        @db.Decimal(13, 2)
+
+  updatedAt DateTime? @updatedAt
+
+  updatedById   String
+  updatedBy     User           @relation("UpdatedBy", fields: [updatedById], references: [id])
+  contractorPay ContractorPay? @relation(fields: [contractorPayId], references: [id])
 }
 
 model PayComponent {
-  id             String           @id @default(uuid())
-  name           String           @db.VarChar(20)
-  employeeSalary EmployeeSalary[]
+  id             String                  @id @default(uuid())
+  name           String                  @db.VarChar(20)
+  employeeSalary EmployeeSalaryVersion[]
 }
 
 model EmployeeSalary {
@@ -201,79 +216,128 @@ model EmployeeSalary {
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id])
 
-  componentId String
-  component   PayComponent @relation(fields: [componentId], references: [id])
+  createdAt DateTime @default(now())
+
+  createdById      String
+  createdBy        User                    @relation("CreatedBy", fields: [createdById], references: [id])
+  employeeSalaries EmployeeSalaryVersion[]
+}
+
+model EmployeeSalaryVersion {
+  id               String         @id @default(uuid())
+  employeeSalaryId String?
+  approvalStatus   ApprovalStatus
+  componentId      String
+  component        PayComponent   @relation(fields: [componentId], references: [id])
 
   type   PaymentType @default(regular)
   amount Decimal     @db.Decimal(13, 2)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime? @updatedAt
 
-  createdById String
-  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
-
-  editedById String
-  editedBy   User   @relation("EditedBy", fields: [editedById], references: [id])
+  updatedById    String
+  updatedBy      User            @relation("UpdatedBy", fields: [updatedById], references: [id])
+  employeeSalary EmployeeSalary? @relation(fields: [employeeSalaryId], references: [id])
 }
 
-model Activity {
+model ActivityLog {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String   @db.VarChar(255)
+  activity    String   @db.VarChar(255)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
-  id        String   @id @default(uuid())
-  // job_order_id String   @unique
-  name      String   @db.VarChar(100)
-  mop       String   @db.VarChar(20)
-  amount    Decimal  @db.Decimal(13, 2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String @id @default(uuid())
+  jobOrderId String
 
+  createdAt   DateTime @default(now())
   createdById String
-  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
 
-  editedById String
-  editedBy   User   @relation("EditedBy", fields: [editedById], references: [id])
+  versions  TransactionVersion[]
+  jobOrder  JobOrder             @relation(fields: [jobOrderId], references: [id])
+  createdBy User                 @relation("CreatedBy", fields: [createdById], references: [id])
+}
+
+model TransactionVersion {
+  id             String         @id @default(uuid())
+  transactionId  String?
+  approvalStatus ApprovalStatus
+  name           String         @db.VarChar(100)
+  mop            String         @db.VarChar(20)
+  amount         Decimal        @db.Decimal(13, 2)
+  updatedAt      DateTime?      @updatedAt
+
+  updatedById String
+  updatedBy   User         @relation("UpdatedBy", fields: [updatedById], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
 }
 
 model OtherIncome {
-  id          String   @id @default(uuid())
-  description String
-  amount      Decimal  @db.Decimal(13, 2)
-  branchId    String
-  branch      Branch   @relation(fields: [branchId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
 
   createdById String
-  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
-  editedById  String
-  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+  createdBy   User                 @relation("CreatedBy", fields: [createdById], references: [id])
+  versions    OtherIncomeVersion[]
+}
+
+model OtherIncomeVersion {
+  id             String         @id @default(uuid())
+  otherIncomeId  String?
+  approvalStatus ApprovalStatus
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch  @relation(fields: [branchId], references: [id])
+
+  updatedAt DateTime @updatedAt
+
+  updatedById String
+  updatedBy   User         @relation("UpdatedBy", fields: [updatedById], references: [id])
+  otherIncome OtherIncome? @relation(fields: [otherIncomeId], references: [id])
 }
 
 model Equipment {
-  id        String   @id @default(uuid())
-  name      String   @db.VarChar(100)
-  quantity  Int
-  price     Decimal  @db.Decimal(13, 2)
-  branchId  String
-  branch    Branch   @relation(fields: [branchId], references: [id])
+  id String @id @default(uuid())
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   createdById String
   createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
-  editedById  String
-  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+
+  versions EquipmentVersion[]
+}
+
+model EquipmentVersion {
+  id             String         @id @default(uuid())
+  equipmentId    String?
+  approvalStatus ApprovalStatus
+
+  name     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+
+  branchId String
+
+  updatedAt   DateTime? @updatedAt
+  updatedById String
+  updatedBy   User      @relation("UpdatedBy", fields: [updatedById], references: [id])
+
+  branch    Branch     @relation(fields: [branchId], references: [id])
+  equipment Equipment? @relation(fields: [equipmentId], references: [id])
 }
 
 model Material {
-  id String @id @default(uuid())
+  id         String   @id @default(uuid())
+  jobOrderId String
+  jobOrder   JobOrder @relation(fields: [jobOrderId], references: [id])
+  name       String   @db.VarChar(100)
+  quantity   Int
+  price      Decimal  @db.Decimal(13, 2)
+  createdAt  DateTime @default(now())
 }
 
 enum OrderStatus {
@@ -284,37 +348,126 @@ enum OrderStatus {
 }
 
 model JobOrder {
-  id             String      @id @default(uuid())
-  jobOrderCode   String      @unique
-  truckId        String
-  truck          Truck       @relation(fields: [truckId], references: [id])
-  contractorId   String
-  contractor     Contractor  @relation(fields: [contractorId], references: [id])
-  status         OrderStatus
-  description    String
-  labor          Decimal     @db.Decimal(13, 2)
-  branchId       String
-  branch         Branch      @relation(fields: [branchId], references: [id])
-  createdAt      DateTime    @default(now())
-  completionDate DateTime?
+  id           String   @id @default(uuid())
+  jobOrderCode String   @unique
+  createdAt    DateTime @default(now())
 
-  createdById String
-  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
-  editedById  String
-  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+  truckId      String
+  branchId     String
+  contractorId String
+  createdById  String
+
+  transactions Transaction[]
+  versions     JobOrderVersion[]
+  materials    Material[]
+
+  truck      Truck      @relation(fields: [truckId], references: [id])
+  branch     Branch     @relation(fields: [branchId], references: [id])
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+  createdBy  User       @relation("CreatedBy", fields: [createdById], references: [id])
+}
+
+model JobOrderVersion {
+  id         String @id @default(uuid())
+  jobOrderId String
+
+  status      OrderStatus
+  description String
+  labor       Decimal     @db.Decimal(13, 2)
+  completedAt DateTime?
+
+  updatedById    String
+  updatedAt      DateTime?      @updatedAt
+  approvalStatus ApprovalStatus
+  jobOrder       JobOrder       @relation(fields: [jobOrderId], references: [id])
+  updatedBy      User           @relation("UpdatedBy", fields: [updatedById], references: [id])
 }
 
 model OverheadExpenses {
-  id          String  @id @default(uuid())
-  description String
-  amount      Decimal @db.Decimal(13, 2)
-  branchId    String
-  branch      Branch  @relation(fields: [branchId], references: [id])
-  createdAt      DateTime    @default(now())
-  completionDate DateTime?
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
 
   createdById String
   createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
-  editedById  String
-  editedBy    User   @relation("EditedBy", fields: [editedById], references: [id])
+
+  versions OverheadExpensesVersion[]
+}
+
+model OverheadExpensesVersion {
+  id                 String @id @default(uuid())
+  overheadExpensesId String
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+
+  updatedById      String
+  updatedAt        DateTime         @updatedAt
+  overheadExpenses OverheadExpenses @relation(fields: [overheadExpensesId], references: [id])
+  updatedBy        User             @relation("UpdatedBy", fields: [updatedById], references: [id])
+  branch           Branch           @relation(fields: [branchId], references: [id])
+}
+
+model UserRole {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id])
+  roleId         String
+  role           Role           @relation(fields: [roleId], references: [id])
+  approvalStatus ApprovalStatus
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  name           String           @db.VarChar(100)
+  baseRoleId     String
+  baseRole       Role             @relation("BaseRole", fields: [baseRoleId], references: [id])
+  baseRoles      Role[]           @relation("BaseRole")
+  isCustom       Boolean
+  users          UserRole[]
+  permissions    RolePermission[]
+  approvalStatus ApprovalStatus
+
+  createdById String?
+  createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id])
+}
+
+enum Method {
+  view
+  create
+  edit
+  delete
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  module      String           @db.VarChar(100)
+  action      String           @db.VarChar(100)
+  method      Method
+  approval    Boolean
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id     String @id @default(uuid())
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  approvalStatus ApprovalStatus
+}
+
+enum Module {
+  JobOrder @map("Job Order")
+}
+model ApprovalLog {
+  id     String @id @default(uuid())
+  module Module
+  moduleVersionId String
+  requestComment String
+  responseComment String
+
 }
