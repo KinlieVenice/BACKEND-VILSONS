@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const { PrismaClient } = require('./generated/prisma');
+const prisma = new PrismaClient();
 const app = express();
 
 const PORT = process.env.PORT || 3550;
@@ -16,5 +18,13 @@ app.use(express.urlencoded({ extended: false }));
 // json middleware for auto parse
 app.use(express.json());
 
+app.use("/users", require("./routes/register"));
+
+
 // middleware for error handling
 app.use(errorHandler);
+
+
+app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
+
+

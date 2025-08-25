@@ -71,13 +71,14 @@ model User {
 model UserVersion {
   id             String         @id @default(uuid())
   userId         String?
-  approvalStatus ApprovalStatus
+  approvalStatus ApprovalStatus @default(pending)
 
   name        String @db.VarChar(100)
-  phone       String @db.VarChar(13)
+  username        String @db.VarChar(100) @unique
+  phone       String? @db.VarChar(13)
   email       String @unique @db.VarChar(100)
   hashPwd     String @db.VarChar(255)
-  description String
+  description String?
 
   updatedAt   DateTime? @updatedAt
   updatedById String?
