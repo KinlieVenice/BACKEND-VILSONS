@@ -72,9 +72,8 @@ model UserEdit {
   userId String?
 
   fullName        String  @db.VarChar(100)
-  username    String  @unique @db.VarChar(100)
   phone       String? @db.VarChar(13)
-  email       String  @unique @db.VarChar(100)
+  email       String  @db.VarChar(100)
   hashPwd     String  @db.VarChar(255)
   description String?
 

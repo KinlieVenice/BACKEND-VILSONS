@@ -41,3 +41,24 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\registerController.
 
 Unknown argument `username`. Available options are marked with ?.
 20250827	19:59:19	3729add0-058f-4b89-b54c-715c918fc56e	TypeError: Cannot read properties of undefined (reading 'findFirst')
+20250827	21:22:04	40f5db56-87ad-459f-8b3d-7626f9873cb9	ReferenceError: Cannot access 'user' before initialization
+20250827	21:22:35	c14e25cc-bd10-4686-ba3a-8d30fd32073d	PrismaClientValidationError: 
+Invalid `prisma.user.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:82:34
+
+  79   approvalStatus,
+  80 } = req.body;
+  81 
+→ 82 const user = await prisma.user.findFirst({
+       id: "05619ec0-1f25-4dc4-8d22-560a799143bc",
+       ~~
+     ? where?: UserWhereInput,
+     ? orderBy?: UserOrderByWithRelationInput[] | UserOrderByWithRelationInput,
+     ? cursor?: UserWhereUniqueInput,
+     ? take?: Int,
+     ? skip?: Int,
+     ? distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+     })
+
+Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
+20250827	21:32:29	34d5222c-350a-4f95-aa3e-9c6f9e6a248b	SyntaxError: Expected double-quoted property name in JSON at position 79 (line 4 column 1)
