@@ -40,3 +40,4 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\registerController.
      })
 
 Unknown argument `username`. Available options are marked with ?.
+20250827	19:59:19	3729add0-058f-4b89-b54c-715c918fc56e	TypeError: Cannot read properties of undefined (reading 'findFirst')

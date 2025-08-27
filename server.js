@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 // json middleware for auto parse
 app.use(express.json());
 
-app.use("/users", require("./routes/register"));
+app.use("/users", require("./routes/api/users"));
 
 
 // middleware for error handling

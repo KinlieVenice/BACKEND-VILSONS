@@ -3,7 +3,15 @@ const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 
 const createUser = async (req, res) => {
-  const { name, username, phone, email, password, description, approvalStatus } = req.body;
+  const {
+    name,
+    username,
+    phone,
+    email,
+    password,
+    description,
+    approvalStatus,
+  } = req.body;
 
   if (!name || !username || !password || !email) {
     return res.status(400).json({
@@ -11,7 +19,7 @@ const createUser = async (req, res) => {
     });
   }
 
-  const duplicate = await prisma.userVersion.findFirst({
+  const duplicate = await prisma.user.findFirst({
     where: {
       OR: [{ username }, { email }],
     },
@@ -32,23 +40,18 @@ const createUser = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
-        data: {},
-      });
-
-      const userVersion = await tx.userVersion.create({
         data: {
-          userId: user.id,
           approvalStatus,
           name,
           username,
-          phone: "null",
+          ...(phone ? { phone } : {}),
           email,
           hashPwd,
-          description: "null",
+          ...(description ? { description } : {}),
         },
       });
 
-      return { user, userVersion };
+      return { user };
     });
 
     return res.status(201).json({
@@ -60,5 +63,29 @@ const createUser = async (req, res) => {
   }
 };
 
+const editUser = async (req, res) => {
+  if (!req?.body?.id)
+    return res.status(400).json({
+      message: "ID is required",
+    });
+
+  const user = await user.findFirst({ id: req.body.id });
+  if (!user)
+    res.status(400).json({ message: `User with ${req.body.id} doesn't exist` });
+
+  const result = await prisma.$transaction(async (tx) => {
+    const user_edit = await tx.userEdit.create({
+      data: {
+        ...(fullName !== undefined ? { fullName } : {}),
+        ...(username !== undefined ? { username } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+        ...(email !== undefined ? { email } : {}),
+        ...(hashPwd !== undefined ? { hashPwd } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(requestType !== undefined ? { requestType } : {}),
+      },
+    });
+  });
+};
 
 module.exports = { createUser };
