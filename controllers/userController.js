@@ -122,4 +122,19 @@ const editUser = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+if (!req?.body?.id)
+  return res.status(400).json({ message: "ID is required" });
+
+const user = await prisma.user.findFirst({ where: { id: req.body.id } });
+
+if (!user) {
+  return res
+    .status(400)
+    .json({ message: `User with ${req.body.id} doesn't exist` });
+}
+
+await prisma.user.delete({ where: { id: req.body.id } });
+}
+
 module.exports = { createUser, editUser };
