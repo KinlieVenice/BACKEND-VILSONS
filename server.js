@@ -19,6 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use("/users", require("./routes/api/users"));
+app.use("/roles", require("./routes/api/roles"));
 
 
 // middleware for error handling
