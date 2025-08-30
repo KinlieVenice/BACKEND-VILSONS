@@ -1,27 +1,31 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
-const defaultPassword = require('../utils/defaultPassword');
-const getRolesList = require('../config/roles_list')
+const defaultPassword = require("../utils/defaultPassword");
+const ROLES_LIST = require("../constants/ROLES_LIST");
+const roleIdFinder = require("../utils/roleIdFinder");
+const getRolePermissionData = require("../prisma/seedData/rolePermissionData");
 
 async function main() {
-  const result = await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     await tx.user.createMany({
-      data: [{
-        fullName: "Super Admin",
-        username: "superadmin",
-        phone: "09000000000",
-        email: "superadmin@vilsons.com",
-        hashPwd: await defaultPassword(),
-      }],
+      data: [
+        {
+          fullName: "Super Admin",
+          username: "superadmin",
+          phone: "09000000000",
+          email: "superadmin@vilsons.com",
+          hashPwd: await defaultPassword(),
+        },
+      ],
       skipDuplicates: true,
     });
-        
+
     await tx.role.createMany({
       data: [
-        { roleName: "Admin", baseRoleId: null, isCustom: false },
-        { roleName: "Employee", baseRoleId: null, isCustom: false },
-        { roleName: "Contractor", baseRoleId: null, isCustom: false },
-        { roleName: "Customer", baseRoleId: null, isCustom: false },
+        { roleName: "admin", baseRoleId: null, isCustom: false },
+        { roleName: "employee", baseRoleId: null, isCustom: false },
+        { roleName: "contractor", baseRoleId: null, isCustom: false },
+        { roleName: "customer", baseRoleId: null, isCustom: false },
       ],
       skipDuplicates: true,
     });
@@ -295,18 +299,24 @@ async function main() {
       ],
       skipDuplicates: true,
     });
+  });
 
-    const superAdmin = await tx.user.findUnique({ where: { username: "superadmin"}});
-    const roles_list = await getRolesList();
+  await prisma.$transaction(async (tx) => {
+    const superAdmin = await tx.user.findUnique({
+      where: { username: "superadmin" },
+    });
 
     await tx.userRole.create({
       data: {
         userId: superAdmin.id,
-        roleId: roles_list.Admin.id
-      }
-    })
+        roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      },
+    });
 
-  
+    await tx.rolePermission.createMany({
+      data: await getRolePermissionData(),
+      skipDuplicates: true,
+    });
   });
 }
 
