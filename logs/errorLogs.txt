@@ -63,3 +63,4 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:8
 Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
 20250827	21:32:29	34d5222c-350a-4f95-aa3e-9c6f9e6a248b	SyntaxError: Expected double-quoted property name in JSON at position 79 (line 4 column 1)
 20250830	13:15:37	2ba19a64-8e96-4993-9457-503abfb35f92	ReferenceError: error is not defined
+20250830	15:33:00	8f96bd46-4289-4fc7-8e69-94fbddac8f12	SyntaxError: Unexpected token 'J', ...""module": Job_Orders"... is not valid JSON

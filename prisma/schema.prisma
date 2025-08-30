@@ -580,19 +580,17 @@ model UserRole {
 
   user           User           @relation(fields: [userId], references: [id])
   role           Role           @relation(fields: [roleId], references: [id])
-  approvalStatus ApprovalStatus @default(published)
 }
 
 model Role {
   id             String           @id @default(uuid())
-  roleName           String           @db.VarChar(100)
+  roleName           String           @db.VarChar(100) @unique
   baseRoleId     String?
   baseRole       Role?             @relation("BaseRole", fields: [baseRoleId], references: [id])
   baseRoles      Role[]           @relation("BaseRole")
   isCustom       Boolean?
   users          UserRole[]
   permissions    RolePermission[]
-  approvalStatus ApprovalStatus @default(published)
 
   createdById String?
   createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id])
@@ -600,8 +598,8 @@ model Role {
 
 model Permission {
   id          String           @id @default(uuid())
-  module      String           @db.VarChar(100)
-  action      String           @db.VarChar(100)
+  module      Module 
+  permissionName      String           @db.VarChar(100) @unique
   method      Method
   description String?
   roles       RolePermission[]
@@ -654,11 +652,12 @@ enum Method {
 }
 
 enum Module {
+  Dashboard
   Job_Orders @map("Job Orders")
-  Other_Income @map("Other_Income")
-  Transaction @map("Transaction")
+  Other_Incomes @map("Other Incomes")
+  Transactions @map("Transactions")
   Finances_Revenue_And_Profit @map("Finances - Revenue and Profit")
-  Finances_Operational_Material @map("Finances - Operational - Material")
+  Finances_Operational_Materials @map("Finances - Operational - Materials")
   Finances_Operational_Equipment @map("Finances - Operational - Equipment")
   Finances_Operational_Labor @map("Finances - Operational - Labor")
   Finances_Overhead @map("Finances - Overhead")
@@ -666,6 +665,14 @@ enum Module {
   Activity_Logs @map("Activity Logs")
   Users_All_Users @map("Users - All Users")
   Users_Roles_And_Permissions @map("Users - Roles and Permissions")
+  My_Dashboard @map("My Dashboard")
+  Assigned_Orders @map("Assigned Orders")
+  My_Payout @map("My Payout")
+  My_Orders @map("My Orders")
+  My_Transactions @map("My Transactions")
+  My_Trucks @map("My Trucks")
+  My_Salary @map("My Salary")
+  Profile @map("Profile")
 }
 
 enum TableName {

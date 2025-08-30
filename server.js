@@ -20,6 +20,7 @@ app.use(express.json());
 
 app.use("/users", require("./routes/api/users"));
 app.use("/roles", require("./routes/api/roles"));
+app.use("/permissions", require("./routes/api/permissions"));
 
 
 // middleware for error handling

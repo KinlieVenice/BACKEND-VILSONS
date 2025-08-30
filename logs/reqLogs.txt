@@ -77,3 +77,13 @@
 20250830	13:23:27	60954e7e-c933-412f-9fae-2511f40b956f	POST	undefined	/roles
 20250830	13:23:32	0032b940-a484-46d1-8d9d-0380bbcb894b	POST	undefined	/roles
 20250830	13:23:39	9d66ca4c-bd2a-467a-beda-47e552028590	POST	undefined	/roles
+20250830	13:47:59	9fcb3492-7220-49f7-be91-efbcbcee82ce	POST	undefined	/permissions
+20250830	13:48:58	262576c4-7118-4616-9067-45d85565d3c4	POST	undefined	/permissions
+20250830	13:49:43	5cba638f-8f67-4add-bd59-a356df108689	POST	undefined	/permissions
+20250830	13:50:24	615d10e9-83b3-40b1-9164-7906fa110f28	POST	undefined	/permissions
+20250830	13:55:48	6934f884-99fa-4dea-bdf1-0625fe7a79d9	POST	undefined	/permissions
+20250830	13:58:04	30675d72-9f39-40d5-8f1a-61366b099b74	POST	undefined	/permissions
+20250830	15:32:32	f2c9cf19-956c-4b3f-bede-cf823b20bb18	POST	undefined	/permissions
+20250830	15:32:46	45d74344-f4c6-4e78-9bc9-3dd69a74568b	POST	undefined	/permissions
+20250830	15:32:51	5b6872c8-320e-4aa0-bc27-1e921072eb9f	POST	undefined	/permissions
+20250830	15:33:00	f54ce820-1249-4c65-9ebb-3de74bf1d38f	POST	undefined	/permissions
