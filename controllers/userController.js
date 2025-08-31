@@ -1,21 +1,15 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
+const roleIdFinder = require("../utils/roleIdFinder");
 
 const createUser = async (req, res) => {
-  const {
-    name,
-    username,
-    phone,
-    email,
-    password,
-    description,
-    approvalStatus,
-  } = req.body;
+  const { name, username, phone, email, password, description, roles } =
+    req.body;
 
-  if (!name || !username || !password || !email) {
+  if (!name || !username || !phone || !password || !email || !roles) {
     return res.status(400).json({
-      message: "Name, username, email and password are required",
+      message: "Name, username, email, password and roles are required",
     });
   }
 
@@ -36,27 +30,56 @@ const createUser = async (req, res) => {
   }
 
   try {
+    let message;
+    let needsApproval = false;
+
     const hashPwd = await bcrypt.hash(password, 10);
+    const userData = {
+      fullName: name,
+      username,
+      phone,
+      email,
+      hashPwd,
+      ...(description ? { description } : {}),
+    };
 
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          approvalStatus,
-          fullName: name,
-          username,
-          ...(phone ? { phone } : {}),
-          email,
-          hashPwd,
-          ...(description ? { description } : {}),
-        },
-      });
+    const result = needsApproval
+      ? await prisma.$transaction(async (tx) => {
+          const user = await tx.userEdit.create({
+            data: { ...userData, requestType: "create" },
+          });
+          const userRoleData = await Promise.all(
+            roles.map(async (role) => {
+              return { roleId: await roleIdFinder(role), userEditId: user.id };
+            })
+          );
+          const userRole = await tx.userRole.createMany({
+            data: userRoleData,
+          });
+          message = "User created is awaiting approval";
 
-      return user ;
-    });
+          return { user, roles };
+        })
+      : await prisma.$transaction(async (tx) => {
+          const user = await tx.user.create({
+            data: { ...userData },
+          });
+          const userRoleData = await Promise.all(
+            roles.map(async (role) => {
+              return { roleId: await roleIdFinder(role), userId: user.id };
+            })
+          );
+          const userRole = await tx.userRole.createMany({
+            data: userRoleData,
+          });
+          message = "User is successfully created";
+
+          return { user, roles };
+        });
 
     return res.status(201).json({
-      message: "User successfully created",
-      username: result.username
+      message,
+      data: result,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -64,14 +87,8 @@ const createUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const {
-    fullName,
-    phone,
-    email,
-    description,
-    approvalStatus,
-    requestType,
-  } = req.body;
+  const { fullName, phone, email, description, approvalStatus, requestType } =
+    req.body;
 
   if (!req?.body?.id || !requestType)
     return res.status(400).json({ message: "ID and requestType are required" });
@@ -86,17 +103,17 @@ const editUser = async (req, res) => {
   try {
     const result = await prisma.$transaction(async (tx) => {
       const updatedData = {
-       // ...(fullName ? { fullName } : {}),
+        // ...(fullName ? { fullName } : {}),
         //...(phone ? { phone } : {}),
-       // ...(email ? { email } : {}),
-       // ...(password ? { hashPwd: await bcrypt.hash(password, 10) } : {}),
-       // ...(description ? { description } : {}),
+        // ...(email ? { email } : {}),
+        // ...(password ? { hashPwd: await bcrypt.hash(password, 10) } : {}),
+        // ...(description ? { description } : {}),
 
-       fullName: fullName ?? user.fullName,
-       phone: phone ?? user.phone,
-       email: email ?? user.email,
-       hashPwd: user.hashPwd,
-       description: description ?? user.description,
+        fullName: fullName ?? user.fullName,
+        phone: phone ?? user.phone,
+        email: email ?? user.email,
+        hashPwd: user.hashPwd,
+        description: description ?? user.description,
       };
 
       const user_edit = await tx.userEdit.create({
@@ -110,7 +127,7 @@ const editUser = async (req, res) => {
       let user_published;
       if (user_edit.approvalStatus === "published") {
         user_published = await tx.user.update({
-          where: { id: user.id }, 
+          where: { id: user.id },
           data: updatedData,
         });
       }
@@ -142,11 +159,11 @@ const editPassword = async (req, res) => {
   try {
     const result = await prisma.$transaction(async (tx) => {
       const updatedData = {
-       fullName: user.fullName,
-       phone: user.phone,
-       email: user.email,
-       hashPwd: password ? await bcrypt.hash(password) : user.password,
-       description: user.description,
+        fullName: user.fullName,
+        phone: user.phone,
+        email: user.email,
+        hashPwd: password ? await bcrypt.hash(password) : user.password,
+        description: user.description,
       };
 
       const user_edit = await tx.userEdit.create({
@@ -160,7 +177,7 @@ const editPassword = async (req, res) => {
       let user_published;
       if (user_edit.approvalStatus === "published") {
         user_published = await tx.user.update({
-          where: { id: user.id }, 
+          where: { id: user.id },
           data: updatedData,
         });
       }
@@ -177,25 +194,25 @@ const editPassword = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-if (!req?.body?.id)
-  return res.status(400).json({ message: "ID is required" });
+  if (!req?.body?.id)
+    return res.status(400).json({ message: "ID is required" });
 
-const user = await prisma.user.findFirst({ where: { id: req.body.id } });
+  const user = await prisma.user.findFirst({ where: { id: req.body.id } });
 
-if (!user) {
-  return res
-    .status(400)
-    .json({ message: `User with ${req.body.id} doesn't exist` });
-}
+  if (!user) {
+    return res
+      .status(400)
+      .json({ message: `User with ${req.body.id} doesn't exist` });
+  }
 
-await prisma.user.delete({ where: { id: req.body.id } });
-}
+  await prisma.user.delete({ where: { id: req.body.id } });
+};
 
 const fetchUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
-        roles: true, 
+        roles: true,
       },
     });
 

@@ -72,18 +72,22 @@ model UserEdit {
   userId String?
 
   fullName        String  @db.VarChar(100)
+  username    String  @unique @db.VarChar(100)
   phone       String @db.VarChar(13)
   email       String  @db.VarChar(100)
   hashPwd     String  @db.VarChar(255)
   description String?
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime  @default(now())
   createdById String?
   updatedAt   DateTime? @updatedAt
   updatedById String?
+
+  rolesEdit       UserRoleEdit[]
+
 
   user      User? @relation("UserEditedVer", fields: [userId], references: [id])
   updatedBy User? @relation("UpdatedBy", fields: [updatedById], references: [id])
@@ -151,7 +155,7 @@ model Branch {
   branchName           String         @db.VarChar(100)
   description    String
   address        String
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -183,7 +187,7 @@ model BranchEdit {
   address     String
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime  @default(now())
   createdById String
@@ -232,7 +236,7 @@ model ContractorPay {
   type   PaymentType
   amount Decimal     @db.Decimal(13, 2)
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -254,7 +258,7 @@ model ContractorPayEdit {
   amount Decimal     @db.Decimal(13, 2)
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -283,7 +287,7 @@ model EmployeeSalary {
   type   PaymentType @default(regular)
   amount Decimal     @db.Decimal(13, 2)
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -307,7 +311,7 @@ model EmployeeSalaryEdit {
   amount Decimal     @db.Decimal(13, 2)
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -335,7 +339,7 @@ model Transaction {
   mop    String  @db.VarChar(20)
   amount Decimal @db.Decimal(13, 2)
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -357,7 +361,7 @@ model TransactionEdit {
   amount Decimal @db.Decimal(13, 2)
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -377,7 +381,7 @@ model OtherIncome {
   branchId    String
   branch      Branch  @relation(fields: [branchId], references: [id])
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -416,7 +420,7 @@ model Equipment {
   price    Decimal @db.Decimal(13, 2)
   branchId String
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -440,7 +444,7 @@ model EquipmentEdit {
   branchId String
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -489,7 +493,7 @@ model JobOrder {
   transactions Transaction[]
   materials    Material[]
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   edits JobOrderEdit[]
 
@@ -517,7 +521,7 @@ model JobOrderEdit {
   completedAt DateTime?
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -537,7 +541,7 @@ model Overhead {
   amount      Decimal @db.Decimal(13, 2)
   branchId    String
 
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -560,7 +564,7 @@ model OverheadEdit {
   branchId    String
 
   requestType    RequestType
-  approvalStatus ApprovalStatus @default(published)
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
   createdById String
@@ -580,6 +584,20 @@ model UserRole {
 
   user           User           @relation(fields: [userId], references: [id])
   role           Role           @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model UserRoleEdit {
+  id     String @id @default(uuid())
+  userEditId String
+  roleId String
+  approvalStatus ApprovalStatus @default(pending)
+
+  user           UserEdit           @relation(fields: [userEditId], references: [id])
+  role           Role           @relation(fields: [roleId], references: [id])
+
+  @@unique([userEditId, roleId])
 }
 
 model Role {
@@ -590,6 +608,7 @@ model Role {
   baseRoles      Role[]           @relation("BaseRole")
   isCustom       Boolean?
   users          UserRole[]
+  userEdits          UserRoleEdit[]
   permissions    RolePermission[]
 
   createdById String?
@@ -614,6 +633,8 @@ model RolePermission {
 
   role       Role       @relation(fields: [roleId], references: [id])
   permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
 }
 
 model ApprovalLog {
@@ -637,6 +658,7 @@ enum ApprovalStatus {
 enum RequestType {
   edit
   delete
+  create
 }
 
 enum PaymentType {
