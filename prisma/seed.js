@@ -306,11 +306,14 @@ async function main() {
       where: { username: "superadmin" },
     });
 
-    await tx.userRole.create({
-      data: {
-        userId: superAdmin.id,
-        roleId: await roleIdFinder(ROLES_LIST.ADMIN),
-      },
+    await tx.userRole.createMany({
+      data: [
+        {
+          userId: superAdmin.id,
+          roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+        },
+      ],
+      skipDuplicates: true,
     });
 
     await tx.rolePermission.createMany({

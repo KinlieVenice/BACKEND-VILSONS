@@ -51,12 +51,12 @@ const createUser = async (req, res) => {
         },
       });
 
-      return { user };
+      return user ;
     });
 
     return res.status(201).json({
-      message: "User created successfully",
-      data: result,
+      message: "User successfully created",
+      username: result.username
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -191,4 +191,18 @@ if (!user) {
 await prisma.user.delete({ where: { id: req.body.id } });
 }
 
-module.exports = { createUser, editUser };
+const fetchUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        roles: true, 
+      },
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Failed to fetch users." });
+  }
+};
+module.exports = { createUser, editUser, fetchUsers };
