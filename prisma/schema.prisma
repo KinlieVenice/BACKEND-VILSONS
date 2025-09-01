@@ -25,6 +25,7 @@ model User {
   email       String  @unique @db.VarChar(100)
   hashPwd     String  @db.VarChar(255)
   description String?
+  refreshToken String?
 
   approvalStatus ApprovalStatus @default(published)
 
