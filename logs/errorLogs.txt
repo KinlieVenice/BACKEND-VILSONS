@@ -64,3 +64,7 @@ Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
 20250827	21:32:29	34d5222c-350a-4f95-aa3e-9c6f9e6a248b	SyntaxError: Expected double-quoted property name in JSON at position 79 (line 4 column 1)
 20250830	13:15:37	2ba19a64-8e96-4993-9457-503abfb35f92	ReferenceError: error is not defined
 20250830	15:33:00	8f96bd46-4289-4fc7-8e69-94fbddac8f12	SyntaxError: Unexpected token 'J', ...""module": Job_Orders"... is not valid JSON
+20250902	12:56:46	daf998ce-0214-48c6-b51a-06b17ca3a7d3	ReferenceError: user is not defined
+20250902	12:57:29	748f8eda-3e21-46f0-a994-62d5442db0f7	ReferenceError: user is not defined
+20250902	13:12:32	6ae0359c-aca0-4000-bec5-103eb4972c3b	TypeError: Cannot read properties of undefined (reading 'name')
+20250902	13:12:50	231668d9-e7c3-4725-a4be-9a6c40cbb981	TypeError: Cannot read properties of undefined (reading 'roleName')

@@ -10,31 +10,52 @@ const handleLogin = async (req, res) => {
       .status(400)
       .json({ message: "Both username and password needed" });
 
-  const user = prisma.user.findUnique({ where: { username } });
-  if (!user) return res.status(404).json({ message: "User not found" });
+  const foundUser = await prisma.user.findUnique({
+    where: { username },
+    include: { roles: { include: { role: true } } },
+  });
+  if (!foundUser) return res.status(404).json({ message: "User not found" });
 
-  const match = await bcrypt.compare(password, user.hashPwd);
+  const match = await bcrypt.compare(password, foundUser.hashPwd);
   if (match) {
+    const roles = foundUser.roles.map((r) => r.role.roleName);
     const accessToken = jwt.sign(
       {
         UserInfo: {
-          id: user.id,
-          roles: user.roles,
+          id: foundUser.id,
+          username: foundUser.username,
+          roles,
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "1h" }
     );
+
+    console.log(jwt.decode(accessToken));
+
+
     const refreshToken = jwt.sign(
-      { id: user.id },
+      { id: foundUser.id },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "1d" }
     );
 
-    user.refreshToken = refreshToken;
-    
+    await prisma.user.update({
+      where: { id: foundUser.id },
+      data: { refreshToken },
+    });
 
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true,
+      sameSite: "None",
+      // secure: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ accessToken });
   } else {
     return res.status(401).json({ message: "Invalid password" });
   }
 };
+
+module.exports = { handleLogin };
