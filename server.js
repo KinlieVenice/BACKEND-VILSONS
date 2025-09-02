@@ -23,6 +23,7 @@ app.use(cookieParser());
 
 app.use("/auth", require("./routes/auth"));
 app.use("/refresh", require("./routes/refresh"));
+app.use("/logout", require("./routes/logout"));
 
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));

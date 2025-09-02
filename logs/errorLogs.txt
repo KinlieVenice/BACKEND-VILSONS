@@ -256,3 +256,22 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\refreshController.j
 Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
 20250902	15:34:56	3ec6b377-830d-4678-bc56-abc70e24a178	TypeError: Cannot read properties of undefined (reading 'map')
 20250902	15:35:44	973640f1-62a0-4f01-8bfe-60892ec798f7	TypeError: Cannot read properties of undefined (reading 'map')
+20250902	21:48:51	8fb12961-bacd-46aa-8106-56484ce3e919	PrismaClientValidationError: 
+Invalid `prisma.user.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\logoutController.js:10:39
+
+   7 if (!cookies?.jwt) return res.sendStatus(204); //no content
+   8 const refreshToken = cookies.jwt;
+   9 
+→ 10 const foundUser = await prisma.user.findFirst({
+       refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZkMGZiMTBkLTM2YWUtNDBmMy05MWI0LTg0MzQ2YWJkNzVkMiIsImlhdCI6MTc1NjgyMDkxNSwiZXhwIjoxNzU2OTA3MzE1fQ.2TTjAjrGyzHwPUozegyE57IuCMWl-MXdvMZR-jjFXug",
+       ~~~~~~~~~~~~
+     ? where?: UserWhereInput,
+     ? orderBy?: UserOrderByWithRelationInput[] | UserOrderByWithRelationInput,
+     ? cursor?: UserWhereUniqueInput,
+     ? take?: Int,
+     ? skip?: Int,
+     ? distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+     })
+
+Unknown argument `refreshToken`. Available options are marked with ?.
