@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const { PrismaClient } = require('./generated/prisma');
 const prisma = new PrismaClient();
 const app = express();
@@ -18,7 +19,10 @@ app.use(express.urlencoded({ extended: false }));
 // json middleware for auto parse
 app.use(express.json());
 
+app.use(cookieParser());
+
 app.use("/auth", require("./routes/auth"));
+app.use("/refresh", require("./routes/refresh"));
 
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));

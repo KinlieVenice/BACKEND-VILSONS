@@ -68,3 +68,191 @@ Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
 20250902	12:57:29	748f8eda-3e21-46f0-a994-62d5442db0f7	ReferenceError: user is not defined
 20250902	13:12:32	6ae0359c-aca0-4000-bec5-103eb4972c3b	TypeError: Cannot read properties of undefined (reading 'name')
 20250902	13:12:50	231668d9-e7c3-4725-a4be-9a6c40cbb981	TypeError: Cannot read properties of undefined (reading 'roleName')
+20250902	15:12:07	d02606a7-957c-49b9-87e5-d43e7582c540	PrismaClientValidationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\refreshController.js:11:39
+
+   8 if (!refreshToken)
+   9   return res.status(401).json({ message: "No cookies found" });
+  10 
+→ 11 const foundUser = await prisma.user.findUnique({
+       where: {
+         refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZkMGZiMTBkLTM2YWUtNDBmMy05MWI0LTg0MzQ2YWJkNzVkMiIsImlhdCI6MTc1Njc5NDU2MCwiZXhwIjoxNzU2ODgwOTYwfQ.hqjotYOY0N1EaxopSdf47-Z_A1kGrU6ZwLRv_9T7AtQ",
+     ?   id?: String,
+     ?   username?: String,
+     ?   email?: String,
+     ?   AND?: UserWhereInput | UserWhereInput[],
+     ?   OR?: UserWhereInput[],
+     ?   NOT?: UserWhereInput | UserWhereInput[],
+     ?   fullName?: StringFilter | String,
+     ?   phone?: StringFilter | String,
+     ?   hashPwd?: StringFilter | String,
+     ?   description?: StringNullableFilter | String | Null,
+     ?   approvalStatus?: EnumApprovalStatusFilter | ApprovalStatus,
+     ?   createdAt?: DateTimeFilter | DateTime,
+     ?   createdById?: StringNullableFilter | String | Null,
+     ?   updatedAt?: DateTimeFilter | DateTime,
+     ?   updatedById?: StringNullableFilter | String | Null,
+     ?   admin?: AdminListRelationFilter,
+     ?   customer?: CustomerListRelationFilter,
+     ?   contractor?: ContractorListRelationFilter,
+     ?   employee?: EmployeeListRelationFilter,
+     ?   activityLog?: ActivityLogListRelationFilter,
+     ?   roles?: UserRoleListRelationFilter,
+     ?   edits?: UserEditListRelationFilter,
+     ?   createdUsers?: UserListRelationFilter,
+     ?   createdUserEdit?: UserEditListRelationFilter,
+     ?   createdRole?: RoleListRelationFilter,
+     ?   createdBranches?: BranchListRelationFilter,
+     ?   createdBranchEdit?: BranchEditListRelationFilter,
+     ?   createdTrucks?: TruckListRelationFilter,
+     ?   createdTransaction?: TransactionListRelationFilter,
+     ?   createdTransactionEdit?: TransactionEditListRelationFilter,
+     ?   createdJobOrder?: JobOrderListRelationFilter,
+     ?   createdJobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   transferredTruckOwnership?: TruckOwnershipListRelationFilter,
+     ?   updatedUserEdits?: UserEditListRelationFilter,
+     ?   updatedBranches?: BranchListRelationFilter,
+     ?   updatedBranchEdits?: BranchEditListRelationFilter,
+     ?   updatedTransaction?: TransactionListRelationFilter,
+     ?   updatedTransactionEdit?: TransactionEditListRelationFilter,
+     ?   updatedJobOrder?: JobOrderListRelationFilter,
+     ?   updatedJobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   createdBy?: UserNullableScalarRelationFilter | UserWhereInput | Null
+       },
+       include: {
+         roles: {
+           include: {
+             role: true
+           }
+         }
+       }
+     })
+
+Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
+20250902	15:12:43	24adffc6-da35-49bc-ace1-64971bbfb3a6	PrismaClientValidationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\refreshController.js:11:39
+
+   8 if (!refreshToken)
+   9   return res.status(401).json({ message: "No cookies found" });
+  10 
+→ 11 const foundUser = await prisma.user.findUnique({
+       where: {
+         refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZkMGZiMTBkLTM2YWUtNDBmMy05MWI0LTg0MzQ2YWJkNzVkMiIsImlhdCI6MTc1Njc5NDU2MCwiZXhwIjoxNzU2ODgwOTYwfQ.hqjotYOY0N1EaxopSdf47-Z_A1kGrU6ZwLRv_9T7AtQ",
+     ?   id?: String,
+     ?   username?: String,
+     ?   email?: String,
+     ?   AND?: UserWhereInput | UserWhereInput[],
+     ?   OR?: UserWhereInput[],
+     ?   NOT?: UserWhereInput | UserWhereInput[],
+     ?   fullName?: StringFilter | String,
+     ?   phone?: StringFilter | String,
+     ?   hashPwd?: StringFilter | String,
+     ?   description?: StringNullableFilter | String | Null,
+     ?   approvalStatus?: EnumApprovalStatusFilter | ApprovalStatus,
+     ?   createdAt?: DateTimeFilter | DateTime,
+     ?   createdById?: StringNullableFilter | String | Null,
+     ?   updatedAt?: DateTimeFilter | DateTime,
+     ?   updatedById?: StringNullableFilter | String | Null,
+     ?   admin?: AdminListRelationFilter,
+     ?   customer?: CustomerListRelationFilter,
+     ?   contractor?: ContractorListRelationFilter,
+     ?   employee?: EmployeeListRelationFilter,
+     ?   activityLog?: ActivityLogListRelationFilter,
+     ?   roles?: UserRoleListRelationFilter,
+     ?   edits?: UserEditListRelationFilter,
+     ?   createdUsers?: UserListRelationFilter,
+     ?   createdUserEdit?: UserEditListRelationFilter,
+     ?   createdRole?: RoleListRelationFilter,
+     ?   createdBranches?: BranchListRelationFilter,
+     ?   createdBranchEdit?: BranchEditListRelationFilter,
+     ?   createdTrucks?: TruckListRelationFilter,
+     ?   createdTransaction?: TransactionListRelationFilter,
+     ?   createdTransactionEdit?: TransactionEditListRelationFilter,
+     ?   createdJobOrder?: JobOrderListRelationFilter,
+     ?   createdJobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   transferredTruckOwnership?: TruckOwnershipListRelationFilter,
+     ?   updatedUserEdits?: UserEditListRelationFilter,
+     ?   updatedBranches?: BranchListRelationFilter,
+     ?   updatedBranchEdits?: BranchEditListRelationFilter,
+     ?   updatedTransaction?: TransactionListRelationFilter,
+     ?   updatedTransactionEdit?: TransactionEditListRelationFilter,
+     ?   updatedJobOrder?: JobOrderListRelationFilter,
+     ?   updatedJobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   createdBy?: UserNullableScalarRelationFilter | UserWhereInput | Null
+       },
+       include: {
+         roles: {
+           include: {
+             role: true
+           }
+         }
+       }
+     })
+
+Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
+20250902	15:12:59	5c59814c-9e67-4917-94ff-44e27ba24e1e	PrismaClientValidationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\refreshController.js:11:39
+
+   8 if (!refreshToken)
+   9   return res.status(401).json({ message: "No cookies found" });
+  10 
+→ 11 const foundUser = await prisma.user.findUnique({
+       where: {
+         refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZkMGZiMTBkLTM2YWUtNDBmMy05MWI0LTg0MzQ2YWJkNzVkMiIsImlhdCI6MTc1Njc5NDU2MCwiZXhwIjoxNzU2ODgwOTYwfQ.hqjotYOY0N1EaxopSdf47-Z_A1kGrU6ZwLRv_9T7AtQ",
+     ?   id?: String,
+     ?   username?: String,
+     ?   email?: String,
+     ?   AND?: UserWhereInput | UserWhereInput[],
+     ?   OR?: UserWhereInput[],
+     ?   NOT?: UserWhereInput | UserWhereInput[],
+     ?   fullName?: StringFilter | String,
+     ?   phone?: StringFilter | String,
+     ?   hashPwd?: StringFilter | String,
+     ?   description?: StringNullableFilter | String | Null,
+     ?   approvalStatus?: EnumApprovalStatusFilter | ApprovalStatus,
+     ?   createdAt?: DateTimeFilter | DateTime,
+     ?   createdById?: StringNullableFilter | String | Null,
+     ?   updatedAt?: DateTimeFilter | DateTime,
+     ?   updatedById?: StringNullableFilter | String | Null,
+     ?   admin?: AdminListRelationFilter,
+     ?   customer?: CustomerListRelationFilter,
+     ?   contractor?: ContractorListRelationFilter,
+     ?   employee?: EmployeeListRelationFilter,
+     ?   activityLog?: ActivityLogListRelationFilter,
+     ?   roles?: UserRoleListRelationFilter,
+     ?   edits?: UserEditListRelationFilter,
+     ?   createdUsers?: UserListRelationFilter,
+     ?   createdUserEdit?: UserEditListRelationFilter,
+     ?   createdRole?: RoleListRelationFilter,
+     ?   createdBranches?: BranchListRelationFilter,
+     ?   createdBranchEdit?: BranchEditListRelationFilter,
+     ?   createdTrucks?: TruckListRelationFilter,
+     ?   createdTransaction?: TransactionListRelationFilter,
+     ?   createdTransactionEdit?: TransactionEditListRelationFilter,
+     ?   createdJobOrder?: JobOrderListRelationFilter,
+     ?   createdJobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   transferredTruckOwnership?: TruckOwnershipListRelationFilter,
+     ?   updatedUserEdits?: UserEditListRelationFilter,
+     ?   updatedBranches?: BranchListRelationFilter,
+     ?   updatedBranchEdits?: BranchEditListRelationFilter,
+     ?   updatedTransaction?: TransactionListRelationFilter,
+     ?   updatedTransactionEdit?: TransactionEditListRelationFilter,
+     ?   updatedJobOrder?: JobOrderListRelationFilter,
+     ?   updatedJobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   createdBy?: UserNullableScalarRelationFilter | UserWhereInput | Null
+       },
+       include: {
+         roles: {
+           include: {
+             role: true
+           }
+         }
+       }
+     })
+
+Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
+20250902	15:34:56	3ec6b377-830d-4678-bc56-abc70e24a178	TypeError: Cannot read properties of undefined (reading 'map')
+20250902	15:35:44	973640f1-62a0-4f01-8bfe-60892ec798f7	TypeError: Cannot read properties of undefined (reading 'map')

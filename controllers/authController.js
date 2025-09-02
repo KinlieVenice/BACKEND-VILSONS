@@ -41,7 +41,7 @@ const handleLogin = async (req, res) => {
     );
 
     await prisma.user.update({
-      where: { id: foundUser.id },
+      where: { username: foundUser.username },
       data: { refreshToken },
     });
 
