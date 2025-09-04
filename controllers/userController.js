@@ -43,39 +43,39 @@ const createUser = async (req, res) => {
       ...(description ? { description } : {}),
     };
 
-    const result = needsApproval
-      ? await prisma.$transaction(async (tx) => {
-          const user = await tx.userEdit.create({
+    const result = await prisma.$transaction(async (tx) => {
+      const user = needsApproval
+        ? await tx.userEdit.create({
             data: { ...userData, requestType: "create" },
-          });
-          const userRoleData = await Promise.all(
-            roles.map(async (role) => {
-              return { roleId: await roleIdFinder(role), userEditId: user.id };
-            })
-          );
-          const userRole = await tx.userRole.createMany({
-            data: userRoleData,
-          });
-          message = "User created is awaiting approval";
-
-          return { user, roles };
-        })
-      : await prisma.$transaction(async (tx) => {
-          const user = await tx.user.create({
+          })
+        : await tx.user.create({
             data: { ...userData },
           });
-          const userRoleData = await Promise.all(
-            roles.map(async (role) => {
-              return { roleId: await roleIdFinder(role), userId: user.id };
-            })
-          );
-          const userRole = await tx.userRole.createMany({
+
+      const userRoleData = await Promise.all(
+        roles.map(async (role) => {
+          return {
+            roleId: await roleIdFinder(role),
+            userId: user.id,
+          };
+        })
+      );
+
+      const userRole = needsApproval
+        ? await tx.userRole.createMany({
+            data: userRoleData,
+          })
+        : await tx.userRole.createMany({
             data: userRoleData,
           });
-          message = "User is successfully created";
 
-          return { user, roles };
-        });
+      const message = needsApproval
+        ? "User created is awaiting approval"
+        : "User is successfully created";
+
+      return { user, roles };
+    });
+
 
     return res.status(201).json({
       message,
@@ -212,7 +212,7 @@ const fetchUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
-        roles: true,
+        role: true,
       },
     });
 

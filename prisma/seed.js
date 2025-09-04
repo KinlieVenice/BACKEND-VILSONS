@@ -4,7 +4,7 @@ const defaultPassword = require("../utils/defaultPassword");
 const ROLES_LIST = require("../constants/ROLES_LIST");
 const roleIdFinder = require("../utils/roleIdFinder");
 const getRolePermissionData = require("../prisma/seedData/rolePermissionData");
-const getPermissionData = require("../prisma/seedData/PermissionData");
+const getPermissionData = require("../prisma/seedData/permissionData");
 
 async function main() {
   await prisma.$transaction(async (tx) => {

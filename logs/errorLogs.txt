@@ -275,3 +275,5 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\logoutController.js
      })
 
 Unknown argument `refreshToken`. Available options are marked with ?.
+20250905	00:55:48	861254d4-2e3f-48b3-84d3-980ad49cb2f4	TypeError: Cannot read properties of undefined (reading 'roleName')
+20250905	01:00:50	3f903e2d-4be3-4610-8d6a-a8fa681f2116	TypeError: Cannot read properties of undefined (reading 'roleName')

@@ -15,14 +15,13 @@ const handleRefresh = async (req, res) => {
   if (!foundUser) return res.status(403).json({ message: "No user found, forbidden" });
 
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-    if (err || foundUser.id !== decoded.id)
+    if (err || foundUser.username !== decoded.username)
       return res.status(403).json({ message: "Invalid username" });
 
     const roles = foundUser.roles.map((r) => r.role.roleName);
     const accessToken = jwt.sign(
       {
         UserInfo: {
-          id: foundUser.id,
           username: foundUser.username,
           roles,
         },
