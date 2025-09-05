@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3550;
 
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
+const verifyJWT = require('./middleware/verifyJWT');
 
 // middleware for log handling
 app.use(logger);
@@ -26,6 +27,7 @@ app.use("/auth", require("./routes/auth"));
 app.use("/refresh", require("./routes/refresh"));
 app.use("/logout", require("./routes/logout"));
 
+app.use(verifyJWT);
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));
 
