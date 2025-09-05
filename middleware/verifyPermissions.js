@@ -1,17 +1,17 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 const permissionIdFinder = require("../utils/permissionIdFinder");
-const PERMISSIONS_LIST = require("../constants/PERMISSIONS_LIST");
 
-const verifyPermission = (...allowedPermissions) => {
+
+const verifyPermission = (allowedPermissions) => {
   return async (req, res, next) => {
     if (!req?.roles) return res.sendStatus(404);
 
     try {
       const roles = await Promise.all(
-        req.roles.map((r) =>
+        req.roles.map((role) =>
           prisma.role.findFirst({
-            where: { roleName: r },
+            where: { roleName: role },
             include: { permissions: { include: { permission: true, }, }, },
           })
         )
@@ -19,19 +19,19 @@ const verifyPermission = (...allowedPermissions) => {
 
       console.log(roles);
 
-      const userPermissions = roles.flatMap((role) =>
+      const userPermissionsId = roles.flatMap((role) =>
         role.permissions.map((perm) => perm.permission.id)
       );
 
-      console.log(userPermissions);
+      console.log(userPermissionsId);
 
-      const hasPermission = userPermissions.some((id) =>
-        allowedPermissions.includes(id)
+      const permissionId = await permissionIdFinder(allowedPermissions);
+        
+      const hasPermission = userPermissionsId.some((id) =>
+        permissionId.includes(id)
       );
 
       console.log(hasPermission);
-
-      console.log(await permissionIdFinder(PERMISSIONS_LIST.CREATE_USER));
 
       if (!hasPermission) return res.sendStatus(403);
 

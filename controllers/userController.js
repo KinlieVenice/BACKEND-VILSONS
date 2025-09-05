@@ -7,9 +7,9 @@ const createUser = async (req, res) => {
   const { name, username, phone, email, password, description, roles } =
     req.body;
 
-  if (!name || !username || !phone || !password || !email || !roles) {
+  if (!name || !username || !phone || !email || !roles) {
     return res.status(400).json({
-      message: "Name, username, email, password and roles are required",
+      message: "Name, username, email, and roles are required",
     });
   }
 
@@ -33,7 +33,7 @@ const createUser = async (req, res) => {
     let message;
     let needsApproval = false;
 
-    const hashPwd = await bcrypt.hash(password, 10);
+    const hashPwd = await bcrypt.hash(password || process.env.DEFAULT_PASSWORD, 10);
     const userData = {
       fullName: name,
       username,
@@ -87,42 +87,50 @@ const createUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const { fullName, phone, email, description, approvalStatus, requestType } =
+  const { fullName, phone, email, description } =
     req.body;
 
-  if (!req?.body?.id || !requestType)
-    return res.status(400).json({ message: "ID and requestType are required" });
+  if (!req?.body?.id)
+    return res.status(400).json({ message: "ID is required" });
 
   const user = await prisma.user.findFirst({ where: { id: req.body.id } });
-  if (!user) {
-    return res
-      .status(400)
-      .json({ message: `User with ${req.body.id} doesn't exist` });
-  }
+  if (!user) return res.status(400).json({ message: `User with ${req.body.id} doesn't exist` });
+
 
   try {
+
+    let message;
+    let needsApproval = false;
+    const updatedData = {
+      // ...(fullName ? { fullName } : {}),
+      //...(phone ? { phone } : {}),
+      // ...(email ? { email } : {}),
+      // ...(password ? { hashPwd: await bcrypt.hash(password, 10) } : {}),
+      // ...(description ? { description } : {}),
+
+      fullName: fullName ?? user.fullName,
+      phone: phone ?? user.phone,
+      email: email ?? user.email,
+      hashPwd: user.hashPwd,
+      description: description ?? user.description,
+      roles: req.roles,
+    };
+
+
     const result = await prisma.$transaction(async (tx) => {
-      const updatedData = {
-        // ...(fullName ? { fullName } : {}),
-        //...(phone ? { phone } : {}),
-        // ...(email ? { email } : {}),
-        // ...(password ? { hashPwd: await bcrypt.hash(password, 10) } : {}),
-        // ...(description ? { description } : {}),
-
-        fullName: fullName ?? user.fullName,
-        phone: phone ?? user.phone,
-        email: email ?? user.email,
-        hashPwd: user.hashPwd,
-        description: description ?? user.description,
-      };
-
-      const user_edit = await tx.userEdit.create({
-        data: {
-          userId: user.id,
-          ...updatedData,
-          requestType: requestType ?? user.requestType,
-        },
-      });
+      
+        const user_edit = needsApproval
+          ? await tx.userEdit.create({
+              data: {
+                userId: user.id,
+                ...updatedData,
+                requestType: "edit",
+              },
+            })
+          : await tx.user.update({
+              where: { id: req.body.id },
+              data: updatedData,
+            });
 
       let user_published;
       if (user_edit.approvalStatus === "published") {
