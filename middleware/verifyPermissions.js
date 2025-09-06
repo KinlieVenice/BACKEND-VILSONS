@@ -5,7 +5,7 @@ const permissionIdFinder = require("../utils/permissionIdFinder");
 
 const verifyPermission = (allowedPermissions) => {
   return async (req, res, next) => {
-    if (!req?.roles) return res.sendStatus(404);
+    if (!req?.roles) return res.status(404).json({ message: "No roles assigned" });
 
     try {
       const roles = await Promise.all(
@@ -19,21 +19,26 @@ const verifyPermission = (allowedPermissions) => {
 
       console.log(roles);
 
-      const userPermissionsId = roles.flatMap((role) =>
-        role.permissions.map((perm) => perm.permission.id)
+      const userPermissions = roles.flatMap((role) =>
+        role.permissions.map((perm) => ({
+          permissionId: perm.permissionId,
+          approval: perm.approval,
+        }))
       );
 
-      console.log(userPermissionsId);
+      console.log(userPermissions);
 
-      const permissionId = await permissionIdFinder(allowedPermissions);
-        
-      const hasPermission = userPermissionsId.some((id) =>
-        permissionId.includes(id)
+      const allowedPermissionId = await permissionIdFinder(allowedPermissions);
+
+      const matchedPermission = userPermissions.find((perm) =>
+        allowedPermissionId.includes(perm.permissionId)
       );
 
-      console.log(hasPermission);
+      if (!matchedPermission) {
+        return res.status(403).json({ message: "Permission not found" });
+      }
 
-      if (!hasPermission) return res.sendStatus(403);
+      req.approval = matchedPermission.approval;
 
       next();
     } catch (err) {

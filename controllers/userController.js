@@ -31,7 +31,8 @@ const createUser = async (req, res) => {
 
   try {
     let message;
-    let needsApproval = false;
+    let needsApproval = req.approval;
+    console.log(needsApproval)
 
     const hashPwd = await bcrypt.hash(password || process.env.DEFAULT_PASSWORD, 10);
     const userData = {
@@ -56,14 +57,22 @@ const createUser = async (req, res) => {
         roles.map(async (role) => {
           return {
             roleId: await roleIdFinder(role),
-            userId: user.id,
+            userId: user.id
+          };
+        })
+      );
+      const userRoleDataEdit = await Promise.all(
+        roles.map(async (role) => {
+          return {
+            roleId: await roleIdFinder(role),
+            userEditId: user.id
           };
         })
       );
 
       const userRole = needsApproval
-        ? await tx.userRole.createMany({
-            data: userRoleData,
+        ? await tx.userRoleEdit.createMany({
+            data: userRoleDataEdit,
           })
         : await tx.userRole.createMany({
             data: userRoleData,
@@ -73,7 +82,7 @@ const createUser = async (req, res) => {
         ? "User created is awaiting approval"
         : "User is successfully created";
 
-      return { user, roles };
+      return { user, roles, message };
     });
 
 
@@ -100,7 +109,8 @@ const editUser = async (req, res) => {
   try {
 
     let message;
-    let needsApproval = false;
+    let needsApproval = req.approval;
+    console.log(needsApproval);
     const updatedData = {
       // ...(fullName ? { fullName } : {}),
       //...(phone ? { phone } : {}),

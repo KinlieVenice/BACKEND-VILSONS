@@ -27,6 +27,7 @@ async function main() {
         { roleName: "employee", baseRoleId: null, isCustom: false },
         { roleName: "contractor", baseRoleId: null, isCustom: false },
         { roleName: "customer", baseRoleId: null, isCustom: false },
+        { roleName: "cashier", baseRoleId: null, isCustom: false },
       ],
       skipDuplicates: true,
     });

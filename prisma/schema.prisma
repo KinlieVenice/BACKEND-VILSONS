@@ -591,11 +591,11 @@ model UserRole {
 
 model UserRoleEdit {
   id     String @id @default(uuid())
-  userEditId String
+  userEditId String?
   roleId String
   approvalStatus ApprovalStatus @default(pending)
 
-  user           UserEdit           @relation(fields: [userEditId], references: [id])
+  user           UserEdit?           @relation(fields: [userEditId], references: [id])
   role           Role           @relation(fields: [roleId], references: [id])
 
   @@unique([userEditId, roleId])
