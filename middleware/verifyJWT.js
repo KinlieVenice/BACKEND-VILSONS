@@ -11,6 +11,7 @@ const verifyJWT = (req, res, next) => {
       console.error("JWT Error:", err.message);
       return res.sendStatus(403); //invalid token
     }
+    req.id = decoded.UserInfo.id;
     req.username = decoded.UserInfo.username;
     req.roles = decoded.UserInfo.roles;
     next();

@@ -7,6 +7,6 @@ const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST")
 router.route("/")
 .get(userController.fetchUsers)
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_USER), userController.createUser)
-.put(userController.editUser);
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser);
 
 module.exports = router;

@@ -32,9 +32,12 @@ const createUser = async (req, res) => {
   try {
     let message;
     let needsApproval = req.approval;
-    console.log(needsApproval)
+    console.log(needsApproval);
 
-    const hashPwd = await bcrypt.hash(password || process.env.DEFAULT_PASSWORD, 10);
+    const hashPwd = await bcrypt.hash(
+      password || process.env.DEFAULT_PASSWORD,
+      10
+    );
     const userData = {
       fullName: name,
       username,
@@ -42,6 +45,8 @@ const createUser = async (req, res) => {
       email,
       hashPwd,
       ...(description ? { description } : {}),
+      createdById: req.id || null,
+      updatedById: req.id || null,
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -55,24 +60,13 @@ const createUser = async (req, res) => {
 
       const userRoleData = await Promise.all(
         roles.map(async (role) => {
-          return {
-            roleId: await roleIdFinder(role),
-            userId: user.id
-          };
-        })
-      );
-      const userRoleDataEdit = await Promise.all(
-        roles.map(async (role) => {
-          return {
-            roleId: await roleIdFinder(role),
-            userEditId: user.id
-          };
+          return { roleId: await roleIdFinder(role), ...(needsApproval ?  {userEditId: user.id} : {userId: user.id}),};
         })
       );
 
       const userRole = needsApproval
         ? await tx.userRoleEdit.createMany({
-            data: userRoleDataEdit,
+            data: userRoleData,
           })
         : await tx.userRole.createMany({
             data: userRoleData,
@@ -85,7 +79,6 @@ const createUser = async (req, res) => {
       return { user, roles, message };
     });
 
-
     return res.status(201).json({
       message,
       data: result,
@@ -96,18 +89,18 @@ const createUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const { fullName, phone, email, description } =
-    req.body;
+  const { name, username, phone, email, description } = req.body;
 
   if (!req?.body?.id)
     return res.status(400).json({ message: "ID is required" });
 
   const user = await prisma.user.findFirst({ where: { id: req.body.id } });
-  if (!user) return res.status(400).json({ message: `User with ${req.body.id} doesn't exist` });
-
+  if (!user)
+    return res
+      .status(400)
+      .json({ message: `User with ${req.body.id} doesn't exist` });
 
   try {
-
     let message;
     let needsApproval = req.approval;
     console.log(needsApproval);
@@ -118,38 +111,31 @@ const editUser = async (req, res) => {
       // ...(password ? { hashPwd: await bcrypt.hash(password, 10) } : {}),
       // ...(description ? { description } : {}),
 
-      fullName: fullName ?? user.fullName,
+      fullName: name ?? user.fullName,
+      username: username ?? user.username,
       phone: phone ?? user.phone,
       email: email ?? user.email,
       hashPwd: user.hashPwd,
       description: description ?? user.description,
-      roles: req.roles,
+      roles: user.roles,
+      updatedById: req.id,
     };
 
-
     const result = await prisma.$transaction(async (tx) => {
-      
-        const user_edit = needsApproval
-          ? await tx.userEdit.create({
-              data: {
-                userId: user.id,
-                ...updatedData,
-                requestType: "edit",
-              },
-            })
-          : await tx.user.update({
-              where: { id: req.body.id },
-              data: updatedData,
-            });
+      const user_edit = needsApproval
+        ? await tx.userEdit.create({
+            data: {
+              userId: user.id,
+              ...updatedData,
+              requestType: "edit",
+            },
+          })
+        : await tx.user.update({
+            where: { id: req.body.id },
+            data: updatedData,
+          });
 
-      let user_published;
-      if (user_edit.approvalStatus === "published") {
-        user_published = await tx.user.update({
-          where: { id: user.id },
-          data: updatedData,
-        });
-      }
-      return { user_edit, user_published };
+      return { user_edit };
     });
 
     return res.status(201).json({
