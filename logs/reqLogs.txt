@@ -308,3 +308,8 @@
 20250906	15:40:09	dc145c46-5657-4a83-a164-082a591947ae	POST	undefined	/api/users
 20250906	15:41:44	6043255f-0752-4f28-9064-0feb25530e72	POST	undefined	/api/users
 20250906	15:43:49	9339f04d-990e-4795-821d-e98f516d449c	POST	undefined	/api/users
+20250906	19:53:53	07c796c6-8a59-43dd-b09d-f8f41a6d0b07	POST	undefined	/auth
+20250906	19:54:15	c603e3fc-b73d-4389-a8b7-808f0eaad963	GET	undefined	/api/users
+20250906	19:55:51	984b3dbd-f662-4b46-ac19-4136eb869e77	GET	undefined	/api/users
+20250906	19:58:05	4dfebd74-fdd2-49d7-a4d0-2ce49dcdcdc3	GET	undefined	/api/users
+20250906	19:59:47	e5d14abc-6118-4940-afac-608913c61f4d	GET	undefined	/api/users

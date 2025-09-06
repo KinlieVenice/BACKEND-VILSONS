@@ -60,7 +60,10 @@ const createUser = async (req, res) => {
 
       const userRoleData = await Promise.all(
         roles.map(async (role) => {
-          return { roleId: await roleIdFinder(role), ...(needsApproval ?  {userEditId: user.id} : {userId: user.id}),};
+          return {
+            roleId: await roleIdFinder(role),
+            ...(needsApproval ? { userEditId: user.id } : { userId: user.id }),
+          };
         })
       );
 
@@ -212,18 +215,21 @@ const deleteUser = async (req, res) => {
   await prisma.user.delete({ where: { id: req.body.id } });
 };
 
-const fetchUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      include: {
-        role: true,
-      },
+      include: { roles: { include: { role: { select: { roleName: true } } } } },
     });
 
-    res.status(200).json(users);
+    const formattedUsers = users.map((user) => ({
+      ...user,
+      roles: user.roles.map((r) => r.role.roleName),
+    }));
+
+    res.status(200).json(formattedUsers);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Failed to fetch users." });
   }
 };
-module.exports = { createUser, editUser, fetchUsers };
+module.exports = { createUser, editUser, getAllUsers };
