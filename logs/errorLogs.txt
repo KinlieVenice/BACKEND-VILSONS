@@ -282,3 +282,5 @@ Unknown argument `refreshToken`. Available options are marked with ?.
 20250905	16:18:07	d6fdc3b1-87fe-4928-b8bc-147e3e22a8da	SyntaxError: Expected double-quoted property name in JSON at position 67 (line 6 column 1)
 20250905	16:19:58	7188607e-e228-4dbe-9d15-42bd7c51f666	SyntaxError: Expected double-quoted property name in JSON at position 67 (line 5 column 1)
 20250905	16:34:27	01ea031f-4e84-4950-8e38-29d00bc59f00	SyntaxError: Expected double-quoted property name in JSON at position 74 (line 8 column 1)
+20250907	22:14:44	14d731aa-c98d-4382-b981-5dcbac31243d	Error: Invalid old password
+20250907	22:21:06	96a5b828-7455-414a-970d-32282d50cc3c	Error: Invalid old password

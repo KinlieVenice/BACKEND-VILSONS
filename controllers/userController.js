@@ -150,55 +150,67 @@ const editUser = async (req, res) => {
   }
 };
 
-const editPassword = async (req, res) => {
-  const { password } = req.body;
+const editUserPassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
 
-  if (!req?.body?.id || !requestType)
-    return res.status(400).json({ message: "ID and requestType are required" });
+  if (!req?.body?.id) {
+    return res.status(400).json({ message: "ID is required" });
+  }
 
   const user = await prisma.user.findFirst({ where: { id: req.body.id } });
   if (!user) {
     return res
       .status(400)
-      .json({ message: `User with ${req.body.id} doesn't exist` });
+      .json({ message: `User with ID ${req.body.id} doesn't exist` });
+  }
+
+  const isMatch = await bcrypt.compare(oldPassword, user.hashPwd);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid old password" });
   }
 
   try {
+    const needsApproval = req.approval; 
+
+    const updatedData = {
+      fullName: user.fullName,
+      username: user.username,
+      phone: user.phone,
+      email: user.email,
+      hashPwd: await bcrypt.hash(newPassword, 10),
+      description: user.description,
+    };
+
     const result = await prisma.$transaction(async (tx) => {
-      const updatedData = {
-        fullName: user.fullName,
-        phone: user.phone,
-        email: user.email,
-        hashPwd: password ? await bcrypt.hash(password) : user.password,
-        description: user.description,
-      };
+      const user_edit = needsApproval
+        ? await tx.userEdit.create({
+            data: {
+              userId: user.id,
+              ...updatedData,
+              requestType: "edit",
+            },
+          })
+        : await tx.user.update({
+            where: { id: user.id },
+            data: updatedData,
+          });
 
-      const user_edit = await tx.userEdit.create({
-        data: {
-          userId: user.id,
-          ...updatedData,
-          requestType: requestType ?? user.requestType,
-        },
-      });
+      const message = needsApproval
+        ? "User password awaiting approval"
+        : "User password successfully changed";
 
-      let user_published;
-      if (user_edit.approvalStatus === "published") {
-        user_published = await tx.user.update({
-          where: { id: user.id },
-          data: updatedData,
-        });
-      }
-      return { user_edit, user_published };
+      return { message, hashPwd: updatedData.hashPwd };
     });
 
     return res.status(201).json({
-      message: "User edited successfully",
-      data: result,
+      message: result.message,
+      data: result.hashPwd,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 const deleteUser = async (req, res) => {
   if (!req?.body?.id)
@@ -232,4 +244,4 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch users." });
   }
 };
-module.exports = { createUser, editUser, getAllUsers };
+module.exports = { createUser, editUser, getAllUsers, editUserPassword };

@@ -9,4 +9,7 @@ router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_USER), userController.createUser)
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser);
 
+router.route("/password")
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);
+
 module.exports = router;
