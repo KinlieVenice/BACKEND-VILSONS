@@ -168,6 +168,16 @@ const editUserPassword = async (req, res) => {
   if (!isMatch) {
     return res.status(400).json({ message: "Invalid old password" });
   }
+  
+   const strongPasswordRegex =
+     /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+
+   if (!strongPasswordRegex.test(newPassword)) {
+     return res.status(400).json({
+       message:
+         "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",
+     });
+   }
 
   try {
     const needsApproval = req.approval; 
