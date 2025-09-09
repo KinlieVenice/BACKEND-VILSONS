@@ -168,26 +168,35 @@ const editUserPassword = async (req, res) => {
   if (!isMatch) {
     return res.status(400).json({ message: "Invalid old password" });
   }
-  
-   const strongPasswordRegex =
-     /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
 
-   if (!strongPasswordRegex.test(newPassword)) {
-     return res.status(400).json({
-       message:
-         "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",
-     });
-   }
+  const strongPasswordRegex =
+    /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+
+  if (!strongPasswordRegex.test(newPassword)) {
+    return res.status(400).json({
+      message:
+        "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",
+    });
+  }
+
+  const hashPwd = await bcrypt.hash(newPassword, 10);
+
+  const isUnchanged = await bcrypt.compare(oldPassword, hashPwd);
+  if (isUnchanged) {
+    return res
+      .status(400)
+      .json({ message: "New and old password cannot be the same" });
+  }
 
   try {
-    const needsApproval = req.approval; 
+    const needsApproval = req.approval;
 
     const updatedData = {
       fullName: user.fullName,
       username: user.username,
       phone: user.phone,
       email: user.email,
-      hashPwd: await bcrypt.hash(newPassword, 10),
+      hashPwd,
       description: user.description,
     };
 
@@ -220,7 +229,6 @@ const editUserPassword = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 const deleteUser = async (req, res) => {
   if (!req?.body?.id)
