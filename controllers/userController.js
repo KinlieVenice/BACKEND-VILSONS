@@ -231,19 +231,54 @@ const editUserPassword = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  if (!req?.body?.id)
+  if (!req?.body?.id) {
     return res.status(400).json({ message: "ID is required" });
+  }
 
-  const user = await prisma.user.findFirst({ where: { id: req.body.id } });
+  const user = await prisma.user.findUnique({ where: { id: req.body.id } });
 
   if (!user) {
     return res
-      .status(400)
-      .json({ message: `User with ${req.body.id} doesn't exist` });
+      .status(404)
+      .json({ message: `User with ID ${req.body.id} doesn't exist` });
   }
 
-  await prisma.user.delete({ where: { id: req.body.id } });
+  try {
+    const needsApproval = req.approval;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user_delete = needsApproval
+        ? await tx.userEdit.create({
+            data: {
+              userId: user.id,
+              fullName: user.fullName,
+              username: user.username,
+              phone: user.phone,
+              email: user.email,
+              hashPwd: user.hashPwd,
+              description: user.description,
+              requestType: "delete",
+            },
+          })
+        : await tx.user.delete({ where: { id: user.id } });
+
+      const message = needsApproval
+        ? "Delete is awaiting approval"
+        : "User deleted";
+
+      return { user_delete, message };
+    });
+
+    return res.status(needsApproval ? 202 : 200).json({
+      message: result.message,
+      data: result.user_delete,
+    });
+  } catch (err) {
+    console.error("Delete user error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
+
 
 const getAllUsers = async (req, res) => {
   try {
@@ -262,4 +297,4 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch users." });
   }
 };
-module.exports = { createUser, editUser, getAllUsers, editUserPassword };
+module.exports = { createUser, editUser, getAllUsers, editUserPassword, deleteUser };

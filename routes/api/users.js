@@ -7,7 +7,8 @@ const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST")
 router.route("/")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS), userController.getAllUsers)
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_USER), userController.createUser)
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser);
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser)
+.delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser);
 
 router.route("/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);

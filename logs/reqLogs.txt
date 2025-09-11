@@ -344,3 +344,15 @@
 20250908	10:07:35	315e13e8-e42d-4ca3-9b2c-d32c9247ecd0	PUT	undefined	/api/users/password
 20250908	10:07:42	67cbbf99-9a7a-489a-8d3f-1123627e4bf9	PUT	undefined	/api/users/password
 20250908	10:08:11	0e272baf-5a80-48c9-8121-74231e4199cc	PUT	undefined	/api/users/password
+20250911	15:11:02	76996375-9ea7-4a79-b5ac-1d2699a49a01	POST	undefined	/auth
+20250911	15:11:08	8ed8e6ad-232a-4095-8034-c19e061ea595	POST	undefined	/auth
+20250911	15:12:00	c1a42a1e-2320-4d6b-bd46-c70843dfaa1f	PUT	undefined	/api/users/password
+20250911	15:12:08	84d67824-83bb-4b29-baa9-c45ce2416595	PUT	undefined	/api/users/password
+20250911	15:14:11	2a233699-4eb8-477a-9747-4c6d06b1b783	PUT	undefined	/api/users/password
+20250911	15:42:39	9ccf0236-c748-48c8-bc7d-b35d443708a6	POST	undefined	/api/users
+20250911	15:42:46	7ee768ec-cb60-4f55-a552-bd36a2e852db	POST	undefined	/api/users
+20250911	15:43:08	5a3cc67a-f22f-4444-9d52-9e2c6174e750	POST	undefined	/auth
+20250911	15:43:54	3e571c26-7eb1-4dd1-90f4-422650c598c0	DELETE	undefined	/api/users
+20250911	15:43:58	29d72e0f-e15b-424b-9457-ef842fbc4b40	DELETE	undefined	/api/users
+20250911	15:46:30	5e8d6eba-2ba4-4df4-adf0-3f85fca3edbf	DELETE	undefined	/api/users
+20250911	15:47:30	2d75dac0-732d-4e47-8bf1-795453d3dc4d	DELETE	undefined	/api/users
