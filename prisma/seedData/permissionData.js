@@ -230,9 +230,27 @@ async function getPermissionData() {
     },
     {
       module: "Branches",
+      permissionName: "view_branch",
+      method: "view",
+      description: "View a new branch",
+    },
+    {
+      module: "Branches",
       permissionName: "create_branch",
       method: "create",
       description: "Create a new branch",
+    },
+    {
+      module: "Branches",
+      permissionName: "edit_branch",
+      method: "edit",
+      description: "Edit an existing branch",
+    },
+    {
+      module: "Branches",
+      permissionName: "delete_branch",
+      method: "delete",
+      description: "Delete an existing branch",
     },
     {
       module: "Users_Roles_And_Permissions",

@@ -286,3 +286,40 @@ Unknown argument `refreshToken`. Available options are marked with ?.
 20250907	22:21:06	96a5b828-7455-414a-970d-32282d50cc3c	Error: Invalid old password
 20250911	15:43:54	9cfd1bb8-cd8a-46e5-ba71-d6af13f1c13d	SyntaxError: Expected double-quoted property name in JSON at position 53 (line 3 column 1)
 20250912	20:08:10	8a487d70-ce9e-4a11-9f20-43ad745ca17c	ReferenceError: branchName is not defined
+20250913	19:57:21	0aa21772-9345-43a4-8640-5594534a2cb6	PrismaClientValidationError: 
+Invalid `prisma.branch.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\branchController.js:86:46
+
+  83     .status(404)
+  84     .json({ message: `User with ${req.body.id} not found` });
+  85 
+→ 86 const existingBranch = await prisma.branch.findFirst({
+       where: {
+         name: "yow",
+         ~~~~
+     ?   AND?: BranchWhereInput | BranchWhereInput[],
+     ?   OR?: BranchWhereInput[],
+     ?   NOT?: BranchWhereInput | BranchWhereInput[],
+     ?   id?: StringFilter | String,
+     ?   branchName?: StringFilter | String,
+     ?   description?: StringNullableFilter | String | Null,
+     ?   address?: StringFilter | String,
+     ?   createdAt?: DateTimeFilter | DateTime,
+     ?   createdByUser?: StringFilter | String,
+     ?   updatedAt?: DateTimeFilter | DateTime,
+     ?   updatedByUser?: StringFilter | String,
+     ?   JobOrders?: JobOrderListRelationFilter,
+     ?   OtherIncomes?: OtherIncomeListRelationFilter,
+     ?   Equipments?: EquipmentListRelationFilter,
+     ?   Overheads?: OverheadListRelationFilter,
+     ?   JobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   OtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+     ?   EquipmentEdit?: EquipmentEditListRelationFilter,
+     ?   OverheadExpensesEdit?: OverheadEditListRelationFilter,
+     ?   edits?: BranchEditListRelationFilter,
+     ?   createdBy?: UserScalarRelationFilter | UserWhereInput,
+     ?   updatedBy?: UserScalarRelationFilter | UserWhereInput
+       }
+     })
+
+Unknown argument `name`. Available options are marked with ?.

@@ -14,7 +14,22 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_BRANCH),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_BRANCH),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.EDIT_BRANCH),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.DELETE_BRANCH),
       approval: false,
     },
     {
@@ -338,7 +353,28 @@ async function getRolePermissionData() {
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_BRANCH
+      ),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(
         PERMISSIONS_LIST.CREATE_BRANCH
+      ),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_BRANCH
+      ),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_BRANCH
       ),
       approval: true,
     },
