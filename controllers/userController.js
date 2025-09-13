@@ -45,8 +45,8 @@ const createUser = async (req, res) => {
       email,
       hashPwd,
       ...(description ? { description } : {}),
-      createdById: req.id || null,
-      updatedById: req.id || null,
+      createdByUser: req.username || null,
+      updatedByUser: req.username || null,
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -92,7 +92,7 @@ const createUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const { name, username, phone, email, description } = req.body;
+  const { name, phone, email, description } = req.body;
 
   if (!req?.body?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -103,10 +103,28 @@ const editUser = async (req, res) => {
       .status(400)
       .json({ message: `User with ${req.body.id} doesn't exist` });
 
+
   try {
     let message;
     let needsApproval = req.approval;
     console.log(needsApproval);
+
+    const existingUser = await prisma.user.findFirst({
+      where: { email },
+    });
+    const pendingEdit = await prisma.userEdit.findFirst({
+      where: {
+        email,
+        approvalStatus: "pending",
+      },
+    });
+
+    if (existingUser || pendingEdit) {
+      return res
+        .status(400)
+        .json({ message: "Email already in use or pending approval" });
+    }
+
     const updatedData = {
       // ...(fullName ? { fullName } : {}),
       //...(phone ? { phone } : {}),
@@ -115,13 +133,13 @@ const editUser = async (req, res) => {
       // ...(description ? { description } : {}),
 
       fullName: name ?? user.fullName,
-      username: username ?? user.username,
+      username: user.username,
       phone: phone ?? user.phone,
       email: email ?? user.email,
       hashPwd: user.hashPwd,
       description: description ?? user.description,
       roles: user.roles,
-      updatedById: req.id,
+      updatedByUser: req.username,
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -130,6 +148,7 @@ const editUser = async (req, res) => {
             data: {
               userId: user.id,
               ...updatedData,
+              createdByUser: req.username,
               requestType: "edit",
             },
           })
@@ -231,7 +250,7 @@ const editUserPassword = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  if (!req?.body?.id) {
+  if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
   }
 
@@ -242,6 +261,8 @@ const deleteUser = async (req, res) => {
       .status(404)
       .json({ message: `User with ID ${req.body.id} doesn't exist` });
   }
+
+  if (user.username === "superadmin") return res.status(400).json({ "message": "Superadmin cannot be deleted"});
 
   try {
     const needsApproval = req.approval;
@@ -258,6 +279,8 @@ const deleteUser = async (req, res) => {
               hashPwd: user.hashPwd,
               description: user.description,
               requestType: "delete",
+              createdByUser: req.username,
+              updatedByUser: req.username
             },
           })
         : await tx.user.delete({ where: { id: user.id } });
@@ -275,10 +298,9 @@ const deleteUser = async (req, res) => {
     });
   } catch (err) {
     console.error("Delete user error:", err);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message });
   }
 };
-
 
 const getAllUsers = async (req, res) => {
   try {
@@ -297,4 +319,11 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch users." });
   }
 };
-module.exports = { createUser, editUser, getAllUsers, editUserPassword, deleteUser };
+
+module.exports = {
+  createUser,
+  editUser,
+  getAllUsers,
+  editUserPassword,
+  deleteUser,
+};

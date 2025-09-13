@@ -14,6 +14,11 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_BRANCH),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(
         PERMISSIONS_LIST.VIEW_EXPENSES_OVERVIEW
       ),
@@ -327,6 +332,13 @@ async function getRolePermissionData() {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(
         PERMISSIONS_LIST.VIEW_REVENUE_PROFIT_OVERVIEW
+      ),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_BRANCH
       ),
       approval: true,
     },

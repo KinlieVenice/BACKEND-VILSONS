@@ -30,9 +30,9 @@ model User {
   approvalStatus ApprovalStatus @default(published)
 
   createdAt   DateTime @default(now())
-  createdById String?
+  createdByUser String?
   updatedAt   DateTime @updatedAt
-  updatedById String?
+  updatedByUser String?
 
   admin       Admin[]
   customer    Customer[]
@@ -43,6 +43,7 @@ model User {
 
   edits           UserEdit[] @relation("UserEditedVer")
   createdUsers    User[]     @relation("CreatedBy")
+  updatedUsers    User[]     @relation("UpdatedBy")
   createdUserEdit UserEdit[] @relation("CreatedBy")
 
   createdRole            Role[]            @relation("CreatedBy")
@@ -53,19 +54,39 @@ model User {
   createdTransactionEdit TransactionEdit[] @relation("CreatedBy")
   createdJobOrder        JobOrder[]        @relation("CreatedBy")
   createdJobOrderEdit    JobOrderEdit[]    @relation("CreatedBy")
+  createdContractorPay     ContractorPay[]     @relation("CreatedBy")
+  createdContractorPayEdit ContractorPayEdit[] @relation("CreatedBy")
+  createdEmployeeSalary     EmployeeSalary[]     @relation("CreatedBy")
+  createdEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("CreatedBy")
+  createdEquipment     Equipment[]     @relation("CreatedBy")
+  createdEquipmentEdit EquipmentEdit[] @relation("CreatedBy")
+  createdOtherIncome     OtherIncome[]     @relation("CreatedBy")
+  createdOtherIncomeEdit OtherIncomeEdit[] @relation("CreatedBy")
+  createdOverhead     Overhead[]     @relation("CreatedBy")
+  createdOverheadEdit OverheadEdit[] @relation("CreatedBy")
 
   transferredTruckOwnership TruckOwnership[] @relation("TransferredBy")
 
   updatedUserEdits UserEdit[] @relation("UpdatedBy")
-
   updatedBranches        Branch[]          @relation("UpdatedBy")
   updatedBranchEdits     BranchEdit[]      @relation("UpdatedBy")
   updatedTransaction     Transaction[]     @relation("UpdatedBy")
   updatedTransactionEdit TransactionEdit[] @relation("UpdatedBy")
   updatedJobOrder        JobOrder[]        @relation("UpdatedBy")
   updatedJobOrderEdit    JobOrderEdit[]    @relation("UpdatedBy")
+  updatedContractorPay     ContractorPay[]     @relation("UpdatedBy")
+  updatedContractorPayEdit ContractorPayEdit[] @relation("UpdatedBy")
+  updatedEmployeeSalary     EmployeeSalary[]     @relation("UpdatedBy")
+  updatedEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("UpdatedBy")
+  updatedEquipment     Equipment[]     @relation("UpdatedBy")
+  updatedEquipmentEdit EquipmentEdit[] @relation("UpdatedBy")
+  updatedOtherIncome     OtherIncome[]     @relation("UpdatedBy")
+  updatedOtherIncomeEdit OtherIncomeEdit[] @relation("UpdatedBy")
+  updatedOverhead     Overhead[]     @relation("UpdatedBy")
+  updatedOverheadEdit OverheadEdit[] @relation("UpdatedBy")
 
-  createdBy User? @relation("CreatedBy", fields: [createdById], references: [id])
+  createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model UserEdit {
@@ -73,7 +94,7 @@ model UserEdit {
   userId String?
 
   fullName        String  @db.VarChar(100)
-  username    String  @unique @db.VarChar(100)
+  username    String  @db.VarChar(100)
   phone       String @db.VarChar(13)
   email       String  @db.VarChar(100)
   hashPwd     String  @db.VarChar(255)
@@ -83,54 +104,29 @@ model UserEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime  @default(now())
-  createdById String?
+  createdByUser String?
   updatedAt   DateTime? @updatedAt
-  updatedById String?
+  updatedByUser String?
 
   rolesEdit       UserRoleEdit[]
 
 
-  user      User? @relation("UserEditedVer", fields: [userId], references: [id] )
-  updatedBy User? @relation("UpdatedBy", fields: [updatedById], references: [id])
-  createdBy User? @relation("CreatedBy", fields: [createdById], references: [id])
+  user      User? @relation("UserEditedVer", fields: [userId], references: [id], onDelete: Cascade)
+  updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
 }
 
 model Admin {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  createdContractorPay     ContractorPay[]     @relation("CreatedBy")
-  updatedContractorPay     ContractorPay[]     @relation("UpdatedBy")
-  createdContractorPayEdit ContractorPayEdit[] @relation("CreatedBy")
-  updatedContractorPayEdit ContractorPayEdit[] @relation("UpdatedBy")
-
-  createdEmployeeSalary     EmployeeSalary[]     @relation("CreatedBy")
-  updatedEmployeeSalary     EmployeeSalary[]     @relation("UpdatedBy")
-  createdEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("CreatedBy")
-  updatedEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("UpdatedBy")
-
-  createdEquipment     Equipment[]     @relation("CreatedBy")
-  updatedEquipment     Equipment[]     @relation("UpdatedBy")
-  createdEquipmentEdit EquipmentEdit[] @relation("CreatedBy")
-  updatedEquipmentEdit EquipmentEdit[] @relation("UpdatedBy")
-
-  createdOtherIncome     OtherIncome[]     @relation("CreatedBy")
-  updatedOtherIncome     OtherIncome[]     @relation("UpdatedBy")
-  createdOtherIncomeEdit OtherIncomeEdit[] @relation("CreatedBy")
-  updatedOtherIncomeEdit OtherIncomeEdit[] @relation("UpdatedBy")
-
-  createdOverhead     Overhead[]     @relation("CreatedBy")
-  updatedOverhead     Overhead[]     @relation("UpdatedBy")
-  createdOverheadEdit OverheadEdit[] @relation("CreatedBy")
-  updatedOverheadEdit OverheadEdit[] @relation("UpdatedBy")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Customer {
   id     String           @id @default(uuid())
   userId String
   trucks TruckOwnership[]
-  user   User             @relation(fields: [userId], references: [id])
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Contractor {
@@ -140,28 +136,27 @@ model Contractor {
 
   contractorPay ContractorPay[]
   JobOrder      JobOrder[]
-  user          User            @relation(fields: [userId], references: [id])
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Employee {
   id             String           @id @default(uuid())
   userId         String
-  user           User             @relation(fields: [userId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   employeeSalary EmployeeSalary[]
 }
 
 model Branch {
   id String @id @default(uuid())
 
-  branchName           String         @db.VarChar(100)
-  description    String
+  branchName           String        @unique @db.VarChar(100)
+  description    String?
   address        String
-  approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   JobOrders    JobOrder[]
   OtherIncomes OtherIncome[]
@@ -175,29 +170,29 @@ model Branch {
 
   edits BranchEdit[]
 
-  createdBy User @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy User @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model BranchEdit {
   id       String  @id @default(uuid())
-  branchId String
+  branchId String?
 
   branchName        String @db.VarChar(100)
-  description String
+  description String?
   address     String
 
   requestType    RequestType
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime  @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime? @updatedAt
-  updatedById String
+  updatedByUser String
 
-  branch    Branch @relation(fields: [branchId], references: [id])
-  createdBy User   @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy User   @relation("UpdatedBy", fields: [updatedById], references: [id])
+  branch    Branch? @relation(fields: [branchId], references: [id])
+  createdBy User   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User   @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model Truck {
@@ -207,12 +202,12 @@ model Truck {
   make        String   @db.VarChar(20)
   model       String   @db.VarChar(20)
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
 
   owners    TruckOwnership[]
   jobOrders JobOrder[]
 
-  createdBy User @relation("CreatedBy", fields: [createdById], references: [id])
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
 }
 
 model TruckOwnership {
@@ -223,8 +218,8 @@ model TruckOwnership {
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
 
-  transferredById String
-  transferredBy   User   @relation("TransferredBy", fields: [transferredById], references: [id])
+  transferredByUser String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)
 
   startDate DateTime  @default(now())
   endDate   DateTime?
@@ -240,15 +235,15 @@ model ContractorPay {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   edits ContractorPayEdit[]
 
   contractor Contractor @relation(fields: [contractorId], references: [id])
-  createdBy  Admin      @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy  Admin      @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy  User      @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy  User      @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model ContractorPayEdit {
@@ -262,12 +257,12 @@ model ContractorPayEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
-  createdBy     Admin          @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy     Admin          @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy     User          @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy     User          @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   contractorPay ContractorPay @relation(fields: [contractorPayId], references: [id])
 }
 
@@ -291,14 +286,14 @@ model EmployeeSalary {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   edits     EmployeeSalaryEdit[]
   employee  Employee             @relation(fields: [employeeId], references: [id])
-  createdBy Admin                @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy Admin                @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User                @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User                @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model EmployeeSalaryEdit {
@@ -315,21 +310,21 @@ model EmployeeSalaryEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
-  createdBy      Admin           @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy      Admin           @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy      User           @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy      User           @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   employeeSalary EmployeeSalary @relation(fields: [employeeSalaryId], references: [id])
 }
 
 model ActivityLog {
   id        String   @id @default(uuid())
-  userId    String
+  userName    String
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userName], references: [id], onDelete: NoAction)
 }
 
 model Transaction {
@@ -343,14 +338,14 @@ model Transaction {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   edits     TransactionEdit[]
   jobOrder  JobOrder          @relation(fields: [jobOrderId], references: [id])
-  createdBy User              @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy User              @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model TransactionEdit {
@@ -365,13 +360,13 @@ model TransactionEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   transaction Transaction @relation(fields: [transactionId], references: [id])
-  createdBy   User        @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy   User        @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model OtherIncome {
@@ -385,13 +380,13 @@ model OtherIncome {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   edits     OtherIncomeEdit[]
-  createdBy Admin             @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy Admin             @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model OtherIncomeEdit {
@@ -404,13 +399,13 @@ model OtherIncomeEdit {
   branch      Branch  @relation(fields: [branchId], references: [id])
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   otherIncome OtherIncome @relation(fields: [otherIncomeId], references: [id])
-  createdBy   Admin        @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy   Admin        @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model Equipment {
@@ -424,15 +419,15 @@ model Equipment {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   edits EquipmentEdit[]
 
   branch    Branch @relation(fields: [branchId], references: [id])
-  createdBy Admin  @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy Admin  @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model EquipmentEdit {
@@ -448,14 +443,14 @@ model EquipmentEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   branch    Branch    @relation(fields: [branchId], references: [id])
   equipment Equipment @relation(fields: [equipmentId], references: [id])
-  createdBy Admin     @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy Admin     @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model Material {
@@ -499,15 +494,15 @@ model JobOrder {
   edits JobOrderEdit[]
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   truck      Truck      @relation(fields: [truckId], references: [id])
   branch     Branch     @relation(fields: [branchId], references: [id])
   contractor Contractor @relation(fields: [contractorId], references: [id])
-  createdBy  User       @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy  User       @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy  User       @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model JobOrderEdit {
@@ -525,14 +520,14 @@ model JobOrderEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
   branch      Branch   @relation(fields: [branchId], references: [id])
 
   jobOrder  JobOrder @relation(fields: [jobOrderId], references: [id])
-  createdBy User     @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy User     @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model Overhead {
@@ -545,15 +540,15 @@ model Overhead {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   edits OverheadEdit[]
 
   branch    Branch @relation(fields: [branchId], references: [id])
-  createdBy Admin  @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy Admin  @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username])
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username])
 }
 
 model OverheadEdit {
@@ -568,14 +563,14 @@ model OverheadEdit {
   approvalStatus ApprovalStatus @default(pending)
 
   createdAt   DateTime @default(now())
-  createdById String
+  createdByUser String
   updatedAt   DateTime @updatedAt
-  updatedById String
+  updatedByUser String
 
   branch    Branch   @relation(fields: [branchId], references: [id])
   overhead  Overhead @relation(fields: [overheadId], references: [id])
-  createdBy Admin    @relation("CreatedBy", fields: [createdById], references: [id])
-  updatedBy Admin    @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdBy User    @relation("CreatedBy", fields: [createdByUser], references: [username])
+  updatedBy User    @relation("UpdatedBy", fields: [updatedByUser], references: [username])
 }
 
 model UserRole {
@@ -583,8 +578,8 @@ model UserRole {
   userId String
   roleId String
 
-  user           User           @relation(fields: [userId], references: [id])
-  role           Role           @relation(fields: [roleId], references: [id])
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
 }
@@ -595,8 +590,8 @@ model UserRoleEdit {
   roleId String
   approvalStatus ApprovalStatus @default(pending)
 
-  user           UserEdit?           @relation(fields: [userEditId], references: [id])
-  role           Role           @relation(fields: [roleId], references: [id])
+  user           UserEdit?           @relation(fields: [userEditId], references: [id], onDelete: Cascade)
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userEditId, roleId])
 }
@@ -605,15 +600,15 @@ model Role {
   id             String           @id @default(uuid())
   roleName           String           @db.VarChar(100) @unique
   baseRoleId     String?
-  baseRole       Role?             @relation("BaseRole", fields: [baseRoleId], references: [id])
+  baseRole       Role?             @relation("BaseRole", fields: [baseRoleId], references: [id], onDelete: Cascade)
   baseRoles      Role[]           @relation("BaseRole")
   isCustom       Boolean?
   users          UserRole[]
   userEdits          UserRoleEdit[]
   permissions    RolePermission[]
 
-  createdById String?
-  createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id])
+  createdByUser String?
+  createdBy   User?   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
 }
 
 model Permission {
@@ -632,8 +627,8 @@ model RolePermission {
 
   approval Boolean
 
-  role       Role       @relation(fields: [roleId], references: [id])
-  permission Permission @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
 }
@@ -679,6 +674,7 @@ enum Module {
   Job_Orders @map("Job Orders")
   Other_Incomes @map("Other Incomes")
   Transactions @map("Transactions")
+  Branches
   Finances_Revenue_And_Profit @map("Finances - Revenue and Profit")
   Finances_Operational_Materials @map("Finances - Operational - Materials")
   Finances_Operational_Equipment @map("Finances - Operational - Equipment")

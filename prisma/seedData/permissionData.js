@@ -229,6 +229,12 @@ async function getPermissionData() {
       description: "Delete a user account and roles",
     },
     {
+      module: "Branches",
+      permissionName: "create_branch",
+      method: "create",
+      description: "Create a new branch",
+    },
+    {
       module: "Users_Roles_And_Permissions",
       permissionName: "view_roles_permissions",
       method: "view",

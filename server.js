@@ -30,6 +30,7 @@ app.use("/logout", require("./routes/logout"));
 app.use(verifyJWT);
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));
+app.use("/api/branches", require("./routes/api/branches"));
 
 app.all(/^.*$/, (req, res) => {
   res.status(404);

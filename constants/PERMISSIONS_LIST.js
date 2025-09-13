@@ -37,6 +37,7 @@ const PERMISSIONS_LIST = {
   EDIT_USER_DETAILS: "edit_user_details",
   EDIT_USER_PASSWORD: "edit_user_password",
   DELETE_USER: "delete_user",
+  CREATE_BRANCH: "create_branch",
   VIEW_ROLES_PERMISSIONS: "view_roles_permissions",
   CREATE_ROLES_PERMISSIONS: "create_roles_permissions",
   EDIT_ROLES_PERMISSIONS: "edit_roles_permissions",
