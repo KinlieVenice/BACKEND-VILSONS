@@ -103,7 +103,6 @@ const editUser = async (req, res) => {
       .status(400)
       .json({ message: `User with ${req.body.id} doesn't exist` });
 
-
   try {
     let message;
     let needsApproval = req.approval;
@@ -262,7 +261,8 @@ const deleteUser = async (req, res) => {
       .json({ message: `User with ID ${req.body.id} doesn't exist` });
   }
 
-  if (user.username === "superadmin") return res.status(400).json({ "message": "Superadmin cannot be deleted"});
+  if (user.username === "superadmin")
+    return res.status(400).json({ message: "Superadmin cannot be deleted" });
 
   try {
     const needsApproval = req.approval;
@@ -280,7 +280,7 @@ const deleteUser = async (req, res) => {
               description: user.description,
               requestType: "delete",
               createdByUser: req.username,
-              updatedByUser: req.username
+              updatedByUser: req.username,
             },
           })
         : await tx.user.delete({ where: { id: user.id } });
@@ -304,9 +304,44 @@ const deleteUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
+    const role = req?.query?.role;
+    const search = req?.query?.search;
+    const page = req?.query?.page && parseInt(req.query.page, 10);
+    const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+
+    let where = {};
+
+    if (role) {
+      where.roles = {
+        some: {
+          role: {
+            roleName: role,
+          },
+        },
+      };
+    }
+
+    if (search) {
+      where.OR = [
+        { fullName: { contains: search } },
+        { username: { contains: search } },
+      ];
+    }
+
     const users = await prisma.user.findMany({
-      include: { roles: { include: { role: { select: { roleName: true } } } } },
+      where,
+      ...(page && limit ? {skip: (page - 1) * limit} : {}),
+      ...(limit ? {take: limit} : {}),
+      include: {
+        roles: {
+          include: {
+            role: { select: { roleName: true } },
+          },
+        },
+      },
     });
+
+    const total = await prisma.user.count({ where });
 
     const formattedUsers = users.map((user) => ({
       ...user,
