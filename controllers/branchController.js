@@ -112,7 +112,11 @@ const editBranch = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       const branch_edit = needsApproval
         ? await tx.branchEdit.create({
-            data: { ...updatedData, createdByUser: req.username, requestType: "edit" },
+            data: {
+              ...updatedData,
+              createdByUser: req.username,
+              requestType: "edit",
+            },
           })
         : await tx.branch.update({
             where: { id: req.body.id },
@@ -123,22 +127,28 @@ const editBranch = async (req, res) => {
         ? "Branch edit is awaiting approval"
         : "Branch successfully edited";
 
-        return branch_edit
+      return branch_edit;
     });
     return res.status(201).json({
       message,
-      data: result
-    })
+      data: result,
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
 
 const deleteBranch = async (req, res) => {
-  if (!req.params.id) return res.status(400).json({ message: "ID is required" });
+  if (!req.params.id)
+    return res.status(400).json({ message: "ID is required" });
 
-  const branch = await prisma.branch.findFirst({ where: { id: req.params.id }});
-  if (!branch) return res.status(404).json({ message: `Branch with ${req.params.id} not found` });
+  const branch = await prisma.branch.findFirst({
+    where: { id: req.params.id },
+  });
+  if (!branch)
+    return res
+      .status(404)
+      .json({ message: `Branch with ${req.params.id} not found` });
 
   try {
     const needsApproval = req.approval;
@@ -152,30 +162,43 @@ const deleteBranch = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const branch_delete = needsApproval 
-      ? await tx.branchEdit.create({
-        data: {
-          branchId: branch.id,
-          ...deletedData,
-          createdByUser: req.username,
-        }
-      }) 
-      : await tx.branch.delete({
-        where: { id: branch.id }
-      })
+      const branch_delete = needsApproval
+        ? await tx.branchEdit.create({
+            data: {
+              branchId: branch.id,
+              ...deletedData,
+              createdByUser: req.username,
+            },
+          })
+        : await tx.branch.delete({
+            where: { id: branch.id },
+          });
 
-      message = needsApproval ? "Branch delete awaiting approval" : "Branch successfully deleted"
+      message = needsApproval
+        ? "Branch delete awaiting approval"
+        : "Branch successfully deleted";
 
-      return branch_delete.branchName
-    })
+      return branch_delete.branchName;
+    });
 
-    return res.status(201).json({ 
+    return res.status(201).json({
       message,
-      data: result
-    })
+      data: result,
+    });
   } catch (err) {
-    return res.status(500).json({ message: err.message })
+    return res.status(500).json({ message: err.message });
   }
-}
+};
 
-module.exports = { createBranch, editBranch, deleteBranch };
+const getAllBranches = async (req, res) => {
+  try {
+    const branches = await prisma.branch.findMany();
+    return res.status(201).json({
+      data: branches,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { createBranch, editBranch, deleteBranch, getAllBranches };
