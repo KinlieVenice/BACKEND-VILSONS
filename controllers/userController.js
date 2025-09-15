@@ -348,7 +348,7 @@ const getAllUsers = async (req, res) => {
       roles: user.roles.map((r) => r.role.roleName),
     }));
 
-    res.status(200).json(formattedUsers);
+    res.status(200).json(formattedUsers, total);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Failed to fetch users." });

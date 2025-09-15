@@ -192,7 +192,27 @@ const deleteBranch = async (req, res) => {
 
 const getAllBranches = async (req, res) => {
   try {
-    const branches = await prisma.branch.findMany();
+    const search = req?.query?.search;
+    const page = req?.query?.page && parseInt(req.query.page, 10);
+    const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+
+    let where = {};
+
+    if (search) {
+      where.OR = [
+        { branchName: { contains: search } },
+        { address: { contains: search } },
+      ];
+    }
+
+    const branches = await prisma.branch.findMany({
+      where,
+      ...(page && limit ? { skip: (page - 1) * limit } : {}),
+      ...(limit ? { take: limit } : {}),
+    });
+
+    const total = await prisma.branch.count({ where });
+
     return res.status(201).json({
       data: branches,
     });
