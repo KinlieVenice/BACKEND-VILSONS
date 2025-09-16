@@ -1,6 +1,5 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
-const sanitizeAndValidate = require("../utils/sanitizeData");
 
 /*
   plate       String   @db.VarChar(10)
@@ -18,19 +17,13 @@ const createTruck = async (req, res) => {
       .json({ message: "Plate number, make, and model are required" });
 
   try {
-    const {
-      plate: sanitizedPlate,
-      make: sanitizedMake,
-      model: sanitizedModel,
-    } = sanitizeAndValidate({ plate, make, model });
-
     const existingTruck = await prisma.truck.findFirst({
-      where: { plate: sanitizedPlate },
+      where: { plate },
     });
 
     const pendingTruck = await prisma.truckEdit.findFirst({
       where: {
-        plate: sanitizedPlate,
+        plate,
         approvalStatus: "pending",
       },
     });
@@ -45,9 +38,9 @@ const createTruck = async (req, res) => {
     let message;
 
     const truckData = {
-      plate: sanitizedPlate,
-      make: sanitizedMake,
-      model: sanitizedModel,
+      plate,
+      make,
+      model,
       createdByUser: req.username,
       updatedByUser: req.username,
     };

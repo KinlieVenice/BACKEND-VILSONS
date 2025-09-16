@@ -432,3 +432,4 @@ Unknown argument `approvalStatus`. Available options are marked with ?.
 20250916	21:51:51	de937467-7337-4e59-aaf9-c717eecf1f6d	Error: Invalid input in description: HTML or scripts are not allowed
 20250916	21:52:42	11eefe16-3a36-4cd1-bc54-64cbb3eebbe8	Error: Invalid input in description: HTML or scripts are not allowed
 20250916	21:53:19	d1facb1a-0566-4ca2-9dfa-f9b6b86063b8	Error: Invalid input in description: HTML or scripts are not allowed
+20250916	22:25:01	77af2d98-764b-4049-bfe9-5bc9b6cca85b	SyntaxError: Expected ',' or '}' after property value in JSON at position 153 (line 6 column 4)

@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3550;
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const verifyJWT = require('./middleware/verifyJWT');
+const sanitizeInput = require('./middleware/sanitizeInput');
 
 // middleware for log handling
 app.use(logger);
@@ -22,6 +23,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use(cookieParser());
+
+app.use(sanitizeInput);
 
 app.use("/auth", require("./routes/auth"));
 app.use("/refresh", require("./routes/refresh"));

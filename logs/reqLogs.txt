@@ -552,3 +552,13 @@
 20250916	21:53:19	bff970e7-81d9-468c-a511-64cbd764800d	POST	undefined	/api/users
 20250916	21:55:11	c7f917e7-8622-4138-9e4b-4e3191908b7b	POST	undefined	/api/users
 20250916	21:55:20	27547074-0d6d-41b8-95f9-00349e43080b	POST	undefined	/api/users
+20250916	22:19:41	d59e9ddf-0dc1-4c8d-8435-013d3e305904	POST	undefined	/api/users
+20250916	22:20:01	f922ff7a-c10e-43a1-b629-5db8b20e09f2	POST	undefined	/api/users
+20250916	22:20:04	6dcba9e0-87a2-4f5a-84a9-447c83dc2f8b	POST	undefined	/api/users
+20250916	22:23:13	c3e6e36f-57e5-44a3-b599-e8d45ce6c2bf	POST	undefined	/api/trucks
+20250916	22:23:21	58088e92-4e99-4b80-83db-48666d670256	POST	undefined	/api/trucks
+20250916	22:23:54	edbd932d-0a94-4b8e-aa97-8e24c71739c6	POST	undefined	/api/trucks
+20250916	22:24:10	853dbd5c-a437-4c2c-96a6-c4c56e794984	POST	undefined	/api/trucks
+20250916	22:25:01	922abdf0-f268-452e-a192-e5950d096b85	POST	undefined	/api/users
+20250916	22:25:05	5cc83530-e108-4c0c-96f1-724ea6999f1b	POST	undefined	/api/users
+20250916	22:25:09	b413b1bc-f971-491e-9182-1c8b20a2a254	POST	undefined	/api/users
