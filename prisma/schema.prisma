@@ -50,6 +50,7 @@ model User {
   createdBranches        Branch[]          @relation("CreatedBy")
   createdBranchEdit      BranchEdit[]      @relation("CreatedBy")
   createdTrucks          Truck[]           @relation("CreatedBy")
+  createdTruckEdit          TruckEdit[]           @relation("CreatedBy")
   createdTransaction     Transaction[]     @relation("CreatedBy")
   createdTransactionEdit TransactionEdit[] @relation("CreatedBy")
   createdJobOrder        JobOrder[]        @relation("CreatedBy")
@@ -70,6 +71,8 @@ model User {
   updatedUserEdits UserEdit[] @relation("UpdatedBy")
   updatedBranches        Branch[]          @relation("UpdatedBy")
   updatedBranchEdits     BranchEdit[]      @relation("UpdatedBy")
+  updatedTruck          Truck[]           @relation("UpdatedBy")
+  updatedTruckEdit          TruckEdit[]           @relation("UpdatedBy")
   updatedTransaction     Transaction[]     @relation("UpdatedBy")
   updatedTransactionEdit TransactionEdit[] @relation("UpdatedBy")
   updatedJobOrder        JobOrder[]        @relation("UpdatedBy")
@@ -198,16 +201,39 @@ model BranchEdit {
 model Truck {
   id String @id @default(uuid())
 
-  plate       String   @db.VarChar(10)
-  make        String   @db.VarChar(20)
+  plate       String   @db.VarChar(10) @unique
+  make        String   @db.VarChar(20) 
   model       String   @db.VarChar(20)
   createdAt   DateTime @default(now())
   createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
 
   owners    TruckOwnership[]
   jobOrders JobOrder[]
 
+  edits    TruckEdit[]
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model TruckEdit {
+  id String @id @default(uuid())
+  truckId String?
+
+  plate       String   @db.VarChar(10)
+  make        String   @db.VarChar(20)
+  model       String   @db.VarChar(20)
+  approvalStatus ApprovalStatus @default(pending)
+  requestType RequestType @default(create)
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  truck   Truck?  @relation(fields: [truckId], references: [id])
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model TruckOwnership {

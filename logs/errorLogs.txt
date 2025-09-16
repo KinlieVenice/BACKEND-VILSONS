@@ -323,3 +323,112 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\branchController.js
      })
 
 Unknown argument `name`. Available options are marked with ?.
+20250916	19:34:54	745da7b8-aea6-4e21-bc8e-f9b08e928cc0	PrismaClientValidationError: 
+Invalid `prisma.branch.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:20:49
+
+  17 .status(400)
+  18 .json({ message: "Plate number, make, and model are required" });
+  19 
+→ 20 const existingTruck = await prisma.branch.findUnique({
+       where: "1234"
+              ~~~~~~
+     })
+
+Argument `where`: Invalid value provided. Expected BranchWhereUniqueInput, provided String.
+20250916	19:35:05	7600d325-0fbc-4d49-b327-ae2835bb1724	PrismaClientValidationError: 
+Invalid `prisma.branch.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:20:49
+
+  17 .status(400)
+  18 .json({ message: "Plate number, make, and model are required" });
+  19 
+→ 20 const existingTruck = await prisma.branch.findFirst({
+       where: "1234"
+              ~~~~~~
+     })
+
+Argument `where`: Invalid value provided. Expected BranchWhereInput, provided String.
+20250916	19:36:36	d1782667-e30b-4c68-b64b-f2318aa736a0	PrismaClientValidationError: 
+Invalid `prisma.branch.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:20:45
+
+  17     .status(400)
+  18     .json({ message: "Plate number, make, and model are required" });
+  19 
+→ 20 const existingTruck = await prisma.branch.findFirst({
+       where: {
+         plate: "1234",
+         ~~~~~
+     ?   AND?: BranchWhereInput | BranchWhereInput[],
+     ?   OR?: BranchWhereInput[],
+     ?   NOT?: BranchWhereInput | BranchWhereInput[],
+     ?   id?: StringFilter | String,
+     ?   branchName?: StringFilter | String,
+     ?   description?: StringNullableFilter | String | Null,
+     ?   address?: StringFilter | String,
+     ?   createdAt?: DateTimeFilter | DateTime,
+     ?   createdByUser?: StringFilter | String,
+     ?   updatedAt?: DateTimeFilter | DateTime,
+     ?   updatedByUser?: StringFilter | String,
+     ?   JobOrders?: JobOrderListRelationFilter,
+     ?   OtherIncomes?: OtherIncomeListRelationFilter,
+     ?   Equipments?: EquipmentListRelationFilter,
+     ?   Overheads?: OverheadListRelationFilter,
+     ?   JobOrderEdit?: JobOrderEditListRelationFilter,
+     ?   OtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+     ?   EquipmentEdit?: EquipmentEditListRelationFilter,
+     ?   OverheadExpensesEdit?: OverheadEditListRelationFilter,
+     ?   edits?: BranchEditListRelationFilter,
+     ?   createdBy?: UserScalarRelationFilter | UserWhereInput,
+     ?   updatedBy?: UserScalarRelationFilter | UserWhereInput
+       }
+     })
+
+Unknown argument `plate`. Available options are marked with ?.
+20250916	19:37:49	3f8e9af6-381f-4600-a0a9-8117725de0c7	PrismaClientValidationError: 
+Invalid `prisma.truckEdit.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:21:47
+
+  18     .json({ message: "Plate number, make, and model are required" });
+  19 
+  20 const existingTruck = await prisma.truck.findFirst({ where: { plate } });
+→ 21 const pendingTruck = await prisma.truckEdit.findFirst({
+       where: {
+         plate: "1234",
+         approvalStatus: "pending",
+         ~~~~~~~~~~~~~~
+     ?   AND?: TruckEditWhereInput | TruckEditWhereInput[],
+     ?   OR?: TruckEditWhereInput[],
+     ?   NOT?: TruckEditWhereInput | TruckEditWhereInput[],
+     ?   id?: StringFilter | String,
+     ?   truckId?: StringNullableFilter | String | Null,
+     ?   make?: StringFilter | String,
+     ?   model?: StringFilter | String,
+     ?   createdAt?: DateTimeFilter | DateTime,
+     ?   createdByUser?: StringFilter | String,
+     ?   updatedAt?: DateTimeFilter | DateTime,
+     ?   updatedByUser?: StringFilter | String,
+     ?   truck?: TruckNullableScalarRelationFilter | TruckWhereInput | Null,
+     ?   createdBy?: UserScalarRelationFilter | UserWhereInput,
+     ?   updatedBy?: UserScalarRelationFilter | UserWhereInput
+       }
+     })
+
+Unknown argument `approvalStatus`. Available options are marked with ?.
+20250916	21:24:55	451e17b8-1d08-4bbf-a7d3-674fd353e815	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:25:10	c76e8ad8-24f2-4faa-b7de-6b7cceaaa178	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:25:58	0b978f29-deeb-4b8b-bc37-6330b8b30b84	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:26:20	c19fb9a9-a0a7-4d1e-80cc-8f0178987834	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:26:25	cd180b18-e2dd-451d-aff7-2584df75be88	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:30:24	90b19860-4c49-4df1-82ba-dadb848061b6	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:31:08	e9dd2642-627e-415b-a673-94517b46230f	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:33:27	29a42749-3a70-477e-b011-ee5287856e39	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:34:23	f1e3196b-7439-4bd1-9348-c84b888d389a	TypeError: Cannot read properties of null (reading 'username')
+20250916	21:50:45	72f8c808-ba24-48ff-9b3c-d92fa3e9be98	ReferenceError: sanitizeAndValidate is not defined
+20250916	21:51:22	a9f30f64-1782-4130-a3d3-76fc3ce22d24	Error: Invalid input in description: HTML or scripts are not allowed
+20250916	21:51:34	401b1a78-e207-4bc7-a842-205c8992e75f	Error: Invalid input in description: HTML or scripts are not allowed
+20250916	21:51:47	0be98775-abb7-4d3e-9a57-4195c721bdf3	Error: Invalid input in description: HTML or scripts are not allowed
+20250916	21:51:51	de937467-7337-4e59-aaf9-c717eecf1f6d	Error: Invalid input in description: HTML or scripts are not allowed
+20250916	21:52:42	11eefe16-3a36-4cd1-bc54-64cbb3eebbe8	Error: Invalid input in description: HTML or scripts are not allowed
+20250916	21:53:19	d1facb1a-0566-4ca2-9dfa-f9b6b86063b8	Error: Invalid input in description: HTML or scripts are not allowed

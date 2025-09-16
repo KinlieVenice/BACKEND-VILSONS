@@ -13,16 +13,30 @@ const createUser = async (req, res) => {
     });
   }
 
-  const duplicate = await prisma.user.findFirst({
+  const existingUser = await prisma.user.findFirst({
     where: {
       OR: [{ username }, { email }],
     },
   });
 
-  if (duplicate) {
+   const pendingUser = await prisma.userEdit.findFirst({
+     where: {
+       OR: [{ username }, { email }],
+     },
+   });
+
+  if (existingUser || pendingUser) {
     let message = [];
-    if (duplicate.username === username) message.push("Username");
-    if (duplicate.email === email) message.push("Email");
+    if (
+      (existingUser && existingUser.username === username) ||
+      (pendingUser && pendingUser.username === username)
+    )
+      message.push("Username");
+    if (
+      (existingUser && existingUser.email === email) ||
+      (pendingUser && pendingUser.email === email)
+    )
+      message.push("Email");
 
     return res
       .status(400)

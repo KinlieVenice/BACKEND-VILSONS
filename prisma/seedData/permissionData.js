@@ -193,6 +193,24 @@ async function getPermissionData() {
       description: "View all trucks",
     },
     {
+      module: "Trucks",
+      permissionName: "create_trucks",
+      method: "create",
+      description: "Add new truck",
+    },
+    {
+      module: "Trucks",
+      permissionName: "edit_trucks",
+      method: "edit",
+      description: "Edit a truck",
+    },
+    {
+      module: "Trucks",
+      permissionName: "delete_trucks",
+      method: "delete",
+      description: "Delete a truck",
+    },
+    {
       module: "Activity_Logs",
       permissionName: "view_activity_logs",
       method: "view",

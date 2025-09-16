@@ -31,6 +31,7 @@ app.use(verifyJWT);
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));
 app.use("/api/branches", require("./routes/api/branches"));
+app.use("/api/trucks", require("./routes/api/trucks"));
 
 app.all(/^.*$/, (req, res) => {
   res.status(404);

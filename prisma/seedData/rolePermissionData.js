@@ -213,6 +213,21 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_TRUCKS),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.EDIT_TRUCKS),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.DELETE_TRUCKS),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(
         PERMISSIONS_LIST.VIEW_ACTIVITY_LOGS
       ),
@@ -555,6 +570,21 @@ async function getRolePermissionData() {
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_TRUCKS),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_TRUCKS),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.EDIT_TRUCKS),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.DELETE_TRUCKS),
       approval: true,
     },
     {
