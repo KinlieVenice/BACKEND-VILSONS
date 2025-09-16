@@ -1,14 +1,15 @@
 const sanitizeHtml = require("sanitize-html");
 
+function containsHtml(str) {
+  // Regex: detects <something> or </something>
+  const htmlTagPattern = /<\/?[a-z][\s\S]*>/i;
+  return htmlTagPattern.test(str);
+}
+
 function deepValidate(obj) {
   if (typeof obj === "string") {
-    // If sanitized string is different from original, it had HTML/script
-    const cleaned = sanitizeHtml(obj, {
-      allowedTags: [],
-      allowedAttributes: {},
-    });
-    if (cleaned !== obj) {
-      throw new Error("Input contains forbidden HTML or script");
+    if (containsHtml(obj)) {
+      throw new Error("Input contains forbidden HTML or script tags");
     }
     return obj;
   } else if (Array.isArray(obj)) {
