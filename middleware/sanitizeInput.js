@@ -1,25 +1,30 @@
 const sanitizeHtml = require("sanitize-html");
-
-function containsHtml(str) {
-  // Regex: detects <something> or </something>
-  const htmlTagPattern = /<\/?[a-z][\s\S]*>/i;
-  return htmlTagPattern.test(str);
+function sanitize(string) {
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+    "/": "&#x2F;",
+    "`": "&#x60;",
+    "=": "&#x3D;",
+  };
+  const reg = /[&<>"'`=\/]/g;
+  return string.replace(reg, (match) => map[match]);
 }
 
-function deepValidate(obj) {
-  if (typeof obj === "string") {
-    if (containsHtml(obj)) {
-      throw new Error("Input contains forbidden HTML or script tags");
-    }
-    return obj;
-  } else if (Array.isArray(obj)) {
-    return obj.map(deepValidate);
-  } else if (typeof obj === "object" && obj !== null) {
-    for (let key in obj) {
-      obj[key] = deepValidate(obj[key]);
+function deepValidate(input) {
+  if (typeof input === "string") {
+    return sanitize(input);
+  } else if (Array.isArray(input)) {
+    return input.map(deepValidate);
+  } else if (typeof input === "object" && input !== null) {
+    for (let key in input) {
+      input[key] = deepValidate(input[key]);
     }
   }
-  return obj;
+  return input;
 }
 
 const sanitizeInput = (req, res, next) => {
