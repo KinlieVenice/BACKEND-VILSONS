@@ -8,5 +8,8 @@ router.route("/")
   .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCKS),truckController.createTruck)
   .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCKS),truckController.editTruck);
 
+router.route("/:id")
+  .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCKS),truckController.deleteTruck);
+
 
 module.exports = router;

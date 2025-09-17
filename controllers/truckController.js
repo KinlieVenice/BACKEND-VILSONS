@@ -126,4 +126,36 @@ const editTruck = async (req, res) => {
   }
 };
 
-module.exports = { createTruck, editTruck };
+const deleteTruck = async (req, res) => {
+   if (!req?.body?.id)
+     return res.status(400).json({ message: "ID is required" });
+
+   const truck = await prisma.truck.findFirst({ id: req.body.id });
+
+   try {
+    const needsApproval = req.approval;
+    let message;
+    const truckData = {
+      plate: truck.plate,
+      make: truck.make,
+      model: truck.model,
+      createdByUser: req.username,
+      updatedByUser: req.username,
+    };
+
+    const result = prisma.$transaction(async (tx) => {
+      const truck_delete = needsApproval ?
+      await tx.truckEdit.create({
+        data: truckData,
+      }) : await tx.truck.delete({
+        where: { id: truck.id }
+      })
+
+      return truck_delete
+    })
+    return res.status(201).json({ message, data: result})
+   } catch (err) {
+    return res.status(500).json({ message: err.message })
+   }
+}
+module.exports = { createTruck, editTruck, deleteTruck };
