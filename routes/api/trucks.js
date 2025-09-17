@@ -5,7 +5,8 @@ const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 router.route("/")
-  .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCKS),truckController.createTruck);
+  .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCKS),truckController.createTruck)
+  .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCKS),truckController.editTruck);
 
 
 module.exports = router;

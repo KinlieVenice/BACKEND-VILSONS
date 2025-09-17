@@ -67,4 +67,63 @@ const createTruck = async (req, res) => {
   }
 };
 
-module.exports = { createTruck };
+const editTruck = async (req, res) => {
+  const { plate, make, model } = req.body;
+
+  if (!req?.body?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  const truck = await prisma.truck.findFirst({ id: req.body.id })
+
+  try {
+    if (plate) {
+      const existingTruck = await prisma.truck.findFirst({
+        where: { plate },
+      });
+
+      const pendingTruck = await prisma.truckEdit.findFirst({
+        where: {
+          plate,
+          approvalStatus: "pending",
+        },
+      });
+
+      if (existingTruck || pendingTruck) {
+        return res.status(400).json({
+          message: "Truck already exists or is pending approval",
+        });
+      }
+    }
+    const needsApproval = req.approval;
+    let message;
+    const truckData = {
+      plate: plate ?? truck.plate,
+      make: make ?? truck.make,
+      model: model ?? truck.model,
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const truck_edit = needsApproval 
+      ? await tx.truckEdit.create({
+        data: {userId: truck.id, ...truckDate, createdByUser: req.username, requestType: "edit"}
+      }) : await tx.truck.update({
+        where: { id: req.body.id },
+        data: truckData
+      })
+
+      message = needsApproval ? "Truck edit is awaiting approval" : "Truck successfully edited";
+
+      return truck_edit;
+    })
+
+    return res.status(201).json({ 
+      message,
+      data: result,
+    })
+  } catch (err) {
+    return res.status(500).json({ message: err.message })
+  }
+};
+
+module.exports = { createTruck, editTruck };
