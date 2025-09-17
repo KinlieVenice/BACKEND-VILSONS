@@ -73,7 +73,7 @@ const editTruck = async (req, res) => {
   if (!req?.body?.id)
     return res.status(400).json({ message: "ID is required" });
 
-  const truck = await prisma.truck.findFirst({ id: req.body.id })
+  const truck = await prisma.truck.findFirst({ id: req.body.id });
 
   try {
     if (plate) {
@@ -104,35 +104,43 @@ const editTruck = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const truck_edit = needsApproval 
-      ? await tx.truckEdit.create({
-        data: {userId: truck.id, ...truckDate, createdByUser: req.username, requestType: "edit"}
-      }) : await tx.truck.update({
-        where: { id: req.body.id },
-        data: truckData
-      })
+      const truck_edit = needsApproval
+        ? await tx.truckEdit.create({
+            data: {
+              userId: truck.id,
+              ...truckDate,
+              createdByUser: req.username,
+              requestType: "edit",
+            },
+          })
+        : await tx.truck.update({
+            where: { id: req.body.id },
+            data: truckData,
+          });
 
-      message = needsApproval ? "Truck edit is awaiting approval" : "Truck successfully edited";
+      message = needsApproval
+        ? "Truck edit is awaiting approval"
+        : "Truck successfully edited";
 
       return truck_edit;
-    })
+    });
 
-    return res.status(201).json({ 
+    return res.status(201).json({
       message,
       data: result,
-    })
+    });
   } catch (err) {
-    return res.status(500).json({ message: err.message })
+    return res.status(500).json({ message: err.message });
   }
 };
 
 const deleteTruck = async (req, res) => {
-   if (!req?.body?.id)
-     return res.status(400).json({ message: "ID is required" });
+  if (!req?.body?.id)
+    return res.status(400).json({ message: "ID is required" });
 
-   const truck = await prisma.truck.findFirst({ id: req.body.id });
+  const truck = await prisma.truck.findFirst({ id: req.body.id });
 
-   try {
+  try {
     const needsApproval = req.approval;
     let message;
     const truckData = {
@@ -144,18 +152,57 @@ const deleteTruck = async (req, res) => {
     };
 
     const result = prisma.$transaction(async (tx) => {
-      const truck_delete = needsApproval ?
-      await tx.truckEdit.create({
-        data: truckData,
-      }) : await tx.truck.delete({
-        where: { id: truck.id }
-      })
+      const truck_delete = needsApproval
+        ? await tx.truckEdit.create({
+            data: truckData,
+          })
+        : await tx.truck.delete({
+            where: { id: truck.id },
+          });
 
-      return truck_delete
-    })
-    return res.status(201).json({ message, data: result})
-   } catch (err) {
-    return res.status(500).json({ message: err.message })
-   }
-}
-module.exports = { createTruck, editTruck, deleteTruck };
+      return truck_delete;
+    });
+    return res.status(201).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const getAllTrucks = async (req, res) => {
+  try {
+    const search = req?.query?.search;
+    const page = req?.query?.page && parseInt(req.query.page, 10);
+    const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+
+    let where = {};
+
+    if (search) {
+      where.OR = [
+        { plate: { contains: search } },
+        { make: { contains: search } },
+        { model: { contains: search } },
+      ];
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const trucks = await tx.truck.findMany({
+        where,
+        ...(page && limit ? { skip: (page - 1) * limit } : {}),
+        ...(limit ? { take: limit } : {}),
+      });
+
+      const total = await tx.truck.count({ where });
+
+      return { trucks, total }
+    });
+
+    return res.status(201).json({
+      data: result,
+    });
+
+    return trucks;
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+module.exports = { createTruck, editTruck, deleteTruck, getAllTrucks };
