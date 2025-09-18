@@ -10,6 +10,7 @@ router.route("/")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_BRANCH), branchController.getAllBranches);
 
 router.route("/:id")
-.delete(verifyPermission(PERMISSIONS_LIST.DELETE_BRANCH), branchController.deleteBranch);
+.delete(verifyPermission(PERMISSIONS_LIST.DELETE_BRANCH), branchController.deleteBranch)
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_BRANCH), branchController.getBranch);
 
 module.exports = router;

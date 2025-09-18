@@ -10,7 +10,8 @@ router.route("/")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser);
 
 router.route("/:id")
-.delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser);
+.delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser)
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS),userController.getUser);
 
 router.route("/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);

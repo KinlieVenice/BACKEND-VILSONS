@@ -369,10 +369,37 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+    if (!req?.params?.id)
+      return res.status(400).json({ message: "ID is required" });
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        roles: {
+          include: {
+            role: { select: { roleName: true } },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    try {
+      return res.status(201).json({ user })
+    } catch (err) {
+      return res.status(500).json({ message: err.message })
+    }
+};
+
 module.exports = {
   createUser,
   editUser,
   getAllUsers,
   editUserPassword,
   deleteUser,
+  getUser
 };
