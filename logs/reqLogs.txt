@@ -655,3 +655,13 @@
 20250918	20:06:16	dcd9af29-9ecb-4891-95df-08e4748985d8	GET	undefined	/api/users/2be04df0-2606-4274-81d2-2d610dfb6e1d
 20250918	20:11:58	fdb6b4d6-5ddf-4ebe-8634-7f07f2bd4e40	GET	undefined	/api/users
 20250918	20:12:19	4e1dd87e-57e0-4650-aae9-249e1f6bc8ba	GET	undefined	/api/users/e5146797-15e9-4572-9a8c-c01ac9fbc002
+20250918	21:46:17	e65310ea-33ce-4d3c-a981-635d5149328d	POST	undefined	/auth
+20250918	21:58:50	14703a0c-e5df-4850-b39e-be6b511191f0	GET	undefined	/api/users?search=customer
+20250918	22:00:13	2a4654d5-7f32-44b9-be49-dc8ffb924ed6	POST	undefined	/api/users
+20250918	22:00:28	5e191361-0259-4604-b16f-e1191dcbc4a3	POST	undefined	/api/users
+20250918	22:01:04	e3024055-9f95-4ce8-8b46-c04920f9e042	GET	undefined	/api/branches
+20250918	22:01:43	32a9033f-f86b-4e01-a397-c0f9dc42a2c4	GET	undefined	/api/trucks
+20250918	22:03:57	72ccd45b-88b9-4caa-a82f-31489dc3cbd3	POST	undefined	/api/joborders
+20250918	22:08:03	9aed7bf5-439b-44f7-9a55-26c1ea4b6992	POST	undefined	/api/joborders
+20250918	22:16:39	c19c78f9-a323-4e85-9046-563a94bb17a8	POST	undefined	/api/joborders
+20250918	22:16:55	9612a2c1-3eeb-44a0-909e-4357f29f1d0c	POST	undefined	/api/joborders

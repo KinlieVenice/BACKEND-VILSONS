@@ -45,6 +45,8 @@ model User {
   createdUsers    User[]     @relation("CreatedBy")
   updatedUsers    User[]     @relation("UpdatedBy")
   createdUserEdit UserEdit[] @relation("CreatedBy")
+  jobOrder JobOrder[] @relation("Customer")
+  jobOrderEdit JobOrderEdit[] @relation("Customer")
 
   createdRole            Role[]            @relation("CreatedBy")
   createdBranches        Branch[]          @relation("CreatedBy")
@@ -505,17 +507,16 @@ model JobOrder {
   jobOrderCode String @unique
   truckId      String
   branchId     String
-  contractorId String
+  customerId String
+  contractorId String?
 
-  status      OrderStatus
+  status      OrderStatus @default(unassigned)
   description String
-  labor       Decimal     @db.Decimal(13, 2)
+  labor       Decimal?     @db.Decimal(13, 2)
   completedAt DateTime?
 
   transactions Transaction[]
   materials    Material[]
-
-  approvalStatus ApprovalStatus @default(pending)
 
   edits JobOrderEdit[]
 
@@ -526,7 +527,8 @@ model JobOrder {
 
   truck      Truck      @relation(fields: [truckId], references: [id])
   branch     Branch     @relation(fields: [branchId], references: [id])
-  contractor Contractor @relation(fields: [contractorId], references: [id])
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+  customer  User       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy  User       @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
@@ -534,10 +536,12 @@ model JobOrder {
 model JobOrderEdit {
   id           String @id @default(uuid())
   jobOrderId   String
-  jobOrderCode String @unique
+  jobOrderCode String
   branchId     String
+  customerId String
 
-  status      OrderStatus
+
+  status      OrderStatus @default(unassigned)
   description String
   labor       Decimal     @db.Decimal(13, 2)
   completedAt DateTime?
@@ -552,6 +556,7 @@ model JobOrderEdit {
   branch      Branch   @relation(fields: [branchId], references: [id])
 
   jobOrder  JobOrder @relation(fields: [jobOrderId], references: [id])
+  customer  User       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
