@@ -19,6 +19,8 @@ function deepValidate(input) {
     return sanitize(input);
   } else if (Array.isArray(input)) {
     return input.map(deepValidate);
+  } else if (typeof input === "number") {
+    return obj;
   } else if (typeof input === "object" && input !== null) {
     for (let key in input) {
       input[key] = deepValidate(input[key]);

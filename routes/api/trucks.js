@@ -7,10 +7,11 @@ const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 router.route("/")
   .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCKS),truckController.createTruck)
   .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCKS),truckController.editTruck)
-  .get(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCKS),truckController.getAllTrucks);
+  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getAllTrucks);
 
 router.route("/:id")
-  .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCKS),truckController.deleteTruck);
+  .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCKS),truckController.deleteTruck)
+  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getTruck);
 
 
 module.exports = router;

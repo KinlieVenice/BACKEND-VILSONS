@@ -433,3 +433,79 @@ Unknown argument `approvalStatus`. Available options are marked with ?.
 20250916	21:52:42	11eefe16-3a36-4cd1-bc54-64cbb3eebbe8	Error: Invalid input in description: HTML or scripts are not allowed
 20250916	21:53:19	d1facb1a-0566-4ca2-9dfa-f9b6b86063b8	Error: Invalid input in description: HTML or scripts are not allowed
 20250916	22:25:01	77af2d98-764b-4049-bfe9-5bc9b6cca85b	SyntaxError: Expected ',' or '}' after property value in JSON at position 153 (line 6 column 4)
+20250918	17:20:14	30531c29-d182-43c4-8a28-18845f123fdc	PrismaClientValidationError: 
+Invalid `prisma.truck.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:76:36
+
+  73 if (!req?.body?.id)
+  74   return res.status(400).json({ message: "ID is required" });
+  75 
+→ 76 const truck = await prisma.truck.findFirst({
+       id: "0b7ccb23-d20d-4967-a07d-fd82c10a99c4",
+       ~~
+     ? where?: TruckWhereInput,
+     ? orderBy?: TruckOrderByWithRelationInput[] | TruckOrderByWithRelationInput,
+     ? cursor?: TruckWhereUniqueInput,
+     ? take?: Int,
+     ? skip?: Int,
+     ? distinct?: TruckScalarFieldEnum | TruckScalarFieldEnum[]
+     })
+
+Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
+20250918	17:20:37	7e7fd931-d3b4-444c-8a3e-bee58f9f41c2	PrismaClientValidationError: 
+Invalid `prisma.truck.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:76:36
+
+  73 if (!req?.body.id)
+  74   return res.status(400).json({ message: "ID is required" });
+  75 
+→ 76 const truck = await prisma.truck.findFirst({
+       id: "0b7ccb23-d20d-4967-a07d-fd82c10a99c4",
+       ~~
+     ? where?: TruckWhereInput,
+     ? orderBy?: TruckOrderByWithRelationInput[] | TruckOrderByWithRelationInput,
+     ? cursor?: TruckWhereUniqueInput,
+     ? take?: Int,
+     ? skip?: Int,
+     ? distinct?: TruckScalarFieldEnum | TruckScalarFieldEnum[]
+     })
+
+Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
+20250918	17:20:50	d69e3aa6-2196-4711-be95-67919ac1b618	PrismaClientValidationError: 
+Invalid `prisma.truck.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\truckController.js:76:36
+
+  73 if (!req.body.id)
+  74   return res.status(400).json({ message: "ID is required" });
+  75 
+→ 76 const truck = await prisma.truck.findFirst({
+       id: "0b7ccb23-d20d-4967-a07d-fd82c10a99c4",
+       ~~
+     ? where?: TruckWhereInput,
+     ? orderBy?: TruckOrderByWithRelationInput[] | TruckOrderByWithRelationInput,
+     ? cursor?: TruckWhereUniqueInput,
+     ? take?: Int,
+     ? skip?: Int,
+     ? distinct?: TruckScalarFieldEnum | TruckScalarFieldEnum[]
+     })
+
+Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
+20250918	17:35:16	f7100d38-e868-4be8-b3da-572916957451	PrismaClientValidationError: 
+Invalid `prisma.branch.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\branchController.js:79:36
+
+  76 
+  77 if (!req.body.id) return res.status(404).json({ message: "ID is required" });
+  78 
+→ 79 const user = await prisma.branch.findFirst({
+       id: "862595b5-cd6d-4f17-b68f-4b863503dbff",
+       ~~
+     ? where?: BranchWhereInput,
+     ? orderBy?: BranchOrderByWithRelationInput[] | BranchOrderByWithRelationInput,
+     ? cursor?: BranchWhereUniqueInput,
+     ? take?: Int,
+     ? skip?: Int,
+     ? distinct?: BranchScalarFieldEnum | BranchScalarFieldEnum[]
+     })
+
+Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.

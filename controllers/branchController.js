@@ -76,12 +76,12 @@ const editBranch = async (req, res) => {
 
   if (!req.body.id) return res.status(404).json({ message: "ID is required" });
 
-  const user = prisma.branch.findFirst({ id: req.body.id });
+  const branch = await prisma.branch.findFirst({ where: { id: req.body.id } });
 
-  if (!user)
+  if (!branch)
     return res
       .status(404)
-      .json({ message: `User with ${req.body.id} not found` });
+      .json({ message: `Branch with ${req.body.id} not found` });
 
   const existingBranch = await prisma.branch.findFirst({
     where: { branchName: name },
@@ -103,10 +103,10 @@ const editBranch = async (req, res) => {
     const needsApproval = req.approval;
     let message;
     const updatedData = {
-      branchName: name ?? user.branchName,
+      branchName: name ?? branch.branchName,
       ...(description ? { description } : {}),
-      address: address ?? user.address,
-      updatedByUser: req.username,
+      address: address ?? branch.address,
+      updatedByUser: req.branchname,
     };
 
     const result = await prisma.$transaction(async (tx) => {

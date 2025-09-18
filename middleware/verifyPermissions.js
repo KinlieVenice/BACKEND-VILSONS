@@ -17,7 +17,7 @@ const verifyPermission = (allowedPermissions) => {
         )
       );
 
-      console.log(roles);
+      // console.log(roles);
 
       const userPermissions = roles.flatMap((role) =>
         role.permissions.map((perm) => ({
@@ -26,7 +26,7 @@ const verifyPermission = (allowedPermissions) => {
         }))
       );
 
-      console.log(userPermissions);
+      // console.log(userPermissions);
 
       const allowedPermissionId = await permissionIdFinder(allowedPermissions);
 
