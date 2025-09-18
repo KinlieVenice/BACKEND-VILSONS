@@ -19,11 +19,11 @@ const createUser = async (req, res) => {
     },
   });
 
-   const pendingUser = await prisma.userEdit.findFirst({
-     where: {
-       OR: [{ username }, { email }],
-     },
-   });
+  const pendingUser = await prisma.userEdit.findFirst({
+    where: {
+      OR: [{ username }, { email }],
+    },
+  });
 
   if (existingUser || pendingUser) {
     let message = [];
@@ -344,8 +344,8 @@ const getAllUsers = async (req, res) => {
 
     const users = await prisma.user.findMany({
       where,
-      ...(page && limit ? {skip: (page - 1) * limit} : {}),
-      ...(limit ? {take: limit} : {}),
+      ...(page && limit ? { skip: (page - 1) * limit } : {}),
+      ...(limit ? { take: limit } : {}),
       include: {
         roles: {
           include: {
@@ -370,9 +370,10 @@ const getAllUsers = async (req, res) => {
 };
 
 const getUser = async (req, res) => {
-    if (!req?.params?.id)
-      return res.status(400).json({ message: "ID is required" });
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
 
+  try {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
@@ -388,12 +389,22 @@ const getUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    try {
-      return res.status(201).json({ user })
-    } catch (err) {
-      return res.status(500).json({ message: err.message })
-    }
+    // Destructure user to separate roles
+    const { roles, ...userWithoutRoles } = user;
+
+    const formattedRoles = roles.map((r) => r.role.roleName);
+
+    const formattedUser = {
+      ...userWithoutRoles,
+      roles: formattedRoles,
+    };
+
+    return res.status(200).json(formattedUser);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
+
 
 module.exports = {
   createUser,
@@ -401,5 +412,5 @@ module.exports = {
   getAllUsers,
   editUserPassword,
   deleteUser,
-  getUser
+  getUser,
 };
