@@ -124,14 +124,14 @@ const editJobOrder = async (req, res) => {
 
   try {
     const jobOrder = await prisma.jobOrder.findFirst({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
     if (!jobOrder)
       return res
         .status(404)
-        .json({ message: `Job order with ID: ${req.body.id} not found` });
+        .json({ message: `Job order with ID: ${req.params.id} not found` });
 
-    const needsApproval = false;
+    const needsApproval = true;
     let message;
 
     const jobOrderData = {
@@ -145,7 +145,9 @@ const editJobOrder = async (req, res) => {
     };
     const result = await prisma.$transaction(async (tx) => {
       let editedJobOrder;
-      message = needsApproval ? "Job Order edit awaiting approval" : "Job order successfully edited";
+      message = needsApproval
+        ? "Job Order edit awaiting approval"
+        : "Job order successfully edited";
 
       if (needsApproval) {
         editedJobOrder = await tx.jobOrderEdit.create({
@@ -169,8 +171,6 @@ const editJobOrder = async (req, res) => {
             })),
           });
         }
-
-         return editedJobOrder;
       } else {
         editedJobOrder = await tx.jobOrder.update({
           where: { id: jobOrder.id },
@@ -192,16 +192,85 @@ const editJobOrder = async (req, res) => {
             })),
           });
         }
-
-        return editedJobOrder;
       }
 
+      return editedJobOrder;
     });
 
-    return res.status(201).json({ message, data: result, materials: materials || [] });
+    return res.status(201).json({
+      message,
+      data: {
+        ...result,
+        materials: materials || [],
+      },
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { createJobOrder, editJobOrder };
+const deleteJobOrder = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(404).json({ message: "ID is required" });
+
+  try {
+    const needsApproval = true;
+    let message;
+
+    const jobOrder = await prisma.jobOrder.findFirst({
+      where: { id: req.params.id },
+    });
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${req.params.id} not found` });
+
+    const result = await prisma.$transaction(async (tx) => {
+      let deletedJobOrder;
+      message = needsApproval
+        ? "Job Order delete awaiting approval"
+        : "Job order successfully deleted";
+
+      const materials = await tx.material.findMany({
+        where: { jobOrderId: jobOrder.id },
+      });
+
+      if (needsApproval) {
+        deletedJobOrder = await tx.jobOrderEdit.create({
+          data: {
+            jobOrderId: jobOrder.id, // keep reference to original
+            jobOrderCode: jobOrder.jobOrderCode,
+            customerId: jobOrder.customerId || null,
+            truckId: jobOrder.truckId || null,
+            branchId: jobOrder.branchId || null,
+            contractorId: jobOrder.contractorId || null,
+            description: jobOrder.description || null,
+            labor: jobOrder.labor || null,
+            status: jobOrder.status,
+            completedAt: jobOrder.completedAt || null,
+            requestType: "delete",
+            createdByUser: req.username,
+            updatedByUser: req.username,
+          },
+        });
+
+        await tx.materialEdit.createMany({
+          data: materials.map((m) => ({
+            jobOrderId: jobOrder.id,
+            materialName: m.materialName,
+            quantity: m.quantity,
+            price: m.price,
+            requestType: "delete",
+          })),
+        });
+
+        return deletedJobOrder;
+      }
+      return res.status(201).json({ message, data: result });
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { createJobOrder, editJobOrder, deleteJobOrder };

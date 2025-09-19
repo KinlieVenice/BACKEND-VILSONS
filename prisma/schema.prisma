@@ -141,6 +141,7 @@ model Contractor {
 
   contractorPay ContractorPay[]
   JobOrder      JobOrder[]
+  JobOrderEdit      JobOrderEdit[]
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -559,6 +560,8 @@ model JobOrderEdit {
   branchId     String
   truckId      String
   customerId String
+  contractorId String?
+
 
 
   status      OrderStatus @default(unassigned)
@@ -577,6 +580,8 @@ model JobOrderEdit {
 
   jobOrder  JobOrder? @relation(fields: [jobOrderId], references: [id])
   truck      Truck      @relation(fields: [truckId], references: [id])
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+
 
   customer  User       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
