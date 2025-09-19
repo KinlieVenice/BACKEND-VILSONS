@@ -536,7 +536,7 @@ model JobOrder {
 model JobOrderEdit {
   id           String @id @default(uuid())
   jobOrderId   String
-  jobOrderCode String
+  jobOrderCode String?
   branchId     String
   customerId String
 

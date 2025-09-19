@@ -1,4 +1,5 @@
 const { PrismaClient } = require("../generated/prisma");
+const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const prisma = new PrismaClient();
 
 const createJobOrder = async (req, res) => {
@@ -20,23 +21,7 @@ const createJobOrder = async (req, res) => {
   try {
     const needsApproval = req.approval;
     let message;
-    let newCode;
-
-    const lastOrder = await prisma.jobOrder.findFirst({
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (!lastOrder) {
-      // First ever job order
-      newCode = "JO-00001";
-    } else {
-      // Extract the number part, increment it
-      const lastNumber = parseInt(lastOrder.jobOrderCode.replace("JO-", ""));
-      const nextNumber = lastNumber + 1;
-
-      // Format with leading zeros (5 digits)
-      newCode = `JO-${String(nextNumber).padStart(5, "0")}`;
-    }
+    const newCode = await generateJobOrderCode(prisma);
 
     const existingJob = await prisma.jobOrder.findUnique({
       where: { jobOrderCode: newCode },
@@ -51,7 +36,6 @@ const createJobOrder = async (req, res) => {
         .json({ message: "Job order already exists or awaiting approval" });
 
     const jobOrderData = {
-      jobOrderCode: newCode,
       customerId,
       branchId,
       truckId,
@@ -66,12 +50,13 @@ const createJobOrder = async (req, res) => {
       const jobOrder = needsApproval
         ? await tx.jobOrderEdit.create({
             data: {
+              jobOrderCode: {},
               ...jobOrderData,
               requestType: "create",
             },
           })
         : await tx.jobOrder.create({
-            data: jobOrderData,
+            data: { ...jobOrderData, jobOrderCode: newCode },
           });
 
       message = needsApproval
@@ -86,5 +71,9 @@ const createJobOrder = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+const editJobOrder = async (req, res) => {
+  
+}
 
 module.exports = { createJobOrder }

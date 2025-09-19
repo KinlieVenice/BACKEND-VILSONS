@@ -194,6 +194,14 @@ const getAllTrucks = async (req, res) => {
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
         ...(limit ? { take: limit } : {}),
+        // include: {
+        //   owners: {
+        //     select: { customer: { select: { user: { select: { username: true, }, },
+        //         },
+        //       },
+        //     },
+        //   },
+        // },
       });
 
       const total = await tx.truck.count({ where });

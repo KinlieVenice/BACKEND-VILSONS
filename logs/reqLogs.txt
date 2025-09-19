@@ -665,3 +665,11 @@
 20250918	22:08:03	9aed7bf5-439b-44f7-9a55-26c1ea4b6992	POST	undefined	/api/joborders
 20250918	22:16:39	c19c78f9-a323-4e85-9046-563a94bb17a8	POST	undefined	/api/joborders
 20250918	22:16:55	9612a2c1-3eeb-44a0-909e-4357f29f1d0c	POST	undefined	/api/joborders
+20250919	19:59:46	bb62012e-7e9a-46b2-a06d-2b0d60eff504	POST	undefined	/auth
+20250919	20:00:14	9a245063-22e2-4c53-af09-21f6fa7746b9	POST	undefined	/api/joborders
+20250919	20:00:22	2d9db43d-94e5-40f8-89d0-e34a011b3bcc	POST	undefined	/api/joborders
+20250919	20:00:23	064b69e3-f968-4cd8-90f6-8a1b27c91ef9	POST	undefined	/api/joborders
+20250919	20:00:24	d0f0e8f0-d87b-4e90-bd1c-9674d25f2f57	POST	undefined	/api/joborders
+20250919	20:00:24	545a3cbc-d456-4fbc-9454-1ef73d9a5779	POST	undefined	/api/joborders
+20250919	20:00:25	24c35ae8-e665-4265-a41e-1f3e4d677ea3	POST	undefined	/api/joborders
+20250919	20:00:25	daa2d9e0-6438-4199-9f33-3899f65150e7	POST	undefined	/api/joborders
