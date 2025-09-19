@@ -96,7 +96,6 @@ const createJobOrder = async (req, res) => {
       return jobOrder;
     });
 
-  
     return res.status(201).json({
       message,
       data: {
@@ -119,6 +118,90 @@ const editJobOrder = async (req, res) => {
     materials,
     labor,
   } = req.body;
+
+  if (!req?.body?.id)
+    return res.status(404).json({ message: "ID is required" });
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({
+      where: { id: req.body.id },
+    });
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${req.body.id} not found` });
+
+    const needsApproval = false;
+    let message;
+
+    const jobOrderData = {
+      customerId: customerId ?? jobOrder.customerId,
+      truckId: truckId ?? jobOrder.truckId,
+      branchId: branchId ?? jobOrder.branchId,
+      description: description ?? jobOrder.description,
+      ...(contractorId ? { contractorId } : {}),
+      ...(labor ? { labor } : {}),
+      updatedByUser: req.username,
+    };
+    const result = await prisma.$transaction(async (tx) => {
+      let editedJobOrder;
+      message = needsApproval ? "Job Order edit awaiting approval" : "Job order successfully edited";
+
+      if (needsApproval) {
+        editedJobOrder = await tx.jobOrderEdit.create({
+          data: {
+            jobOrderId: jobOrder.id,
+            jobOrderCode: jobOrder.jobOrderCode,
+            ...jobOrderData,
+            requestType: "edit",
+            createdByUser: req.username,
+          },
+        });
+
+        if (materials && materials.length > 0) {
+          await tx.materialEdit.createMany({
+            data: materials.map((m) => ({
+              jobOrderId: jobOrder.id,
+              materialName: m.name,
+              quantity: m.quantity,
+              price: m.price,
+              requestType: "edit",
+            })),
+          });
+        }
+
+         return editedJobOrder;
+      } else {
+        editedJobOrder = await tx.jobOrder.update({
+          where: { id: jobOrder.id },
+          data: jobOrderData,
+        });
+
+        if (materials && materials.length > 0) {
+          await tx.material.deleteMany({
+            where: { jobOrderId: jobOrder.id },
+          });
+
+          // Insert new materials
+          await tx.material.createMany({
+            data: materials.map((m) => ({
+              jobOrderId: jobOrder.id,
+              materialName: m.name,
+              quantity: m.quantity,
+              price: m.price,
+            })),
+          });
+        }
+
+        return editedJobOrder;
+      }
+
+    });
+
+    return res.status(201).json({ message, data: result, materials: materials || [] });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
-module.exports = { createJobOrder };
+module.exports = { createJobOrder, editJobOrder };

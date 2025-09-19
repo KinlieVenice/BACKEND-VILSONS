@@ -75,6 +75,9 @@ const editTruck = async (req, res) => {
 
   const truck = await prisma.truck.findFirst({ where: { id: req.body.id } });
 
+  if (!truck) return res.status(404).json({ message: `Truck with ID: ${req.body.id} not found`})
+
+
   try {
     if (plate) {
       const existingTruck = await prisma.truck.findFirst({
