@@ -509,3 +509,4 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\branchController.js
      })
 
 Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
+20250919	21:37:12	5833488e-98be-4753-a030-7827b2d9bba2	SyntaxError: Expected double-quoted property name in JSON at position 376 (line 18 column 1)

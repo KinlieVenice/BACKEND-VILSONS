@@ -213,6 +213,8 @@ model Truck {
 
   owners    TruckOwnership[]
   jobOrders JobOrder[]
+  jobOrdersEdit JobOrderEdit[]
+
 
   edits    TruckEdit[]
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
@@ -232,6 +234,8 @@ model TruckEdit {
   createdByUser String
   updatedAt   DateTime @updatedAt
   updatedByUser String
+
+
 
   truck   Truck?  @relation(fields: [truckId], references: [id])
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
@@ -494,6 +498,20 @@ model Material {
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id])
 }
 
+model MaterialEdit {
+  id         String @id @default(uuid())
+  jobOrderId String?
+
+  materialName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  requestType    RequestType
+
+  createdAt DateTime @default(now())
+
+  jobOrder JobOrder? @relation(fields: [jobOrderId], references: [id])
+}
+
 enum OrderStatus {
   unassigned
   ongoing
@@ -516,7 +534,8 @@ model JobOrder {
   completedAt DateTime?
 
   transactions Transaction[]
-  materials    Material[]
+  materials    Material[] 
+  materialEdit    MaterialEdit[] 
 
   edits JobOrderEdit[]
 
@@ -535,15 +554,16 @@ model JobOrder {
 
 model JobOrderEdit {
   id           String @id @default(uuid())
-  jobOrderId   String
+  jobOrderId   String?
   jobOrderCode String?
   branchId     String
+  truckId      String
   customerId String
 
 
   status      OrderStatus @default(unassigned)
   description String
-  labor       Decimal     @db.Decimal(13, 2)
+  labor       Decimal?     @db.Decimal(13, 2)
   completedAt DateTime?
 
   requestType    RequestType
@@ -555,7 +575,9 @@ model JobOrderEdit {
   updatedByUser String
   branch      Branch   @relation(fields: [branchId], references: [id])
 
-  jobOrder  JobOrder @relation(fields: [jobOrderId], references: [id])
+  jobOrder  JobOrder? @relation(fields: [jobOrderId], references: [id])
+  truck      Truck      @relation(fields: [truckId], references: [id])
+
   customer  User       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)

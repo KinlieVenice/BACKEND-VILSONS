@@ -178,6 +178,8 @@ const getAllTrucks = async (req, res) => {
     const search = req?.query?.search;
     const page = req?.query?.page && parseInt(req.query.page, 10);
     const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+    const startDate = req?.query?.startDate; // e.g. "2025-01-01"
+    const endDate = req?.query?.endDate; // e.g. "2025-01-31"
 
     let where = {};
 
@@ -187,6 +189,13 @@ const getAllTrucks = async (req, res) => {
         { make: { contains: search } },
         { model: { contains: search } },
       ];
+    }
+
+    if (startDate && endDate) {
+      where.createdAt = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -206,7 +215,7 @@ const getAllTrucks = async (req, res) => {
 
       const total = await tx.truck.count({ where });
 
-      return { trucks, total }
+      return { trucks, total };
     });
 
     return res.status(201).json({
