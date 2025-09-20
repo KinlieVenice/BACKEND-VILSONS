@@ -2,8 +2,6 @@ const { PrismaClient } = require("../generated/prisma");
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const prisma = new PrismaClient();
 
-//change no more ids but change to actual unique identifier
-
 const createJobOrder = async (req, res) => {
   const {
     customerId,
@@ -363,6 +361,8 @@ const getAllJobOrders = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       return tx.jobOrder.findMany({
         where,
+        ...(page && limit ? { skip: (page - 1) * limit } : {}),
+        ...(limit ? { take: limit } : {}),
         include: {
           truck: true,
           branch: true,

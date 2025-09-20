@@ -800,3 +800,15 @@
 20250920	22:43:13	6dfe7d78-a791-4118-a0e3-85692d00a2c0	GET	undefined	/api/joborders?search=hey
 20250920	22:43:36	89f44f67-6254-40ac-9e80-3ed8d771c937	GET	undefined	/api/joborders?search=hey
 20250920	22:44:04	fc393c43-4cd9-4cfb-9680-9e4dbc51d3ea	GET	undefined	/api/joborders?search=hey
+20250920	22:50:47	fc45934b-d7a9-4098-b676-cdf8707dd9c1	GET	undefined	/api/joborders?search=hEy
+20250920	23:33:17	6e319f36-d0a4-4a83-bd01-c7cc1ae8ff88	GET	undefined	/refresh
+20250920	23:35:23	38fba494-72bd-491a-938e-cbda0085fa56	POST	undefined	/api/equipments
+20250920	23:36:21	4e20cbd7-b3f9-445f-98e5-fbf10f302c4f	POST	undefined	/api/equipments
+20250920	23:38:09	7536057c-47fe-45e5-a33d-cb4b3f96050b	POST	undefined	/api/equipments
+20250920	23:40:00	4809c0b2-cf07-445f-8466-0d4b1aa29f37	POST	undefined	/api/equipments
+20250920	23:55:12	c4c3a5af-c574-4de1-a7b2-11ac6a96f852	PUT	undefined	/api/equipments
+20250920	23:56:18	a7b7f50a-bfff-46ea-a599-eb56a1222c35	PUT	undefined	/api/equipments
+20250920	23:56:45	e9258a01-b678-4768-9893-7c15f501eeb8	PUT	undefined	/api/equipments
+20250920	23:57:49	13e89c2f-fe08-47a5-ab87-bbbfec72a1e6	GET	undefined	/api/joborders
+20250921	00:01:36	0394e66e-1245-4948-9629-6cf05f089691	DELETE	undefined	/api/equipments/7459842d-3be1-417f-9794-2cce79e26975
+20250921	00:02:36	29727e2e-6f9a-423e-8520-67a0e8639304	DELETE	undefined	/api/equipments/8cb83e8c-8185-48bf-8e25-27e2d3574c36
