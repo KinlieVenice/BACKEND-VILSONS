@@ -9,7 +9,7 @@ const createUser = async (req, res) => {
 
   if (!name || !username || !phone || !email || !roles) {
     return res.status(400).json({
-      message: "Name, username, email, and roles are required",
+      message: "Name, username, email, phone, and roles are required",
     });
   }
 

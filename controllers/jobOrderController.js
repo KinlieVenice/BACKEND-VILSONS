@@ -2,6 +2,8 @@ const { PrismaClient } = require("../generated/prisma");
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const prisma = new PrismaClient();
 
+//change no more ids but change to actual unique identifier
+
 const createJobOrder = async (req, res) => {
   const {
     customerId,
@@ -296,10 +298,84 @@ const deleteJobOrder = async (req, res) => {
 };
 
 const getAllJobOrders = async (req, res) => {
+  const search = req?.query?.search;
+  const page = req?.query?.page && parseInt(req.query.page, 10);
+  const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+  const startDate = req?.query?.startDate; // e.g. "2025-01-01"
+  const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+
+  let where = {};
+
+  if (search) {
+    where.OR = [
+      {
+        truck: {
+          OR: [
+            { plate: { contains: search } },
+            { make: { contains: search } },
+            { model: { contains: search } },
+          ],
+        },
+      },
+      {
+        branch: {
+          OR: [
+            { branchName: { contains: search } },
+            { address: { contains: search } },
+          ],
+        },
+      },
+      {
+        customer: {
+          user: {
+            OR: [
+              { username: { contains: search } },
+              { fullName: { contains: search } },
+              { phone: { contains: search } },
+              { email: { contains: search } },
+            ],
+          },
+        },
+      },
+      {
+        contractor: {
+          user: {
+            OR: [
+              { username: { contains: search } },
+              { fullName: { contains: search } },
+              { phone: { contains: search } },
+              { email: { contains: search } },
+            ],
+          },
+        },
+      },
+    ];
+  }
+
+  if (startDate && endDate) {
+    where.createdAt = {
+      gte: new Date(startDate),
+      lte: new Date(endDate),
+    };
+  }
+
   try {
     const result = await prisma.$transaction(async (tx) => {
       return tx.jobOrder.findMany({
+        where,
         include: {
+          truck: true,
+          branch: true,
+          customer: {
+            include: {
+              user: true,
+            },
+          },
+          contractor: {
+            include: {
+              user: true,
+            },
+          },
           materials: true,
         },
       });

@@ -45,8 +45,6 @@ model User {
   createdUsers    User[]     @relation("CreatedBy")
   updatedUsers    User[]     @relation("UpdatedBy")
   createdUserEdit UserEdit[] @relation("CreatedBy")
-  jobOrder JobOrder[] @relation("Customer")
-  jobOrderEdit JobOrderEdit[] @relation("Customer")
 
   createdRole            Role[]            @relation("CreatedBy")
   createdBranches        Branch[]          @relation("CreatedBy")
@@ -132,6 +130,8 @@ model Customer {
   userId String
   trucks TruckOwnership[]
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobOrder JobOrder[] @relation("Customer")
+  jobOrderEdit JobOrderEdit[] @relation("Customer")
 }
 
 model Contractor {
@@ -549,7 +549,7 @@ model JobOrder {
   truck      Truck      @relation(fields: [truckId], references: [id])
   branch     Branch     @relation(fields: [branchId], references: [id])
   contractor Contractor? @relation(fields: [contractorId], references: [id])
-  customer  User       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
+    Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy  User       @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
@@ -584,11 +584,11 @@ model JobOrderEdit {
   contractor Contractor? @relation(fields: [contractorId], references: [id])
 
 
-  customer  User       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
+  customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
-
+customer
 model Overhead {
   id String @id @default(uuid())
 
