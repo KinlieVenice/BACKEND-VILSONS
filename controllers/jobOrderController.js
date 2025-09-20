@@ -131,7 +131,7 @@ const editJobOrder = async (req, res) => {
         .status(404)
         .json({ message: `Job order with ID: ${req.params.id} not found` });
 
-    const needsApproval = true;
+    const needsApproval = req.approval;
     let message;
 
     const jobOrderData = {
@@ -214,8 +214,10 @@ const deleteJobOrder = async (req, res) => {
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    const needsApproval = true;
+    const needsApproval = req.approval;
     let message;
+    let deletedJobOrder;
+    let responseMaterials = []; // will hold the right set of materials
 
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
@@ -226,11 +228,6 @@ const deleteJobOrder = async (req, res) => {
         .json({ message: `Job order with ID: ${req.params.id} not found` });
 
     const result = await prisma.$transaction(async (tx) => {
-      let deletedJobOrder;
-      message = needsApproval
-        ? "Job Order delete awaiting approval"
-        : "Job order successfully deleted";
-
       const materials = await tx.material.findMany({
         where: { jobOrderId: jobOrder.id },
       });
@@ -238,7 +235,7 @@ const deleteJobOrder = async (req, res) => {
       if (needsApproval) {
         deletedJobOrder = await tx.jobOrderEdit.create({
           data: {
-            jobOrderId: jobOrder.id, // keep reference to original
+            jobOrderId: jobOrder.id,
             jobOrderCode: jobOrder.jobOrderCode,
             customerId: jobOrder.customerId || null,
             truckId: jobOrder.truckId || null,
@@ -254,7 +251,7 @@ const deleteJobOrder = async (req, res) => {
           },
         });
 
-        await tx.materialEdit.createMany({
+        const materialEdits = await tx.materialEdit.createMany({
           data: materials.map((m) => ({
             jobOrderId: jobOrder.id,
             materialName: m.materialName,
@@ -264,13 +261,36 @@ const deleteJobOrder = async (req, res) => {
           })),
         });
 
-        return deletedJobOrder;
+        responseMaterials = await tx.materialEdit.findMany({
+          where: { jobOrderId: jobOrder.id, requestType: "delete", approvalStatus: "pending" },
+        });
+
+        message = "Job Order delete awaiting approval";
+      } else {
+        await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } });
+        deletedJobOrder = await tx.jobOrder.delete({
+          where: { id: jobOrder.id },
+        });
+
+        responseMaterials = materials; 
+        message = "Job order successfully deleted";
       }
-      return res.status(201).json({ message, data: result });
+
+      return deletedJobOrder;
+    });
+
+    return res.status(201).json({
+      message,
+      data: {
+        ...result,
+        materials: responseMaterials,
+      },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
+
 
 module.exports = { createJobOrder, editJobOrder, deleteJobOrder };

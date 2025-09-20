@@ -507,6 +507,7 @@ model MaterialEdit {
   quantity Int
   price    Decimal @db.Decimal(13, 2)
   requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
 
   createdAt DateTime @default(now())
 
