@@ -233,15 +233,14 @@ const getTruck = async (req, res) => {
     if (!req?.params?.id)
       return res.status(400).json({ message: "ID is required" });
 
-    const truck = await prisma.truck.findUnique({
-      where: { id: req.params.id },
-    });
-
-    if (!truck) {
-      return res.status(404).json({ message: "Truck not found" });
-    }
-
     try {
+      const truck = await prisma.truck.findUnique({
+        where: { id: req.params.id },
+      });
+
+      if (!truck) {
+        return res.status(404).json({ message: "Truck not found" });
+      }
       return res.status(201).json({ truck })
     } catch (err) {
       return res.status(500).json({ message: err.message })

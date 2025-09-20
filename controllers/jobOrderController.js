@@ -217,7 +217,7 @@ const deleteJobOrder = async (req, res) => {
     const needsApproval = req.approval;
     let message;
     let deletedJobOrder;
-    let responseMaterials = []; // will hold the right set of materials
+    let responseMaterials = [];
 
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
@@ -262,7 +262,11 @@ const deleteJobOrder = async (req, res) => {
         });
 
         responseMaterials = await tx.materialEdit.findMany({
-          where: { jobOrderId: jobOrder.id, requestType: "delete", approvalStatus: "pending" },
+          where: {
+            jobOrderId: jobOrder.id,
+            requestType: "delete",
+            approvalStatus: "pending",
+          },
         });
 
         message = "Job Order delete awaiting approval";
@@ -272,7 +276,7 @@ const deleteJobOrder = async (req, res) => {
           where: { id: jobOrder.id },
         });
 
-        responseMaterials = materials; 
+        responseMaterials = materials;
         message = "Job order successfully deleted";
       }
 
@@ -291,6 +295,48 @@ const deleteJobOrder = async (req, res) => {
   }
 };
 
+const getAllJobOrders = async (req, res) => {
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      return tx.jobOrder.findMany({
+        include: {
+          materials: true,
+        },
+      });
+    });
 
+    return res.status(200).json({ data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
 
-module.exports = { createJobOrder, editJobOrder, deleteJobOrder };
+const getJobOrder = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const jobOrder = await prisma.jobOrder.findUnique({
+      where: { id: req.params.id },
+      include: {
+        materials: true,
+      },
+    });
+
+    if (!jobOrder) {
+      return res.status(404).json({ message: "Job Order not found" });
+    }
+
+    return res.status(200).json({ data: jobOrder });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  createJobOrder,
+  editJobOrder,
+  deleteJobOrder,
+  getAllJobOrders,
+  getJobOrder,
+};

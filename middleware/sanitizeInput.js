@@ -1,4 +1,3 @@
-const sanitizeHtml = require("sanitize-html");
 function sanitize(string) {
   const map = {
     "&": "&amp;",

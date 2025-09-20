@@ -756,3 +756,5 @@
 20250920	13:04:28	7c87ee80-e53a-4454-bd9c-d165dda04542	DELETE	undefined	/api/joborders/3dcbd97d-70ae-4767-a362-1943ac5bdc71
 20250920	13:09:43	2885e1f5-fa7e-4bab-8334-3dc4c4ab12b5	DELETE	undefined	/api/joborders/3dcbd97d-70ae-4767-a362-1943ac5bdc71
 20250920	13:11:41	2121e5cc-0727-4efb-b971-2b34c7ae4e6f	DELETE	undefined	/api/joborders/3dcbd97d-70ae-4767-a362-1943ac5bdc71
+20250920	14:07:57	7c5617aa-eb04-49b6-b916-e4d9c2076811	GET	undefined	/api/joborders
+20250920	14:11:10	676f121b-3da3-4258-8697-92790d044ac7	GET	undefined	/api/joborders/074b2b7e-6676-40ec-868f-fc1e5725f868
