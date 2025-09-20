@@ -197,5 +197,22 @@ const getAllEquipments = async (req, res) => {
   }
 };
 
+const getEquipment = async (req, res) => {
+      if (!req?.params?.id)
+    return res.status(404).json({ message: "ID is required" });
 
-module.exports = { createEquipment, editEquipment, deleteEquipment, getAllEquipments };
+  try {
+    const equipment = await prisma.equipment.findFirst({
+      where: { id: req.params.id },
+    });
+    if (!equipment) return res.status(404).json({ message: `Equipment with ${req.params.id} not found` });
+
+    return res.status(201).json({ data: equipment })
+  } catch (err) {
+    return res.status(500).json({ message: err.message })
+  }
+
+}
+
+
+module.exports = { createEquipment, editEquipment, deleteEquipment, getAllEquipments, getEquipment };
