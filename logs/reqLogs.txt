@@ -819,3 +819,6 @@
 20250922	11:33:48	2a610daa-f304-4c3f-8305-af4db7e44873	GET	undefined	/api/materials
 20250922	11:37:44	fc8b2b8c-322a-4148-882f-bab17ccf1e02	GET	undefined	/api/materials
 20250922	11:40:37	490c7c7d-56bc-4bc3-95ba-34cd737c4465	GET	undefined	/api/materials
+20250922	12:43:08	2210039c-a635-4fcb-a6e5-1bd848bdecf8	GET	undefined	/api/branches
+20250922	12:43:58	3a8e8ac0-ee7a-4acc-b905-35467ceda73e	POST	undefined	/api/otherincomes
+20250922	12:44:10	7703db84-b752-4636-954e-38938e6e32a4	POST	undefined	/api/otherincomes

@@ -70,15 +70,19 @@ const createTruck = async (req, res) => {
 const editTruck = async (req, res) => {
   const { plate, make, model } = req.body;
 
-  if (!req?.body?.id)
-    return res.status(400).json({ message: "ID is required" });
-
-  const truck = await prisma.truck.findFirst({ where: { id: req.body.id } });
-
-  if (!truck) return res.status(404).json({ message: `Truck with ID: ${req.body.id} not found`})
-
-
   try {
+    if (!req?.body?.id)
+      return res.status(400).json({ message: "ID is required" });
+
+    const truck = await prisma.truck.findFirst({
+      where: { id: req.body.id },
+    });
+
+    if (!truck)
+      return res
+        .status(404)
+        .json({ message: `Truck with ID: ${req.body.id} not found` });
+
     if (plate) {
       const existingTruck = await prisma.truck.findFirst({
         where: { plate },
