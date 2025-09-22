@@ -16,7 +16,7 @@ const createEquipment = async (req, res) => {
       .json({ message: "Name, quantity, price, and branchId are required" });
 
   try {
-    const needsApproval = needsApproval;
+    const needsApproval = req.approval;
     let message;
     const equipmentData = {
       equipmentName: name,
@@ -158,6 +158,7 @@ const deleteEquipment = async (req, res) => {
 
 const getAllEquipments = async (req, res) => {
   const search = req?.query?.search;
+  const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const startDate = req?.query?.startDate; // e.g. "2025-01-01"
@@ -165,11 +166,23 @@ const getAllEquipments = async (req, res) => {
 
   let where = {};
 
+   if (branch) {
+     where.branch = {
+       branchName: { contains: branch },
+     };
+   }
+
   if (search) {
+    const searchAsNumber = Number(search);
+
     where.OR = [
-      { equipmentName: { contains: search } },
-      { price: { contains: search } },
-      { quantity: { contains: search } },
+      { equipmentName: { contains: search } }, // string search
+      ...(isNaN(searchAsNumber)
+        ? []
+        : [
+            { price: { equals: searchAsNumber } }, // number search
+            { quantity: { equals: searchAsNumber } },
+          ]),
     ];
   }
 
@@ -186,6 +199,11 @@ const getAllEquipments = async (req, res) => {
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
         ...(limit ? { take: limit } : {}),
+        include: {
+          branch: {
+            select: { branchName: true, address: true },
+          },
+        },
       });
 
       return equipments;

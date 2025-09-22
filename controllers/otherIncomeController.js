@@ -205,4 +205,28 @@ const getAllOtherIncomes = async (req, res) => {
   }
 };
 
-module.exports = { createOtherIncome, editOtherIncome, deleteOtherIncome };
+const getOtherIncome = async (req, res) => {
+    if (!req.params.id) return res.status(404).json({ message: "Id is required" });
+
+  try {
+    const otherIncome = await prisma.otherIncome.findFirst({
+      where: { id: req.params.id },
+    });
+    if (!otherIncome)
+      return res
+        .status(404)
+        .json({ message: `Other income with id: ${req.params.id.id} not found` });
+
+    return res.status(201).json({ data: otherIncome }) 
+} catch (err) {
+    return res.status(500).json({ message: err.message })
+}
+}
+
+module.exports = {
+  createOtherIncome,
+  editOtherIncome,
+  deleteOtherIncome,
+  getAllOtherIncomes,
+  getOtherIncome,
+};
