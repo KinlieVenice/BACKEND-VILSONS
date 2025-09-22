@@ -932,3 +932,16 @@
 20250922	21:42:09	f40a6122-2cc5-4b40-81cf-d43d43522108	GET	undefined	/api/joborders/myorders
 20250922	22:16:54	e38e5c53-d774-4ff7-ac9b-45e07ebbe46d	GET	undefined	/api/joborders/myorders
 20250922	22:17:27	8c80cd6c-085a-430f-b377-e2dccc5ed80e	GET	undefined	/api/joborders/myorders
+20250922	22:25:54	02beadac-a258-4a72-99b2-4fd1a896825d	POST	undefined	/auth
+20250922	22:26:07	cf3d4800-8501-4a3e-8ac2-f32836702757	GET	undefined	/api/users
+20250922	22:47:05	8be2150c-a129-48b4-a5e3-8344b4f0ec41	POST	undefined	/api/trucks/ownership
+20250922	22:48:18	859f23ce-0871-450d-8ebc-46cfccd5c1ed	POST	undefined	/api/trucks/ownership
+20250922	22:50:42	94644ac8-26fe-4c6f-b7fb-6a7a695b62b5	POST	undefined	/api/trucks/ownership
+20250922	22:51:06	27e36453-d5ce-4e37-b118-228709ce0681	POST	undefined	/api/trucks/ownership
+20250922	22:57:08	8aee6c53-4f3a-457c-babb-049652194f98	POST	undefined	/api/trucks/ownership
+20250922	23:00:34	f1ea090e-9c32-4268-991a-1b91c2005756	POST	undefined	/api/trucks/ownership
+20250922	23:03:16	0d88f564-b797-401e-9e4a-f1bd6eba7a0d	POST	undefined	/api/trucks/ownership
+20250922	23:03:53	fd98cf68-b2b5-43a0-b832-662f07e55077	POST	undefined	/api/trucks/ownership
+20250922	23:10:36	6a4105cf-d6ca-4fe0-b12b-c44555f249f6	POST	undefined	/api/trucks/ownership
+20250922	23:11:22	ab27ab3a-ad0e-48c7-a725-ad23b3bacd0f	POST	undefined	/api/trucks/ownership
+20250922	23:13:40	bb587282-aa3d-4460-a03d-6fdb227046c9	POST	undefined	/api/trucks/ownership

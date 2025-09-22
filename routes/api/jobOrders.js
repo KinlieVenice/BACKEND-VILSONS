@@ -16,8 +16,6 @@ router.route("/assignedorders")
 router.route("/myorders")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), jobOrderController.getMyJobOrders);
 
-
-
 router.route("/:id")
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.deleteJobOrder)
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER), jobOrderController.getJobOrder);

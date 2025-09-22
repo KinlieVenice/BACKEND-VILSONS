@@ -235,6 +235,12 @@ async function getPermissionData() {
       description: "View single truck",
     },
     {
+      module: "Trucks",
+      permissionName: "edit_truck_owner",
+      method: "edit",
+      description: "Transfer truck ownership",
+    },
+    {
       module: "Activity_Logs",
       permissionName: "view_activity_logs",
       method: "view",

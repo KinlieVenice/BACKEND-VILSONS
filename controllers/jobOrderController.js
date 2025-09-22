@@ -313,7 +313,7 @@ const getAllJobOrders = async (req, res) => {
   }
 
   if (status) {
-    where.status = status; 
+    where.status = status;
   }
 
   if (search) {
@@ -454,29 +454,32 @@ const getAssignedJobOrders = async (req, res) => {
   }
 
   try {
-    const contractor = await prisma.contractor.findFirst({ where: { userId: req.id }});
+    const result = await prisma.$transaction(async (tx) => {
+      const contractor = await prisma.contractor.findFirst({
+        where: { userId: req.id },
+      });
+      const jobOrder = await prisma.jobOrder.findMany({
+        where: {
+          contractorId: contractor.id,
+          ...where,
+        },
+        ...(page && limit ? { skip: (page - 1) * limit } : {}),
+        ...(limit ? { take: limit } : {}),
+        include: {
+          materials: true,
+          truck: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
 
-    console.log(contractor.id)
-    const jobOrder = await prisma.jobOrder.findMany({
-      where: {
-        contractorId: contractor.id,
-        ...where, 
-      },
-      ...(page && limit ? { skip: (page - 1) * limit } : {}),
-      ...(limit ? { take: limit } : {}),
-      include: {
-        materials: true,
-        truck: true, 
-      },
-      orderBy: { createdAt: "desc" },
+      if (!jobOrder) {
+        return res.status(404).json({ message: "Job Orders not found" });
+      }
+
+      return jobOrder
     });
 
-
-    if (!jobOrder) {
-      return res.status(404).json({ message: "Job Orders not found" });
-    }
-
-    return res.status(200).json({ data: jobOrder });
+    return res.status(200).json({ data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -519,22 +522,23 @@ const getMyJobOrders = async (req, res) => {
   }
 
   try {
-    const customer = await prisma.customer.findFirst({ where: { userId: req.id }});
+    const customer = await prisma.customer.findFirst({
+      where: { userId: req.id },
+    });
 
     const jobOrder = await prisma.jobOrder.findMany({
       where: {
         customerId: customer.id,
-        ...where, 
+        ...where,
       },
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
       include: {
         materials: true,
-        truck: true, 
+        truck: true,
       },
       orderBy: { createdAt: "desc" },
     });
-
 
     if (!jobOrder) {
       return res.status(404).json({ message: "Job Orders not found" });

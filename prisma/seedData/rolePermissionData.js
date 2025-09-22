@@ -233,6 +233,11 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.EDIT_TRUCK_OWNER),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.DELETE_TRUCKS),
       approval: false,
     },

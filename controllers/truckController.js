@@ -141,6 +141,52 @@ const editTruck = async (req, res) => {
   }
 };
 
+const editTruckOwner = async (req, res) => {
+  const { truckId, customerId } = req.body;
+
+  try {
+    const truckData = {
+      customerId,
+      truckId,
+      transferredByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      let newTruckOwner;
+      const truck = await tx.truck.findFirst({ where: { id: truckId } });
+      if (!truck) return res.status(404).json({ message: "Truck not found" });
+
+      const truckOwner = await tx.truckOwnership.findFirst({
+        where: { truckId },
+        orderBy: { startDate: "desc" }, // get the latest ownership
+      });
+
+      if (truckOwner) {
+        await tx.truckOwnership.update({
+          where: { id: truckOwner.id },
+          data: { endDate: new Date() }, // end previous ownership
+        });
+        newTruckOwner = await tx.truckOwnership.create({
+          data: truckData,
+        });
+      } else {
+        newTruckOwner = await tx.truckOwnership.create({
+          data: truckData,
+        });
+      }
+
+      return newTruckOwner;
+    });
+
+    return res.status(201).json({
+      message: "Truck owner successfully transferred",
+      data: result,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 const deleteTruck = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -170,7 +216,9 @@ const deleteTruck = async (req, res) => {
             where: { id: truck.id },
           });
 
-          message = needsApproval ? "Truck delete is awaiting approval" : "Truck is successfully deleted";
+      message = needsApproval
+        ? "Truck delete is awaiting approval"
+        : "Truck is successfully deleted";
 
       return truck_delete;
     });
@@ -234,21 +282,28 @@ const getAllTrucks = async (req, res) => {
 };
 
 const getTruck = async (req, res) => {
-    if (!req?.params?.id)
-      return res.status(400).json({ message: "ID is required" });
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
 
-    try {
-      const truck = await prisma.truck.findUnique({
-        where: { id: req.params.id },
-      });
+  try {
+    const truck = await prisma.truck.findUnique({
+      where: { id: req.params.id },
+    });
 
-      if (!truck) {
-        return res.status(404).json({ message: "Truck not found" });
-      }
-      return res.status(201).json({ truck })
-    } catch (err) {
-      return res.status(500).json({ message: err.message })
+    if (!truck) {
+      return res.status(404).json({ message: "Truck not found" });
     }
+    return res.status(201).json({ truck });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
-module.exports = { createTruck, editTruck, deleteTruck, getAllTrucks, getTruck };
+module.exports = {
+  createTruck,
+  editTruck,
+  deleteTruck,
+  getAllTrucks,
+  getTruck,
+  editTruckOwner,
+};

@@ -9,6 +9,9 @@ router.route("/")
   .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCKS),truckController.editTruck)
   .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getAllTrucks);
 
+router.route("/ownership")
+  .post(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK_OWNER),truckController.editTruckOwner)
+
 router.route("/:id")
   .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCKS),truckController.deleteTruck)
   .get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_TRUCK),truckController.getTruck);

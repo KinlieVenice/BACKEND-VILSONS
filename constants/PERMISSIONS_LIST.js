@@ -37,6 +37,7 @@ const PERMISSIONS_LIST = {
   VIEW_SINGLE_TRUCK: "view_single_truck",
   CREATE_TRUCKS: "create_trucks",
   EDIT_TRUCKS: "edit_trucks",
+  EDIT_TRUCK_OWNER: "edit_truck_owner",
   DELETE_TRUCKS: "delete_trucks",
   VIEW_ACTIVITY_LOGS: "view_activity_logs",
   VIEW_USERS: "view_users",
