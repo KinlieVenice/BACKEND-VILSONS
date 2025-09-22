@@ -154,8 +154,8 @@ const getAllOtherIncomes = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  const startDate = req?.query?.startDate; // e.g. "2025-01-01"
-  const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+  const year = req?.query?.year; // e.g. "2025"
+  const month = req?.query?.month; // e.g. "09" for September
 
   let where = {};
 
@@ -168,25 +168,28 @@ const getAllOtherIncomes = async (req, res) => {
   if (search) {
     where.OR = [
       { description: { contains: search } },
-      { amount: { contains: search } },
-      { brnach: { contains: search } },
-      {
-        branch: {
-          OR: [
-            { branchName: { contains: search } },
-            { address: { contains: search } },
-          ],
-        },
-      },
     ];
   }
 
-  if (startDate && endDate) {
+  if (year && !month) {
+    const y = parseInt(year, 10);
     where.createdAt = {
-      gte: new Date(startDate),
-      lte: new Date(endDate),
+      gte: new Date(y, 0, 1),
+      lt: new Date(y + 1, 0, 1),
     };
   }
+
+  if (year && month) {
+    const y = parseInt(year, 10);
+    const m = parseInt(month, 10);
+    const startOfMonth = new Date(y, m - 1, 1); 
+    const endOfMonth = new Date(y, m, 1); 
+    where.createdAt = {
+      gte: startOfMonth,
+      lt: endOfMonth,
+    };
+  }
+
   try {
     const otherIncome = await prisma.otherIncome.findMany({
       where,
@@ -199,7 +202,7 @@ const getAllOtherIncomes = async (req, res) => {
       },
     });
 
-    return otherIncome;
+    return res.status(200).json({ data: otherIncome });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

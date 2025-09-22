@@ -173,16 +173,8 @@ const getAllEquipments = async (req, res) => {
    }
 
   if (search) {
-    const searchAsNumber = Number(search);
-
     where.OR = [
-      { equipmentName: { contains: search } }, // string search
-      ...(isNaN(searchAsNumber)
-        ? []
-        : [
-            { price: { equals: searchAsNumber } }, // number search
-            { quantity: { equals: searchAsNumber } },
-          ]),
+      { equipmentName: { contains: search } }
     ];
   }
 
