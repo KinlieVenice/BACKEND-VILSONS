@@ -72,10 +72,8 @@ const createUser = async (req, res) => {
             data: { ...userData },
           });
 
-
-
-        //this is an object with function as value
-        if (!needsApproval) {
+      //this is an object with function as value
+      if (!needsApproval) {
         const roleTableMap = {
           admin: () => tx.admin.create({ data: { userId: user.id } }),
           customer: () => tx.customer.create({ data: { userId: user.id } }),
@@ -84,7 +82,7 @@ const createUser = async (req, res) => {
             tx.contractor.create({
               data: {
                 userId: user.id,
-                commission: req.body.commission, 
+                commission: req.body.commission,
               },
             }),
         };
@@ -133,7 +131,7 @@ const createUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const { name, phone, email, description } = req.body;
+  const { name, phone, email, description, roles } = req.body;
 
   if (!req?.body?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -147,19 +145,23 @@ const editUser = async (req, res) => {
   try {
     let message;
     let needsApproval = req.approval;
+    let existingUser;
+    let pendingUser;
     console.log(needsApproval);
 
-    const existingUser = await prisma.user.findFirst({
-      where: { email },
-    });
-    const pendingEdit = await prisma.userEdit.findFirst({
-      where: {
-        email,
-        approvalStatus: "pending",
-      },
-    });
+    if (email && email !== user.email) {
+      existingUser = await prisma.user.findFirst({
+        where: { email },
+      });
+      pendingUser = await prisma.userEdit.findFirst({
+        where: {
+          email,
+          approvalStatus: "pending",
+        },
+      });
+    }
 
-    if (existingUser || pendingEdit) {
+    if (existingUser || pendingUser) {
       return res
         .status(400)
         .json({ message: "Email already in use or pending approval" });
@@ -197,12 +199,183 @@ const editUser = async (req, res) => {
             data: updatedData,
           });
 
+      const arraysEqual = (a, b) =>
+        Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        [...a].sort().join(",") === [...b].sort().join(",");
+
+      if (!needsApproval && !arraysEqual(user.roles, roles)) {
+        // STEP 1: Reset junction table roles
+        await tx.userRole.deleteMany({ where: { userId: user.id } });
+
+        await tx.userRole.createMany({
+          data: await Promise.all(
+            roles.map(async (role) => ({
+              userId: user.id,
+              roleId: await roleIdFinder(role),
+            }))
+          ),
+        });
+
+        // STEP 2: Clear old role-specific tables
+        await Promise.all([
+          tx.admin.deleteMany({ where: { userId: user.id } }),
+          tx.customer.deleteMany({ where: { userId: user.id } }),
+          tx.employee.deleteMany({ where: { userId: user.id } }),
+          tx.contractor.deleteMany({ where: { userId: user.id } }),
+        ]);
+
+        // STEP 3: Recreate based on new roles
+        const roleTableMap = {
+          admin: () => tx.admin.create({ data: { userId: user.id } }),
+          customer: () => tx.customer.create({ data: { userId: user.id } }),
+          employee: () => tx.employee.create({ data: { userId: user.id } }),
+          contractor: () =>
+            tx.contractor.create({
+              data: {
+                userId: user.id,
+                commission: req.body.commission,
+              },
+            }),
+        };
+
+        await Promise.all(
+          roles
+            .filter((role) => roleTableMap[role])
+            .map((role) => roleTableMap[role]())
+        );
+      }
+
+      message = needsApproval
+        ? "User edit awaiting approval"
+        : "User edited successfully";
+
       return { user_edit };
     });
 
     return res.status(201).json({
-      message: "User edited successfully",
+      message,
       data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const editProfile = async (req, res) => {
+  const { name, phone, email, description } = req.body;
+
+  try {
+    let message;
+    let existingUser;
+    let pendingUser;
+
+    const user = await prisma.user.findFirst({ where: { id: req.id } });
+
+    if (email && email !== user.email) {
+      existingUser = await prisma.user.findFirst({
+        where: { email },
+      });
+      pendingUser = await prisma.userEdit.findFirst({
+        where: {
+          email,
+          approvalStatus: "pending",
+        },
+      });
+    }
+
+    if (existingUser || pendingUser) {
+      return res
+        .status(400)
+        .json({ message: "Email already in use or pending approval" });
+    }
+
+    const updatedData = {
+      fullName: name ?? user.fullName,
+      username: user.username,
+      phone: phone ?? user.phone,
+      email: email ?? user.email,
+      hashPwd: user.hashPwd,
+      description: description ?? user.description,
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user_edit = await tx.user.update({
+            where: { id: user.id },
+            data: updatedData,
+          });
+
+      message = "User edited successfully";
+
+      return user_edit;
+    });
+
+    return res.status(201).json({
+      message,
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const editProfilePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await prisma.user.findFirst({ where: { id: req.id } });
+
+  const isMatch = await bcrypt.compare(oldPassword, user.hashPwd);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid old password" });
+  }
+
+  const strongPasswordRegex =
+    /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+
+  if (!strongPasswordRegex.test(newPassword)) {
+    return res.status(400).json({
+      message:
+        "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",
+    });
+  }
+
+  const hashPwd = await bcrypt.hash(newPassword, 10);
+
+  const isUnchanged = await bcrypt.compare(oldPassword, hashPwd);
+  if (isUnchanged) {
+    return res
+      .status(400)
+      .json({ message: "New and old password cannot be the same" });
+  }
+
+  try {
+    const updatedData = {
+      fullName: user.fullName,
+      username: user.username,
+      phone: user.phone,
+      email: user.email,
+      hashPwd,
+      description: user.description,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user_edit = await tx.user.update({
+            where: { id: user.id },
+            data: updatedData,
+          });
+
+      const message = needsApproval
+        ? "User password awaiting approval"
+        : "User password successfully changed";
+
+      return { message, hashPwd: updatedData.hashPwd };
+    });
+
+    return res.status(201).json({
+      message: result.message,
+      data: result.hashPwd,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -441,10 +614,11 @@ const getUser = async (req, res) => {
   }
 };
 
-
 module.exports = {
   createUser,
   editUser,
+  editProfile,
+  editProfilePassword,
   getAllUsers,
   editUserPassword,
   deleteUser,
