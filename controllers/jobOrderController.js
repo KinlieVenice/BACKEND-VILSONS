@@ -297,12 +297,19 @@ const deleteJobOrder = async (req, res) => {
 
 const getAllJobOrders = async (req, res) => {
   const search = req?.query?.search;
+  const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const startDate = req?.query?.startDate; // e.g. "2025-01-01"
   const endDate = req?.query?.endDate; // e.g. "2025-01-31"
 
   let where = {};
+
+  if (branch) {
+    where.branch = {
+      branchName: { contains: branch },
+    };
+  }
 
   if (search) {
     where.OR = [
@@ -365,7 +372,9 @@ const getAllJobOrders = async (req, res) => {
         ...(limit ? { take: limit } : {}),
         include: {
           truck: true,
-          branch: true,
+          branch: {
+            select: { branchName: true, address: true }, // single branch, not array
+          },
           customer: {
             include: {
               user: true,
