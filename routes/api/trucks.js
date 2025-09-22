@@ -11,7 +11,7 @@ router.route("/")
 
 router.route("/:id")
   .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCKS),truckController.deleteTruck)
-  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getTruck);
+  .get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_TRUCK),truckController.getTruck);
 
 
 module.exports = router;

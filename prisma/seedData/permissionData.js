@@ -55,6 +55,24 @@ async function getPermissionData() {
       description: "Delete a job order",
     },
     {
+      module: "Job_Orders",
+      permissionName: "view_single_job_order",
+      method: "view",
+      description: "View single job orders",
+    },
+    {
+      module: "Job_Orders",
+      permissionName: "view_assigned_job_orders",
+      method: "view",
+      description: "View assigned job orders",
+    },
+    {
+      module: "Job_Orders",
+      permissionName: "view_my_job_orders",
+      method: "view",
+      description: "View my job orders",
+    },
+    {
       module: "Other_Incomes",
       permissionName: "view_other_incomes",
       method: "view",
@@ -211,6 +229,12 @@ async function getPermissionData() {
       description: "Delete a truck",
     },
     {
+      module: "Trucks",
+      permissionName: "view_single_truck",
+      method: "view",
+      description: "View single truck",
+    },
+    {
       module: "Activity_Logs",
       permissionName: "view_activity_logs",
       method: "view",
@@ -245,6 +269,12 @@ async function getPermissionData() {
       permissionName: "delete_user",
       method: "delete",
       description: "Delete a user account and roles",
+    },
+    {
+      module: "Users_All_Users",
+      permissionName: "view_single_user",
+      method: "view",
+      description: "View single user",
     },
     {
       module: "Branches",

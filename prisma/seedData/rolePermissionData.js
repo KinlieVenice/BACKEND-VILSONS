@@ -60,6 +60,11 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_JOB_ORDER),
       approval: false,
     },
@@ -213,6 +218,11 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_TRUCK),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_TRUCKS),
       approval: false,
     },
@@ -236,6 +246,11 @@ async function getRolePermissionData() {
     {
       roleId: await roleIdFinder(ROLES_LIST.ADMIN),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_USERS),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_USER),
       approval: false,
     },
     {
@@ -338,6 +353,20 @@ async function getRolePermissionData() {
       ),
       approval: false,
     },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CONTRACTOR),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS
+      ),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CONTRACTOR),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER
+      ),
+      approval: false,
+    },
   ];
 
   const customer = [
@@ -355,6 +384,20 @@ async function getRolePermissionData() {
       ),
       approval: false,
     },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CUSTOMER),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS
+      ),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CUSTOMER),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER
+      ),
+      approval: false,
+    },
   ];
 
   const cashier = [
@@ -367,30 +410,22 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await permissionIdFinder(
-        PERMISSIONS_LIST.VIEW_BRANCH
-      ),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_BRANCH),
       approval: true,
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await permissionIdFinder(
-        PERMISSIONS_LIST.CREATE_BRANCH
-      ),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_BRANCH),
       approval: true,
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await permissionIdFinder(
-        PERMISSIONS_LIST.EDIT_BRANCH
-      ),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.EDIT_BRANCH),
       approval: true,
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await permissionIdFinder(
-        PERMISSIONS_LIST.DELETE_BRANCH
-      ),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.DELETE_BRANCH),
       approval: true,
     },
     {
@@ -417,6 +452,11 @@ async function getRolePermissionData() {
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_JOB_ORDERS),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER),
       approval: true,
     },
     {
@@ -574,6 +614,13 @@ async function getRolePermissionData() {
     },
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_SINGLE_TRUCK
+      ),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_TRUCKS),
       approval: true,
     },
@@ -597,6 +644,11 @@ async function getRolePermissionData() {
     {
       roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_USERS),
+      approval: true,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_USER),
       approval: true,
     },
     {
@@ -659,7 +711,7 @@ async function getRolePermissionData() {
       approval: true,
     },
     {
-      roleId: await roleIdFinder(ROLES_LIST.ADMIN),
+      roleId: await roleIdFinder(ROLES_LIST.CASHIER),
       permissionId: await permissionIdFinder(
         PERMISSIONS_LIST.EDIT_PROFILE_PASSWORD
       ),

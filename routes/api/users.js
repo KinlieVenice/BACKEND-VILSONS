@@ -14,9 +14,12 @@ router.route("/profile")
 
 router.route("/:id")
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser)
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS),userController.getUser);
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_USER),userController.getUser);
 
 router.route("/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);
+
+router.route("/profile/password")
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_PASSWORD),userController.editProfilePassword);
 
 module.exports = router;
