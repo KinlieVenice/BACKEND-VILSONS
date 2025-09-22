@@ -27,11 +27,11 @@ const getAllMaterials = async (req, res) => {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const materials = await tx.material.findMany(
+      const materials = await tx.material.findMany({
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
-        ...(limit ? { take: limit } : {})
-      );
+        ...(limit ? { take: limit } : {}),
+      });
 
       return materials;
     });

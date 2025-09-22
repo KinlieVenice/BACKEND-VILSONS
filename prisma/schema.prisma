@@ -422,19 +422,22 @@ model OtherIncome {
 
 model OtherIncomeEdit {
   id            String @id @default(uuid())
-  otherIncomeId String
+  otherIncomeId String?
 
   description String
   amount      Decimal @db.Decimal(13, 2)
   branchId    String
   branch      Branch  @relation(fields: [branchId], references: [id])
 
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
   createdAt   DateTime @default(now())
   createdByUser String
   updatedAt   DateTime @updatedAt
   updatedByUser String
 
-  otherIncome OtherIncome @relation(fields: [otherIncomeId], references: [id])
+  otherIncome OtherIncome? @relation(fields: [otherIncomeId], references: [id])
   createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
@@ -508,13 +511,6 @@ model MaterialEdit {
   createdAt DateTime @default(now())
 
   jobOrder JobOrder? @relation(fields: [jobOrderId], references: [id])
-}
-
-enum OrderStatus {
-  unassigned
-  ongoing
-  completed
-  forRelease
 }
 
 model JobOrder {
@@ -697,6 +693,13 @@ model ApprovalLog {
 
 
 // enum
+
+enum OrderStatus {
+  unassigned
+  ongoing
+  completed
+  forRelease
+}
 
 enum ApprovalStatus {
   pending

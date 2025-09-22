@@ -812,3 +812,10 @@
 20250920	23:57:49	13e89c2f-fe08-47a5-ab87-bbbfec72a1e6	GET	undefined	/api/joborders
 20250921	00:01:36	0394e66e-1245-4948-9629-6cf05f089691	DELETE	undefined	/api/equipments/7459842d-3be1-417f-9794-2cce79e26975
 20250921	00:02:36	29727e2e-6f9a-423e-8520-67a0e8639304	DELETE	undefined	/api/equipments/8cb83e8c-8185-48bf-8e25-27e2d3574c36
+20250922	11:26:48	ea4dc51b-c4df-4d1d-bba9-7769bbac02ff	POST	undefined	/auth
+20250922	11:27:06	4450ad6f-6161-42fe-b8cc-243651158b2f	GET	undefined	/api/materials
+20250922	11:32:29	effc29ba-5c3f-4be9-8e30-4aa5d9347c62	GET	undefined	/api/materials
+20250922	11:32:47	b87144c2-6cd6-4729-a10e-e423368ee335	GET	undefined	/api/materials
+20250922	11:33:48	2a610daa-f304-4c3f-8305-af4db7e44873	GET	undefined	/api/materials
+20250922	11:37:44	fc8b2b8c-322a-4148-882f-bab17ccf1e02	GET	undefined	/api/materials
+20250922	11:40:37	490c7c7d-56bc-4bc3-95ba-34cd737c4465	GET	undefined	/api/materials
