@@ -72,6 +72,30 @@ const createUser = async (req, res) => {
             data: { ...userData },
           });
 
+
+
+        //this is an object with function as value
+        if (!needsApproval) {
+        const roleTableMap = {
+          admin: () => tx.admin.create({ data: { userId: user.id } }),
+          customer: () => tx.customer.create({ data: { userId: user.id } }),
+          employee: () => tx.employee.create({ data: { userId: user.id } }),
+          contractor: () =>
+            tx.contractor.create({
+              data: {
+                userId: user.id,
+                commission: req.body.commission, 
+              },
+            }),
+        };
+
+        await Promise.all(
+          roles
+            .filter((role) => roleTableMap[role])
+            .map((role) => roleTableMap[role]()) // call value function
+        );
+      }
+
       const userRoleData = await Promise.all(
         roles.map(async (role) => {
           return {
@@ -89,16 +113,19 @@ const createUser = async (req, res) => {
             data: userRoleData,
           });
 
-      const message = needsApproval
+      message = needsApproval
         ? "User created is awaiting approval"
         : "User is successfully created";
 
-      return { user, roles, message };
+      return { user, roles };
     });
 
     return res.status(201).json({
       message,
-      data: result,
+      data: {
+        ...result.user,
+        roles: result.roles,
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

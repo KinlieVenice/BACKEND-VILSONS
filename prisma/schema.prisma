@@ -41,6 +41,11 @@ model User {
   activityLog ActivityLog[]
   roles       UserRole[]
 
+  adminEdit       AdminEdit[]
+  customerEdit    CustomerEdit[]
+  contractorEdit  ContractorEdit[]
+  employeeEdit    EmployeeEdit[]
+
   edits           UserEdit[] @relation("UserEditedVer")
   createdUsers    User[]     @relation("CreatedBy")
   updatedUsers    User[]     @relation("UpdatedBy")
@@ -125,6 +130,14 @@ model Admin {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model AdminEdit {
+  id     String @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+}
+
 model Customer {
   id     String           @id @default(uuid())
   userId String
@@ -132,6 +145,12 @@ model Customer {
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobOrder JobOrder[] @relation("Customer")
   jobOrderEdit JobOrderEdit[] @relation("Customer")
+}
+
+model CustomerEdit {
+  id     String           @id @default(uuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Contractor {
@@ -145,11 +164,24 @@ model Contractor {
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model ContractorEdit {
+  id         String  @id @default(uuid())
+  userId     String
+  commission Decimal @db.Decimal(13, 2)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Employee {
   id             String           @id @default(uuid())
   userId         String
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   employeeSalary EmployeeSalary[]
+}
+
+model EmployeeEdit {
+  id             String           @id @default(uuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Branch {
