@@ -323,14 +323,6 @@ const getAllJobOrders = async (req, res) => {
         },
       },
       {
-        branch: {
-          OR: [
-            { branchName: { contains: search } },
-            { address: { contains: search } },
-          ],
-        },
-      },
-      {
         customer: {
           user: {
             OR: [

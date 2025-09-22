@@ -1,0 +1,235 @@
+const { PrismaClient } = require("../generated/prisma");
+const prisma = new PrismaClient();
+
+/*
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+*/
+
+const createOverhead = async (req, res) => {
+  const { description, amount, branchId } = req.body;
+  if (!description || !amount || !branchId)
+    return res
+      .status(400)
+      .json({ message: "Description, amount, and branchId required" });
+
+  try {
+    const needsApproval = req.approval;
+    let message;
+    const overheadData = {
+      description,
+      amount,
+      branchId,
+      createdByUser: req.username,
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const overhead = needsApproval
+        ? await tx.overheadEdit.create({
+            data: {
+              ...overheadData,
+              requestType: "create",
+              overheadId: null,
+            },
+          })
+        : await tx.overhead.create({
+            data: overheadData,
+          });
+
+      message = needsApproval
+        ? "Overhead is awaiting approval"
+        : "Overhead is successfully created";
+
+      return overhead;
+    });
+
+    return res.status(201).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const editOverhead = async (req, res) => {
+  const { description, amount, branchId } = req.body;
+  if (!req?.body?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const overhead = await prisma.overhead({
+      where: { id: req.body.id },
+    });
+    if (!overhead)
+      return res.status(404).json({
+        message: `Overhead with id: ${req.body.id} does not exist`,
+      });
+
+    const needsApproval = req.approval;
+    let message;
+    const overheadData = {
+      description: description ?? overhead.description,
+      amount: amount ?? overhead.amount,
+      branchId: branchId ?? overhead.branchId,
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const editedOverhead = needsApproval
+        ? await tx.overheadEdit.create({
+            data: {
+              ...overheadData,
+              createdByUser: req.username,
+              overheadId: overhead.id,
+              requestType: "edit",
+            },
+          })
+        : await tx.overhead.update({
+            where: { id: overhead.id },
+            data: overheadData,
+          });
+
+      message = needsApproval
+        ? "Overhead edit awaiting approval"
+        : "Overhead edited successfully";
+
+      return editedOverhead;
+    });
+    return res.status(201).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteOverhead = async (req, res) => {
+  if (!req.body.id) return res.status(404).json({ message: "Id is required" });
+
+  try {
+    const overhead = await prisma.overhead.findFirst({
+      where: { id: req.body.id },
+    });
+    if (!overhead)
+      return res
+        .status(404)
+        .json({ message: `Overhead with id: ${req.body.id.id} not found` });
+
+    const needsApproval = req.approval;
+    let message;
+    const overheadData = {
+      description: description ?? overhead.description,
+      amount: amount ?? overhead.amount,
+      branchId: branchId ?? overhead.branchId,
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const deletedOverhead = needsApproval
+        ? await tx.overheadEdit.create({
+            data: {
+              ...overheadData,
+              createdByUser: req.username,
+              overheadId: overhead.id,
+              requestType: "delete",
+            },
+          })
+        : await tx.overhead.delete({
+            where: { id: overhead.id },
+          });
+
+      message = needsApproval
+        ? "Overhead delete awaiting approval"
+        : "Overhead deleted successfully";
+
+      return deletedOverhead;
+    });
+
+    return res.status(201).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const getAllOverheads = async (req, res) => {
+  const search = req?.query?.search;
+  const branch = req?.query?.branch;
+  const page = req?.query?.page && parseInt(req.query.page, 10);
+  const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+  const year = req?.query?.year; // e.g. "2025"
+  const month = req?.query?.month; // e.g. "09" for September
+
+  let where = {};
+
+  if (branch) {
+    where.branch = {
+      branchName: { contains: branch },
+    };
+  }
+
+  if (search) {
+    where.OR = [
+      { description: { contains: search } },
+    ];
+  }
+
+  if (year && !month) {
+    const y = parseInt(year, 10);
+    where.createdAt = {
+      gte: new Date(y, 0, 1),
+      lt: new Date(y + 1, 0, 1),
+    };
+  }
+
+  if (year && month) {
+    const y = parseInt(year, 10);
+    const m = parseInt(month, 10);
+    const startOfMonth = new Date(y, m - 1, 1); 
+    const endOfMonth = new Date(y, m, 1); 
+    where.createdAt = {
+      gte: startOfMonth,
+      lt: endOfMonth,
+    };
+  }
+
+  try {
+    const overhead = await prisma.overhead.findMany({
+      where,
+      ...(page && limit ? { skip: (page - 1) * limit } : {}),
+      ...(limit ? { take: limit } : {}),
+      include: {
+        branch: {
+          select: { branchName: true, address: true },
+        },
+      },
+    });
+
+    return res.status(200).json({ data: overhead });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const getOverhead = async (req, res) => {
+    if (!req.params.id) return res.status(404).json({ message: "Id is required" });
+
+  try {
+    const overhead = await prisma.overhead.findFirst({
+      where: { id: req.params.id },
+    });
+    if (!overhead)
+      return res
+        .status(404)
+        .json({ message: `Overhead with id: ${req.params.id.id} not found` });
+
+    return res.status(201).json({ data: overhead }) 
+} catch (err) {
+    return res.status(500).json({ message: err.message })
+}
+}
+
+module.exports = {
+  createOverhead,
+  editOverhead,
+  deleteOverhead,
+  getAllOverheads,
+  getOverhead,
+};

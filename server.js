@@ -39,6 +39,7 @@ app.use("/api/joborders", require("./routes/api/jobOrders"));
 app.use("/api/equipments", require("./routes/api/equipments"));
 app.use("/api/materials", require("./routes/api/materials"));
 app.use("/api/otherincomes", require("./routes/api/otherincomes"));
+app.use("/api/overheads", require("./routes/api/overheads"));
 
 app.all(/^.*$/, (req, res) => {
   res.status(404);

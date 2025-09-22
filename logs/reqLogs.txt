@@ -866,3 +866,4 @@
 20250922	16:20:21	da2e712e-103a-4a83-824a-eeda34478c3b	POST	undefined	/api/otherincomes?year=2025&month=09
 20250922	16:20:25	178f2c17-42e3-4b75-a073-b819faf47e7c	GET	undefined	/api/otherincomes?year=2025&month=09
 20250922	16:20:31	f54c7feb-8216-4ead-9185-83631f88ec18	GET	undefined	/api/otherincomes?year=2025&month=08
+20250922	16:59:32	99ee2394-df4b-4010-a35c-ab9dda78fe79	POST	undefined	/api/overheads

@@ -12,6 +12,6 @@ router.route("/")
 
 router.route("/:id")
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_EQUIPMENT), equipmentController.deleteEquipment)
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_EQUIPMENT), equipmentController.getEquipment)
+// .get(verifyPermission(PERMISSIONS_LIST.VIEW_EQUIPMENT), equipmentController.getEquipment)
 
 module.exports = router;
