@@ -642,11 +642,12 @@ model UserRole {
 
 model UserRoleEdit {
   id     String @id @default(uuid())
-  userId String?
+  userId String
   roleId String
+  requestType    RequestType
   approvalStatus ApprovalStatus @default(pending)
 
-  user           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
@@ -665,11 +666,12 @@ model UserBranch {
 
 model UserBranchEdit {
   id     String @id @default(uuid())
-  userId String?
+  userId String
   branchId String
+  requestType    RequestType
   approvalStatus ApprovalStatus @default(pending)
 
-  user           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@unique([userId, branchId])

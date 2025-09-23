@@ -55,7 +55,6 @@ const createUser = async (req, res) => {
   try {
     let message;
     let needsApproval = req.approval;
-    console.log(needsApproval);
 
     const hashPwd = await bcrypt.hash(
       password || process.env.DEFAULT_PASSWORD,
@@ -107,15 +106,13 @@ const createUser = async (req, res) => {
         roles.map(async (role) => {
           return {
             roleId: await roleIdFinder(role),
-            ...(needsApproval ? { userEditId: user.id } : { userId: user.id }),
+            userId: user.id,
           };
         })
       );
 
       const userRole = needsApproval
-        ? await tx.userRoleEdit.createMany({
-            data: userRoleData,
-          })
+        ? {}
         : await tx.userRole.createMany({
             data: userRoleData,
           });
@@ -124,15 +121,13 @@ const createUser = async (req, res) => {
         branches.map(async (branch) => {
           return {
             branchId: await branchIdFinder(branch),
-            ...(needsApproval ? { userEditId: user.id } : { userId: user.id }),
+            userId: user.id,
           };
         })
       );
 
       const userBranch = needsApproval
-        ? await tx.userBranchEdit.createMany({
-            data: userBranchData,
-          })
+        ? {}
         : await tx.userBranch.createMany({
             data: userBranchData,
           });
