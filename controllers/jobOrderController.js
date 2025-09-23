@@ -48,45 +48,50 @@ const createJobOrder = async (req, res) => {
       updatedByUser: req.username,
     };
 
+    let contractorPercent;
+    let contractorCommission;
+    let shopCommission;
+    let totalMaterialCost = 0;
+
     const result = await prisma.$transaction(async (tx) => {
       let jobOrder;
 
-      if (needsApproval) {
-        jobOrder = await tx.jobOrderEdit.create({
-          data: {
-            jobOrderCode: null,
-            jobOrderId: null,
-            ...jobOrderData,
-            requestType: "create",
-          },
+      if (contractorId && labor) {
+        const contractor = await tx.contractor.findFirst({
+          where: { id: contractorId },
         });
 
-        if (materials && materials.length > 0) {
-          await tx.materialEdit.createMany({
-            data: materials.map((m) => ({
-              jobOrderId: null,
-              materialName: m.name,
-              quantity: m.quantity,
-              price: m.price,
-              requestType: "create",
-            })),
-          });
-        }
-      } else {
-        jobOrder = await tx.jobOrder.create({
-          data: { ...jobOrderData, jobOrderCode: newCode },
-        });
+        contractorPercent = contractor.commission;
+        contractorCommission = labor * contractorPercent;
+        shopCommission = contractorCommission - labor;
+      }
 
-        if (materials && materials.length > 0) {
-          await tx.material.createMany({
-            data: materials.map((m) => ({
-              jobOrderId: jobOrder.id,
-              materialName: m.name,
-              quantity: m.quantity,
-              price: m.price,
-            })),
-          });
-        }
+      const jobOrderModel = needsApproval ? tx.jobOrderEdit : tx.jobOrder;
+      const materialModel = needsApproval ? tx.materialEdit : tx.material;
+
+      jobOrder = await jobOrderModel.create({
+        data: {
+          ...jobOrderData,
+          jobOrderCode: needsApproval ? null : newCode,
+          jobOrderId: needsApproval ? null : undefined,
+          requestType: needsApproval ? "create" : undefined,
+          contractorPercent,
+        },
+      });
+
+      if (materials && materials.length > 0) {
+         totalMaterialCost = materials.reduce((sum, m) => {
+           return sum + m.price * m.quantity;
+         }, 0);
+        await materialModel.createMany({
+          data: materials.map((m) => ({
+            jobOrderId: needsApproval ? null : jobOrder.id,
+            materialName: m.name,
+            quantity: m.quantity,
+            price: m.price,
+            ...(needsApproval ? { requestType: "create" } : {}),
+          })),
+        });
       }
 
       message = needsApproval
@@ -100,6 +105,9 @@ const createJobOrder = async (req, res) => {
       message,
       data: {
         ...result,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
         materials: materials || [],
       },
     });
@@ -476,7 +484,7 @@ const getAssignedJobOrders = async (req, res) => {
         return res.status(404).json({ message: "Job Orders not found" });
       }
 
-      return jobOrder
+      return jobOrder;
     });
 
     return res.status(200).json({ data: result });

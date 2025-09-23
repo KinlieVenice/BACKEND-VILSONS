@@ -512,3 +512,83 @@ Unknown argument `id`. Did you mean `skip`? Available options are marked with ?.
 20250919	21:37:12	5833488e-98be-4753-a030-7827b2d9bba2	SyntaxError: Expected double-quoted property name in JSON at position 376 (line 18 column 1)
 20250922	17:58:28	56b9c8b2-732d-425f-9e91-5dd5455d0e3b	SyntaxError: Expected double-quoted property name in JSON at position 136 (line 7 column 1)
 20250922	18:09:02	3cfe1a62-1e39-4d8f-b30c-03c6c2cc193e	SyntaxError: Expected double-quoted property name in JSON at position 83 (line 5 column 1)
+20250923	17:32:47	1fdfcdb0-93e8-4d56-9b17-88eeb4ddd152	PrismaClientValidationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:470:34
+
+  467   return res.status(400).json({ message: "ID is required" });
+  468 }
+  469 
+→ 470 const user = await prisma.user.findUnique({
+        where: {
+          id: undefined,
+      ?   username?: String,
+      ?   email?: String,
+      ?   AND?: UserWhereInput | UserWhereInput[],
+      ?   OR?: UserWhereInput[],
+      ?   NOT?: UserWhereInput | UserWhereInput[],
+      ?   fullName?: StringFilter | String,
+      ?   phone?: StringFilter | String,
+      ?   hashPwd?: StringFilter | String,
+      ?   description?: StringNullableFilter | String | Null,
+      ?   refreshToken?: StringNullableFilter | String | Null,
+      ?   approvalStatus?: EnumApprovalStatusFilter | ApprovalStatus,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   createdByUser?: StringNullableFilter | String | Null,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   updatedByUser?: StringNullableFilter | String | Null,
+      ?   admin?: AdminListRelationFilter,
+      ?   customer?: CustomerListRelationFilter,
+      ?   contractor?: ContractorListRelationFilter,
+      ?   employee?: EmployeeListRelationFilter,
+      ?   activityLog?: ActivityLogListRelationFilter,
+      ?   roles?: UserRoleListRelationFilter,
+      ?   edits?: UserEditListRelationFilter,
+      ?   createdUsers?: UserListRelationFilter,
+      ?   updatedUsers?: UserListRelationFilter,
+      ?   createdUserEdit?: UserEditListRelationFilter,
+      ?   createdRole?: RoleListRelationFilter,
+      ?   createdBranches?: BranchListRelationFilter,
+      ?   createdBranchEdit?: BranchEditListRelationFilter,
+      ?   createdTrucks?: TruckListRelationFilter,
+      ?   createdTruckEdit?: TruckEditListRelationFilter,
+      ?   createdTransaction?: TransactionListRelationFilter,
+      ?   createdTransactionEdit?: TransactionEditListRelationFilter,
+      ?   createdJobOrder?: JobOrderListRelationFilter,
+      ?   createdJobOrderEdit?: JobOrderEditListRelationFilter,
+      ?   createdContractorPay?: ContractorPayListRelationFilter,
+      ?   createdContractorPayEdit?: ContractorPayEditListRelationFilter,
+      ?   createdEmployeeSalary?: EmployeeSalaryListRelationFilter,
+      ?   createdEmployeeSalaryEdit?: EmployeeSalaryEditListRelationFilter,
+      ?   createdEquipment?: EquipmentListRelationFilter,
+      ?   createdEquipmentEdit?: EquipmentEditListRelationFilter,
+      ?   createdOtherIncome?: OtherIncomeListRelationFilter,
+      ?   createdOtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+      ?   createdOverhead?: OverheadListRelationFilter,
+      ?   createdOverheadEdit?: OverheadEditListRelationFilter,
+      ?   transferredTruckOwnership?: TruckOwnershipListRelationFilter,
+      ?   updatedUserEdits?: UserEditListRelationFilter,
+      ?   updatedBranches?: BranchListRelationFilter,
+      ?   updatedBranchEdits?: BranchEditListRelationFilter,
+      ?   updatedTruck?: TruckListRelationFilter,
+      ?   updatedTruckEdit?: TruckEditListRelationFilter,
+      ?   updatedTransaction?: TransactionListRelationFilter,
+      ?   updatedTransactionEdit?: TransactionEditListRelationFilter,
+      ?   updatedJobOrder?: JobOrderListRelationFilter,
+      ?   updatedJobOrderEdit?: JobOrderEditListRelationFilter,
+      ?   updatedContractorPay?: ContractorPayListRelationFilter,
+      ?   updatedContractorPayEdit?: ContractorPayEditListRelationFilter,
+      ?   updatedEmployeeSalary?: EmployeeSalaryListRelationFilter,
+      ?   updatedEmployeeSalaryEdit?: EmployeeSalaryEditListRelationFilter,
+      ?   updatedEquipment?: EquipmentListRelationFilter,
+      ?   updatedEquipmentEdit?: EquipmentEditListRelationFilter,
+      ?   updatedOtherIncome?: OtherIncomeListRelationFilter,
+      ?   updatedOtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+      ?   updatedOverhead?: OverheadListRelationFilter,
+      ?   updatedOverheadEdit?: OverheadEditListRelationFilter,
+      ?   createdBy?: UserNullableScalarRelationFilter | UserWhereInput | Null,
+      ?   updatedBy?: UserNullableScalarRelationFilter | UserWhereInput | Null
+        }
+      })
+
+Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.

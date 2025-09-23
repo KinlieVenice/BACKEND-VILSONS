@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const defaultPassword = require("../utils/defaultPassword");
 const ROLES_LIST = require("../constants/ROLES_LIST");
 const roleIdFinder = require("../utils/roleIdFinder");
+const branchIdFinder = require("../utils/branchIdFinder");
 const getRolePermissionData = require("../prisma/seedData/rolePermissionData");
 const getPermissionData = require("../prisma/seedData/permissionData");
 
@@ -36,6 +37,18 @@ async function main() {
       data: await getPermissionData(),
       skipDuplicates: true,
     });
+
+    await tx.branch.createMany({
+      data: [
+        {
+          branchName: "main",
+          address: "Laguna",
+          createdByUser: "superadmin",
+          updatedByUser: "superadmin"
+        },
+      ],
+      skipDuplicates: true,
+    });
   });
 
   await prisma.$transaction(async (tx) => {
@@ -57,6 +70,18 @@ async function main() {
       data: await getRolePermissionData(),
       skipDuplicates: true,
     });
+
+     await tx.userBranch.createMany({
+       data: [
+         {
+           userId: superAdmin.id,
+           branchId: await branchIdFinder("main"),
+         },
+       ],
+       skipDuplicates: true,
+     });
+
+    
   });
 }
 

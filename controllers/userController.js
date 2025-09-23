@@ -2,14 +2,23 @@ const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const roleIdFinder = require("../utils/roleIdFinder");
+const branchIdFinder = require("../utils/branchIdFinder");
 
 const createUser = async (req, res) => {
-  const { name, username, phone, email, password, description, roles } =
-    req.body;
+  const {
+    name,
+    username,
+    phone,
+    email,
+    password,
+    description,
+    roles,
+    branches,
+  } = req.body;
 
-  if (!name || !username || !phone || !email || !roles) {
+  if (!name || !username || !phone || !email || !roles || !branches) {
     return res.status(400).json({
-      message: "Name, username, email, phone, and roles are required",
+      message: "Name, username, email, phone, branches, and roles are required",
     });
   }
 
@@ -111,11 +120,28 @@ const createUser = async (req, res) => {
             data: userRoleData,
           });
 
+      const userBranchData = await Promise.all(
+        branches.map(async (branch) => {
+          return {
+            branchId: await branchIdFinder(branch),
+            ...(needsApproval ? { userEditId: user.id } : { userId: user.id }),
+          };
+        })
+      );
+
+       const userBranch = needsApproval
+         ? await tx.userBranchEdit.createMany({
+             data: userBranchData,
+           })
+         : await tx.userBranch.createMany({
+             data: userBranchData,
+           });
+
       message = needsApproval
         ? "User created is awaiting approval"
         : "User is successfully created";
 
-      return { user, roles };
+      return { user, roles, branches };
     });
 
     return res.status(201).json({
@@ -123,6 +149,7 @@ const createUser = async (req, res) => {
       data: {
         ...result.user,
         roles: result.roles,
+        branches: result.branches
       },
     });
   } catch (error) {
@@ -303,9 +330,9 @@ const editProfile = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const user_edit = await tx.user.update({
-            where: { id: user.id },
-            data: updatedData,
-          });
+        where: { id: user.id },
+        data: updatedData,
+      });
 
       message = "User edited successfully";
 
@@ -362,9 +389,9 @@ const editProfilePassword = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const user_edit = await tx.user.update({
-            where: { id: user.id },
-            data: updatedData,
-          });
+        where: { id: user.id },
+        data: updatedData,
+      });
 
       const message = needsApproval
         ? "User password awaiting approval"
