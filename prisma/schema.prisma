@@ -140,6 +140,7 @@ model Contractor {
   commission Decimal @db.Decimal(13, 2)
 
   contractorPay ContractorPay[]
+  contractorPayEdit ContractorPayEdit[]
   JobOrder      JobOrder[]
   JobOrderEdit      JobOrderEdit[]
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -265,8 +266,6 @@ model ContractorPay {
   type   PaymentType
   amount Decimal     @db.Decimal(13, 2)
 
-  approvalStatus ApprovalStatus @default(pending)
-
   createdAt   DateTime @default(now())
   createdByUser String
   updatedAt   DateTime @updatedAt
@@ -282,6 +281,7 @@ model ContractorPay {
 model ContractorPayEdit {
   id              String  @id @default(uuid())
   contractorPayId String
+  contractorId String
 
   type   PaymentType
   amount Decimal     @db.Decimal(13, 2)
@@ -294,6 +294,7 @@ model ContractorPayEdit {
   updatedAt   DateTime @updatedAt
   updatedByUser String
 
+  contractor Contractor @relation(fields: [contractorId], references: [id])
   createdBy     User          @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy     User          @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   contractorPay ContractorPay @relation(fields: [contractorPayId], references: [id])
