@@ -592,3 +592,8 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:4
       })
 
 Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
+20250923	22:54:11	e525b848-3a1b-4baf-af5b-cdf8d71332fe	SyntaxError: Expected double-quoted property name in JSON at position 219 (line 9 column 1)
+20250923	23:19:25	2f7ea808-3dc3-4ce5-8fda-e2c877a2f203	Error: data and hash arguments required
+20250923	23:19:53	7240e1f4-42db-46f4-ad83-b9aab5b5950c	Error: data and hash arguments required
+20250923	23:20:24	946d0c86-1a9f-4f0c-bf0e-d3bae0b8031e	Error: data and hash arguments required
+20250923	23:25:22	304ba69e-7732-4b05-b7f8-d876a31bb3e7	SyntaxError: Expected ',' or '}' after property value in JSON at position 104 (line 5 column 1)

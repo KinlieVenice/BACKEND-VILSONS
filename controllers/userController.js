@@ -129,13 +129,13 @@ const createUser = async (req, res) => {
         })
       );
 
-       const userBranch = needsApproval
-         ? await tx.userBranchEdit.createMany({
-             data: userBranchData,
-           })
-         : await tx.userBranch.createMany({
-             data: userBranchData,
-           });
+      const userBranch = needsApproval
+        ? await tx.userBranchEdit.createMany({
+            data: userBranchData,
+          })
+        : await tx.userBranch.createMany({
+            data: userBranchData,
+          });
 
       message = needsApproval
         ? "User created is awaiting approval"
@@ -147,9 +147,9 @@ const createUser = async (req, res) => {
     return res.status(201).json({
       message,
       data: {
-        ...result.user,
+        username: result.user.username,
         roles: result.roles,
-        branches: result.branches
+        branches: result.branches,
       },
     });
   } catch (error) {
@@ -158,23 +158,22 @@ const createUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const { name, phone, email, description, roles } = req.body;
+  const { name, phone, email, description, roles, branches } = req.body;
 
-  if (!req?.body?.id)
+  if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
-  const user = await prisma.user.findFirst({ where: { id: req.body.id } });
+  const user = await prisma.user.findFirst({ where: { id: req.params.id } });
   if (!user)
     return res
       .status(400)
-      .json({ message: `User with ${req.body.id} doesn't exist` });
+      .json({ message: `User with ${req.params.id} doesn't exist` });
 
   try {
     let message;
     let needsApproval = req.approval;
     let existingUser;
     let pendingUser;
-    console.log(needsApproval);
 
     if (email && email !== user.email) {
       existingUser = await prisma.user.findFirst({
@@ -195,24 +194,17 @@ const editUser = async (req, res) => {
     }
 
     const updatedData = {
-      // ...(fullName ? { fullName } : {}),
-      //...(phone ? { phone } : {}),
-      // ...(email ? { email } : {}),
-      // ...(password ? { hashPwd: await bcrypt.hash(password, 10) } : {}),
-      // ...(description ? { description } : {}),
-
       fullName: name ?? user.fullName,
       username: user.username,
       phone: phone ?? user.phone,
       email: email ?? user.email,
       hashPwd: user.hashPwd,
       description: description ?? user.description,
-      roles: user.roles,
       updatedByUser: req.username,
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const user_edit = needsApproval
+      const editedUser = needsApproval
         ? await tx.userEdit.create({
             data: {
               userId: user.id,
@@ -222,7 +214,7 @@ const editUser = async (req, res) => {
             },
           })
         : await tx.user.update({
-            where: { id: req.body.id },
+            where: { id: user.id },
             data: updatedData,
           });
 
@@ -232,7 +224,7 @@ const editUser = async (req, res) => {
         a.length === b.length &&
         [...a].sort().join(",") === [...b].sort().join(",");
 
-      if (!needsApproval && !arraysEqual(user.roles, roles)) {
+      if (!needsApproval && roles && !arraysEqual(user.roles, roles)) {
         // STEP 1: Reset junction table roles
         await tx.userRole.deleteMany({ where: { userId: user.id } });
 
@@ -274,16 +266,33 @@ const editUser = async (req, res) => {
         );
       }
 
+      if (!needsApproval && branches && !arraysEqual(user.branches, branches)) {
+        await tx.userBranch.deleteMany({ where: { userId: user.id } });
+
+        await tx.userBranch.createMany({
+          data: await Promise.all(
+            branches.map(async (branch) => ({
+              userId: user.id,
+              branchId: await branchIdFinder(branch),
+            }))
+          ),
+        });
+      }
+
       message = needsApproval
         ? "User edit awaiting approval"
         : "User edited successfully";
 
-      return { user_edit };
+      return { editedUser, roles, branches };
     });
 
     return res.status(201).json({
       message,
-      data: result,
+      data: {
+        username: result.editedUser.username,
+        roles: result.roles ?? result.editedUser.roles,
+        branches: result.branches
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -329,19 +338,24 @@ const editProfile = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const user_edit = await tx.user.update({
+      const editedProfile = await tx.user.update({
         where: { id: user.id },
         data: updatedData,
       });
 
-      message = "User edited successfully";
+      message = "Profile edited successfully";
 
-      return user_edit;
+      return editedProfile;
     });
 
     return res.status(201).json({
       message,
-      data: result,
+      data: {
+        username: user.username,
+        phone: phone ?? user.phone,
+        email: email ?? user.email,
+        description: description ?? user.description
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -362,10 +376,7 @@ const editProfilePassword = async (req, res) => {
     /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
 
   if (!strongPasswordRegex.test(newPassword)) {
-    return res.status(400).json({
-      message:
-        "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",
-    });
+    return res.status(400).json({ message: "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",});
   }
 
   const hashPwd = await bcrypt.hash(newPassword, 10);
@@ -378,6 +389,7 @@ const editProfilePassword = async (req, res) => {
   }
 
   try {
+    let message = "Profile password successfully changed";
     const updatedData = {
       fullName: user.fullName,
       username: user.username,
@@ -388,21 +400,14 @@ const editProfilePassword = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const user_edit = await tx.user.update({
+      const editedProfilePassword = await tx.user.update({
         where: { id: user.id },
         data: updatedData,
       });
-
-      const message = needsApproval
-        ? "User password awaiting approval"
-        : "User password successfully changed";
-
-      return { message, hashPwd: updatedData.hashPwd };
     });
 
     return res.status(201).json({
-      message: result.message,
-      data: result.hashPwd,
+      message,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -449,6 +454,7 @@ const editUserPassword = async (req, res) => {
 
   try {
     const needsApproval = req.approval;
+    let message;
 
     const updatedData = {
       fullName: user.fullName,
@@ -460,7 +466,7 @@ const editUserPassword = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const user_edit = needsApproval
+      const editedUserPassword = needsApproval
         ? await tx.userEdit.create({
             data: {
               userId: user.id,
@@ -473,16 +479,13 @@ const editUserPassword = async (req, res) => {
             data: updatedData,
           });
 
-      const message = needsApproval
+      message = needsApproval
         ? "User password awaiting approval"
         : "User password successfully changed";
-
-      return { message, hashPwd: updatedData.hashPwd };
     });
 
     return res.status(201).json({
-      message: result.message,
-      data: result.hashPwd,
+      message
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -494,22 +497,23 @@ const deleteUser = async (req, res) => {
     return res.status(400).json({ message: "ID is required" });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: req.body.id } });
+  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
 
   if (!user) {
     return res
       .status(404)
-      .json({ message: `User with ID ${req.body.id} doesn't exist` });
+      .json({ message: `User with ID ${req.params.id} doesn't exist` });
   }
 
-  if (user.username === "superadmin")
-    return res.status(400).json({ message: "Superadmin cannot be deleted" });
+  if (user.username === "superadmin") return res.status(400).json({ message: "Superadmin cannot be deleted" });
+  if (user.username === req.username) return res.status(400).json({ message: "Self cannot be deleted" });
 
   try {
     const needsApproval = req.approval;
+    let message;
 
     const result = await prisma.$transaction(async (tx) => {
-      const user_delete = needsApproval
+      const deletedUser = needsApproval
         ? await tx.userEdit.create({
             data: {
               userId: user.id,
@@ -526,26 +530,26 @@ const deleteUser = async (req, res) => {
           })
         : await tx.user.delete({ where: { id: user.id } });
 
-      const message = needsApproval
+      message = needsApproval
         ? "Delete is awaiting approval"
         : "User deleted";
 
-      return { user_delete, message };
+      return { deletedUser };
     });
 
     return res.status(needsApproval ? 202 : 200).json({
-      message: result.message,
-      data: result.user_delete,
+      message,
+      username: result.deletedUser.username,
     });
   } catch (err) {
-    console.error("Delete user error:", err);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
 const getAllUsers = async (req, res) => {
   try {
     const role = req?.query?.role;
+    const branch = req?.query?.branch;
     const search = req?.query?.search;
     const page = req?.query?.page && parseInt(req.query.page, 10);
     const limit = req?.query?.limit && parseInt(req.query.limit, 10);
@@ -559,6 +563,16 @@ const getAllUsers = async (req, res) => {
         some: {
           role: {
             roleName: role,
+          },
+        },
+      };
+    }
+
+    if (branch) {
+      where.branches = {
+        some: {
+          branch: {
+            branchName: branch,
           },
         },
       };
@@ -588,20 +602,25 @@ const getAllUsers = async (req, res) => {
             role: { select: { roleName: true } },
           },
         },
+        branches: {
+          include: {
+            branch: { select: { branchName: true } }, 
+          },
+        },
       },
     });
 
     const total = await prisma.user.count({ where });
 
-    const formattedUsers = users.map((user) => ({
+    const formattedUsers = users.map(({ hashPwd, refreshToken, ...user }) => ({
       ...user,
       roles: user.roles.map((r) => r.role.roleName),
+      branches: user.branches.map((b) => b.branch.branchName),
     }));
 
     res.status(200).json(formattedUsers, total);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ message: "Failed to fetch users." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -618,6 +637,11 @@ const getUser = async (req, res) => {
             role: { select: { roleName: true } },
           },
         },
+        branches: {
+          include: {
+            branch: { select: { branchName: true } },
+          },
+        },
       },
     });
 
@@ -626,16 +650,19 @@ const getUser = async (req, res) => {
     }
 
     // Destructure user to separate roles
-    const { roles, ...userWithoutRoles } = user;
+    const { roles, branches, hashPwd, refreshToken, ...filteredUser } = user;
 
     const formattedRoles = roles.map((r) => r.role.roleName);
+    const formattedBranches = branches.map((r) => r.branch.branchName);
 
-    const formattedUser = {
-      ...userWithoutRoles,
-      roles: formattedRoles,
-    };
 
-    return res.status(200).json(formattedUser);
+    return res.status(200).json({
+      data: {
+        ...filteredUser,
+        roles: formattedRoles,
+        branches: formattedBranches,
+      },
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

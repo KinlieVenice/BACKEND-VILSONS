@@ -15,13 +15,12 @@ router.route("/profile/password")
 
 router.route("/")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS), userController.getAllUsers)
-.post(verifyPermission(PERMISSIONS_LIST.CREATE_USER), userController.createUser)
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser);
+.post(verifyPermission(PERMISSIONS_LIST.CREATE_USER), userController.createUser);
 
 router.route("/:id")
-.delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser)
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_USER),userController.getUser);
-
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_USER),userController.getUser)
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser)
+.delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser);
 
 
 module.exports = router;

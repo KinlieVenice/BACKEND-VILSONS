@@ -73,6 +73,8 @@ const createBranch = async (req, res) => {
 
 const editBranch = async (req, res) => {
   const { name, description, address } = req.body;
+  let existingBranch;
+  let pendingBranch;
 
   if (!req.body.id) return res.status(404).json({ message: "ID is required" });
 
@@ -82,17 +84,19 @@ const editBranch = async (req, res) => {
     return res
       .status(404)
       .json({ message: `Branch with ${req.body.id} not found` });
+      
+  if (name && name !== branch.branchName) {
+    existingBranch = await prisma.branch.findFirst({
+      where: { branchName: name },
+    });
 
-  const existingBranch = await prisma.branch.findFirst({
-    where: { branchName: name },
-  });
-
-  const pendingBranch = await prisma.branchEdit.findFirst({
-    where: {
-      branchName: name,
-      approvalStatus: "pending",
-    },
-  });
+    pendingBranch = await prisma.branchEdit.findFirst({
+      where: {
+        branchName: name,
+        approvalStatus: "pending",
+      },
+    });
+  }
 
   if (existingBranch || pendingBranch)
     return res
