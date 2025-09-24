@@ -27,8 +27,6 @@ model User {
   description String?
   refreshToken String?
 
-  approvalStatus ApprovalStatus @default(published)
-
   createdAt   DateTime @default(now())
   createdByUser String?
   updatedAt   DateTime @updatedAt
@@ -70,6 +68,7 @@ model User {
   createdOverheadEdit OverheadEdit[] @relation("CreatedBy")
 
   transferredTruckOwnership TruckOwnership[] @relation("TransferredBy")
+  transferredTruckOwnershipEdit TruckOwnershipEdit[] @relation("TransferredBy")
 
   updatedUserEdits UserEdit[] @relation("UpdatedBy")
   updatedBranches        Branch[]          @relation("UpdatedBy")
@@ -114,9 +113,6 @@ model UserEdit {
   updatedAt   DateTime? @updatedAt
   updatedByUser String?
 
-
-
-
   user      User? @relation("UserEditedVer", fields: [userId], references: [id], onDelete: Cascade)
   updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
@@ -132,6 +128,7 @@ model Customer {
   id     String           @id @default(uuid())
   userId String @unique
   trucks TruckOwnership[]
+  trucksEdit TruckOwnershipEdit[]
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobOrder JobOrder[] @relation("Customer")
   jobOrderEdit JobOrderEdit[] @relation("Customer")
@@ -220,6 +217,7 @@ model Truck {
   updatedByUser String
 
   owners    TruckOwnership[]
+  ownersEdit    TruckOwnershipEdit[]
   jobOrders JobOrder[]
   jobOrdersEdit JobOrderEdit[]
 
@@ -255,6 +253,23 @@ model TruckOwnership {
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
+
+  transferredByUser String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)
+
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+}
+
+model TruckOwnershipEdit {
+  id      String @id @default(uuid())
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  requestType RequestType
+  approvalStatus ApprovalStatus @default(pending)
 
   transferredByUser String
   transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)

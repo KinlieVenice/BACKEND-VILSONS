@@ -599,3 +599,5 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20250923	23:25:22	304ba69e-7732-4b05-b7f8-d876a31bb3e7	SyntaxError: Expected ',' or '}' after property value in JSON at position 104 (line 5 column 1)
 20250924	13:55:03	cf8985ac-6412-40a5-b83c-64c217c2a5fa	SyntaxError: Expected ',' or '}' after property value in JSON at position 29 (line 3 column 1)
 20250924	15:05:02	8664fa79-c5a4-4fa9-9bd4-f513ad71ec77	SyntaxError: Expected property name or '}' in JSON at position 3 (line 2 column 1)
+20250924	21:53:25	842d38ea-c358-4981-b65a-51d410bb2a2f	Error: Cannot set headers after they are sent to the client
+20250924	21:57:18	45dbff57-7edf-4b30-9d2a-f64573648ca9	Error: Cannot set headers after they are sent to the client

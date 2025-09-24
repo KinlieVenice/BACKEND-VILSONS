@@ -1232,3 +1232,14 @@
 20250924	21:03:45	d49d447b-725d-4867-a737-4ee45ee6c015	PUT	undefined	/api/trucks/2cc06b2c-72a4-4df7-8738-f1ae10a5bbe2
 20250924	21:09:09	6b6dac61-f40f-40ac-b833-547228d4b578	DELETE	undefined	/api/trucks/2cc06b2c-72a4-4df7-8738-f1ae10a5bbe2
 20250924	21:09:29	704a49e5-c419-48ad-bb63-8c41d98827b5	GET	undefined	/api/trucks
+20250924	21:39:53	4342a8a3-5358-4053-8782-1c010be7f4cd	POST	undefined	/api/trucks
+20250924	21:40:01	cc93e285-ce18-44f3-ab09-a726d5528051	POST	undefined	/api/trucks/ownership
+20250924	21:42:30	033e8403-8581-4d76-a4b9-00d7c610abc3	GET	undefined	/api/trucks
+20250924	21:42:40	c50956ee-60b7-4e88-9d92-baab2f5e6bff	DELETE	undefined	/api/trucks/13964e64-94fb-4cff-941f-b78043530178
+20250924	21:43:45	c21f5aab-8ec2-456e-96e9-54d968216104	DELETE	undefined	/api/trucks/13964e64-94fb-4cff-941f-b78043530178
+20250924	21:49:56	2f438ad6-cc91-43fd-aa67-84920ffc6365	POST	undefined	/api/trucks/ownership
+20250924	21:50:11	8da9c4dd-47af-43ac-82b3-7d230f76aa73	POST	undefined	/api/trucks/ownership
+20250924	21:50:47	823c1ca3-7bbd-4471-9c85-20557f33f879	POST	undefined	/api/trucks/ownership
+20250924	21:52:29	c7d76a1f-c248-4bb1-9e28-db6b0240c59a	POST	undefined	/api/trucks/ownership
+20250924	21:53:25	4d448e22-a099-4d78-81f2-19f9c03833ad	POST	undefined	/api/trucks/ownership
+20250924	21:57:18	9b0b1570-a7a5-41b9-bfce-8e4a717b6898	POST	undefined	/api/trucks/ownership

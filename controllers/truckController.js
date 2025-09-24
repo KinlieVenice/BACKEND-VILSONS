@@ -153,8 +153,11 @@ const editTruckOwner = async (req, res) => {
   }
 
   try {
+    const needsApproval = req.approval;
+    let message;
     const truckId = await idFinders.truckIdFinder(truckPlate);
     const customerId = await idFinders.customerIdFinder(customerUsername);
+    let newTruckOwner;
 
     const truckData = {
       truckId,
@@ -166,34 +169,55 @@ const editTruckOwner = async (req, res) => {
       const truck = await tx.truck.findUnique({ where: { id: truckId } });
       if (!truck) return res.status(404).json({ message: "Truck not found" });
 
+      const pendingEdit = await tx.truckOwnershipEdit.findFirst({
+        where: {
+          truckId,
+          approvalStatus: "pending", 
+        },
+      });
+
+      if (pendingEdit) return res.status(400).json({ message: "Truck already has a pending ownership transfer request" });
+
       // Get latest ownership
-      const truckOwner = await tx.truckOwnership.findFirst({
+      const latestOwner = await tx.truckOwnership.findFirst({
         where: { truckId },
         orderBy: { startDate: "desc" },
       });
 
-      let newTruckOwner;
-      if (truckOwner) {
-        // End previous ownership
-        await tx.truckOwnership.update({
-          where: { id: truckOwner.id },
-          data: { endDate: new Date() },
+      if (
+        latestOwner &&
+        !latestOwner.endDate &&
+        latestOwner.customerId === customerId
+      ) return res.status(400).json({ message: "Truck is already owned by this customer" });
+    
+      if (needsApproval) {
+        newTruckOwner = await tx.truckOwnershipEdit.create({
+          data: { ...truckData, requestType: "edit" },
         });
-
-        newTruckOwner = await tx.truckOwnership.create({ data: truckData });
+        message = "Truck owner transfer awaiting approval";
       } else {
+        if (latestOwner) {
+          // End previous ownership
+          await tx.truckOwnership.update({
+            where: { id: latestOwner.id },
+            data: { endDate: new Date() },
+          });
+        }
+
+        // Create new ownership if no previous owner
         newTruckOwner = await tx.truckOwnership.create({ data: truckData });
+        message = "Truck owner successfully transferred";
       }
 
       return newTruckOwner;
     });
 
     return res.status(201).json({
-      message: "Truck owner successfully transferred",
+      message,
       data: result,
     });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+      return res.status(500).json({ message: err.message });
   }
 };
 
@@ -218,7 +242,7 @@ const deleteTruck = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const truck_delete = needsApproval
+      const deletedTruck = needsApproval
         ? await tx.truckEdit.create({
             data: truckData,
           })
@@ -230,9 +254,11 @@ const deleteTruck = async (req, res) => {
         ? "Truck delete is awaiting approval"
         : "Truck is successfully deleted";
 
-      return truck_delete;
+      return truckData;
     });
-    return res.status(201).json({ message, data: result });
+    return res
+      .status(201)
+      .json({ message, plate: result.plate });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

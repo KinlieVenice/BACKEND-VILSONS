@@ -414,22 +414,30 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_BRANCH),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_BRANCH
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_BRANCH),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_BRANCH
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_BRANCH),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_BRANCH
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_BRANCH),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_BRANCH
+      ),
       approval: true,
     },
     {
@@ -455,22 +463,30 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_JOB_ORDERS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_JOB_ORDERS
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_SINGLE_JOB_ORDER
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_JOB_ORDER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_JOB_ORDER
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_JOB_ORDER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_JOB_ORDER
+      ),
       approval: true,
     },
     {
@@ -482,7 +498,9 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_JOB_ORDER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_JOB_ORDER
+      ),
       approval: true,
     },
     {
@@ -529,7 +547,9 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_TRANSACTION),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_TRANSACTION
+      ),
       approval: true,
     },
     {
@@ -548,72 +568,100 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_MATERIALS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_MATERIALS
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_EQUIPMENT),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_EQUIPMENT
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_EQUIPMENT),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_EQUIPMENT
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_EQUIPMENT),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_EQUIPMENT
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_EQUIPMENT),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_EQUIPMENT
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_LABOR),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_LABOR
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_LABOR),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_LABOR
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_LABOR),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_LABOR
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_LABOR),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_LABOR
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_OVERHEAD),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_OVERHEAD
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_OVERHEAD),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_OVERHEAD
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_OVERHEAD),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_OVERHEAD
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_OVERHEAD),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_OVERHEAD
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_TRUCKS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_TRUCKS
+      ),
       approval: true,
     },
     {
@@ -625,17 +673,30 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_TRUCKS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_TRUCKS
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.EDIT_TRUCKS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_TRUCKS
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_TRUCKS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_TRUCKS
+      ),
+      approval: true,
+    },
+    {
+      roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.EDIT_TRUCK_OWNER
+      ),
       approval: true,
     },
     {
@@ -647,17 +708,23 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_USERS),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_USERS
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.VIEW_SINGLE_USER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.VIEW_SINGLE_USER
+      ),
       approval: true,
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.CREATE_USER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.CREATE_USER
+      ),
       approval: true,
     },
     {
@@ -676,7 +743,9 @@ async function getRolePermissionData() {
     },
     {
       roleId: await idFinders.roleIdFinder(ROLES_LIST.CASHIER),
-      permissionId: await idFinders.permissionIdFinder(PERMISSIONS_LIST.DELETE_USER),
+      permissionId: await idFinders.permissionIdFinder(
+        PERMISSIONS_LIST.DELETE_USER
+      ),
       approval: true,
     },
     {
