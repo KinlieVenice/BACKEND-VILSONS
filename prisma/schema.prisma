@@ -243,9 +243,7 @@ model TruckEdit {
   updatedAt   DateTime @updatedAt
   updatedByUser String
 
-
-
-  truck   Truck?  @relation(fields: [truckId], references: [id])
+  truck   Truck?  @relation(fields: [truckId], references: [id], onDelete: Cascade)
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
@@ -253,7 +251,7 @@ model TruckEdit {
 model TruckOwnership {
   id      String @id @default(uuid())
   truckId String
-  truck   Truck  @relation(fields: [truckId], references: [id])
+  truck   Truck  @relation(fields: [truckId], references: [id], onDelete: Cascade)
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
@@ -546,7 +544,7 @@ model JobOrder {
   updatedAt   DateTime @updatedAt
   updatedByUser String
 
-  truck      Truck      @relation(fields: [truckId], references: [id])
+  truck      Truck      @relation(fields: [truckId], references: [id], onDelete: Cascade)
   branch     Branch     @relation(fields: [branchId], references: [id])
   contractor Contractor? @relation(fields: [contractorId], references: [id])
   customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
@@ -579,7 +577,7 @@ model JobOrderEdit {
   branch      Branch   @relation(fields: [branchId], references: [id])
 
   jobOrder  JobOrder? @relation(fields: [jobOrderId], references: [id])
-  truck      Truck      @relation(fields: [truckId], references: [id])
+  truck      Truck      @relation(fields: [truckId], references: [id], onDelete: Cascade)
   contractor Contractor? @relation(fields: [contractorId], references: [id])
 
 

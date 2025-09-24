@@ -1,5 +1,5 @@
-const truckIdFinder = require("../utils/truckIdFinder");
-const customerIdFinder = require("../utils/customerIdFinder");
+const idFinders = require("../utils/idFinders");
+const usernameFinder = require("../utils/usernameFinder");
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
@@ -153,11 +153,8 @@ const editTruckOwner = async (req, res) => {
   }
 
   try {
-    const truckId = await truckIdFinder(truckPlate);
-    const customerId = await customerIdFinder(customerUsername);
-
-    console.log("truck", truckId)
-    console.log("customer", customerId)
+    const truckId = await idFinders.truckIdFinder(truckPlate);
+    const customerId = await idFinders.customerIdFinder(customerUsername);
 
     const truckData = {
       truckId,
@@ -244,10 +241,12 @@ const deleteTruck = async (req, res) => {
 const getAllTrucks = async (req, res) => {
   try {
     const search = req?.query?.search;
-    const page = req?.query?.page && parseInt(req.query.page, 10);
-    const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+    const page = req?.query?.page ? parseInt(req.query.page, 10) : 1;
+    const limit = req?.query?.limit ? parseInt(req.query.limit, 10) : null;
     const startDate = req?.query?.startDate; // e.g. "2025-01-01"
     const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+    let totalItems = 0;
+    let totalPages = 0;
 
     let where = {};
 
@@ -271,23 +270,40 @@ const getAllTrucks = async (req, res) => {
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
         ...(limit ? { take: limit } : {}),
-        // include: {
-        //   owners: {
-        //     select: { customer: { select: { user: { select: { username: true, }, },
-        //         },
-        //       },
-        //     },
-        //   },
-        // },
+        include: {
+          owners: {
+            include: {
+              customer: {
+                include: { user: true },
+              },
+            },
+          },
+        },
       });
 
-      const total = await tx.truck.count({ where });
+      const trucksWithOwners = trucks.map((truck) => ({
+        ...truck,
+        owners:
+          truck.owners.length > 0
+            ? truck.owners.map((owner) => ({
+                customer: owner.customer?.user?.username,
+                transferredByUser: owner.transferredByUser,
+                startDate: owner.startDate,
+                endDate: owner.endDate,
+              }))
+            : [],
+      }));
 
-      return { trucks, total };
+      if (limit) {
+        totalItems = await tx.truck.count({ where });
+        totalPages = Math.ceil(totalItems / limit);
+      }
+
+      return { trucks: trucksWithOwners };
     });
 
-    return res.status(201).json({
-      data: result,
+    return res.status(200).json({
+      data: { ...result, pagination: { totalItems, totalPages } },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -301,12 +317,35 @@ const getTruck = async (req, res) => {
   try {
     const truck = await prisma.truck.findUnique({
       where: { id: req.params.id },
+      include: {
+        owners: {
+          include: {
+            customer: {
+              include: { user: true },
+            },
+          },
+        },
+      },
     });
 
     if (!truck) {
       return res.status(404).json({ message: "Truck not found" });
     }
-    return res.status(201).json({ truck });
+
+    const truckWithOwners = {
+      ...truck,
+      owners:
+        truck.owners.length > 0
+          ? truck.owners.map((owner) => ({
+              customer: owner.customer?.user?.username || null,
+              transferredByUser: owner.transferredByUser,
+              startDate: owner.startDate,
+              endDate: owner.endDate,
+            }))
+          : [],
+    };
+
+    return res.status(200).json({ truck: truckWithOwners });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
