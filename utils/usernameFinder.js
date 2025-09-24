@@ -6,7 +6,7 @@ const usernameFinder = async (roleTable, userId) => {
   includeObj[roleTable] = { include: { user: true } };
 
   const user = await prisma.user.findUnique({
-    where: { id: userId }, // 👈 now we search by ID, not username
+    where: { id: userId }, 
     include: includeObj,
   });
 

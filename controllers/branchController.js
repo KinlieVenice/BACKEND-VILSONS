@@ -59,7 +59,7 @@ const createBranch = async (req, res) => {
         ? "Branch awaiting approval"
         : "Branch successfully created";
 
-      return { branch };
+      return branch;
     });
 
     return res.status(201).json({
@@ -76,14 +76,14 @@ const editBranch = async (req, res) => {
   let existingBranch;
   let pendingBranch;
 
-  if (!req.body.id) return res.status(404).json({ message: "ID is required" });
+  if (!req.params.id) return res.status(404).json({ message: "ID is required" });
 
-  const branch = await prisma.branch.findFirst({ where: { id: req.body.id } });
+  const branch = await prisma.branch.findFirst({ where: { id: req.params.id } });
 
   if (!branch)
     return res
       .status(404)
-      .json({ message: `Branch with ${req.body.id} not found` });
+      .json({ message: `Branch with ${req.params.id} not found` });
       
   if (name && name !== branch.branchName) {
     existingBranch = await prisma.branch.findFirst({
@@ -114,7 +114,7 @@ const editBranch = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const branch_edit = needsApproval
+      const editedBranch = needsApproval
         ? await tx.branchEdit.create({
             data: {
               ...updatedData,
@@ -123,7 +123,7 @@ const editBranch = async (req, res) => {
             },
           })
         : await tx.branch.update({
-            where: { id: req.body.id },
+            where: { id: req.params.id },
             data: updatedData,
           });
 
@@ -131,7 +131,7 @@ const editBranch = async (req, res) => {
         ? "Branch edit is awaiting approval"
         : "Branch successfully edited";
 
-      return branch_edit;
+      return editedBranch;
     });
     return res.status(201).json({
       message,
@@ -166,7 +166,7 @@ const deleteBranch = async (req, res) => {
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      const branch_delete = needsApproval
+      const deletedBranch = needsApproval
         ? await tx.branchEdit.create({
             data: {
               branchId: branch.id,
@@ -182,12 +182,12 @@ const deleteBranch = async (req, res) => {
         ? "Branch delete awaiting approval"
         : "Branch successfully deleted";
 
-      return branch_delete.branchName;
+      return deletedBranch.branchName;
     });
 
     return res.status(201).json({
       message,
-      data: result,
+      branchName: result,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -201,6 +201,8 @@ const getAllBranches = async (req, res) => {
     const limit = req?.query?.limit && parseInt(req.query.limit, 10);
     const startDate = req?.query?.startDate; // e.g. "2025-01-01"
     const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+    let totalItems = 0;
+    let totalPages = 1;
 
     let where = {};
 
@@ -224,10 +226,14 @@ const getAllBranches = async (req, res) => {
       ...(limit ? { take: limit } : {}),
     });
 
-    const total = await prisma.branch.count({ where });
+    totalItems = await prisma.truck.count({ where });
+
+    if (limit) {
+      totalPages = Math.ceil(totalItems / limit);
+    } 
 
     return res.status(201).json({
-      data: branches,
+      data: { branches, pagination: { totalItems, totalPages } },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -246,7 +252,7 @@ const getBranch = async (req, res) => {
     if (!branch) {
       return res.status(404).json({ message: "Branch not found" });
     }
-    return res.status(201).json({ branch });
+    return res.status(201).json({ data: branch });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

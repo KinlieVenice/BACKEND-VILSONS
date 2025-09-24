@@ -1,7 +1,8 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
-const idFinders = require("../utils/idFinders");
+const roleIdFinder = require("../utils/roleIdFinder");
+const branchIdFinder = require("../utils/branchIdFinder");
 
 const createUser = async (req, res) => {
   const {
@@ -104,7 +105,7 @@ const createUser = async (req, res) => {
       const userRoleData = await Promise.all(
         roles.map(async (role) => {
           return {
-            roleId: await idFinders.roleIdFinder(role),
+            roleId: await roleIdFinder(role),
             userId: user.id,
           };
         })
@@ -119,7 +120,7 @@ const createUser = async (req, res) => {
       const userBranchData = await Promise.all(
         branches.map(async (branch) => {
           return {
-            branchId: await idFinders.branchIdFinder(branch),
+            branchId: await branchIdFinder(branch),
             userId: user.id,
           };
         })
@@ -229,7 +230,7 @@ const editUser = async (req, res) => {
           data: await Promise.all(
             roles.map(async (role) => ({
               userId: user.id,
-              roleId: await idFinders.roleIdFinder(role),
+              roleId: await roleIdFinder(role),
             }))
           ),
         });
@@ -270,7 +271,7 @@ const editUser = async (req, res) => {
           data: await Promise.all(
             branches.map(async (branch) => ({
               userId: user.id,
-              branchId: await idFinders.branchIdFinder(branch),
+              branchId: await branchIdFinder(branch),
             }))
           ),
         });
@@ -556,7 +557,7 @@ const getAllUsers = async (req, res) => {
     const startDate = req?.query?.startDate; // e.g. "2025-01-01"
     const endDate = req?.query?.endDate; // e.g. "2025-01-31"
     let totalItems = 0;
-    let totalPages = 0;
+    let totalPages = 1;
 
     let where = {};
 
@@ -613,11 +614,11 @@ const getAllUsers = async (req, res) => {
         },
       });
 
-      if (limit) {
-        totalItems = await tx.truck.count({ where });
-        totalPages = Math.ceil(totalItems / limit);
-      }
+      totalItems = await tx.truck.count({ where });
 
+      if (limit) {
+        totalPages = Math.ceil(totalItems / limit);
+      } 
 
       const formattedUsers = users.map((user) => {
         const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;

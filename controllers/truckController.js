@@ -1,5 +1,5 @@
-const idFinders = require("../utils/idFinders");
-const usernameFinder = require("../utils/usernameFinder");
+const truckIdFinder = require("../utils/truckIdFinder");
+const customerIdFinder = require("../utils/customerIdFinder");
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
@@ -155,8 +155,8 @@ const editTruckOwner = async (req, res) => {
   try {
     const needsApproval = req.approval;
     let message;
-    const truckId = await idFinders.truckIdFinder(truckPlate);
-    const customerId = await idFinders.customerIdFinder(customerUsername);
+    const truckId = await truckIdFinder(truckPlate);
+    const customerId = await customerIdFinder(customerUsername);
     let newTruckOwner;
 
     const truckData = {
@@ -214,7 +214,7 @@ const editTruckOwner = async (req, res) => {
 
     return res.status(201).json({
       message,
-      data: result,
+      data: {...result, newOwner: customerUsername},
     });
   } catch (err) {
       return res.status(500).json({ message: err.message });
@@ -267,12 +267,12 @@ const deleteTruck = async (req, res) => {
 const getAllTrucks = async (req, res) => {
   try {
     const search = req?.query?.search;
-    const page = req?.query?.page ? parseInt(req.query.page, 10) : 1;
-    const limit = req?.query?.limit ? parseInt(req.query.limit, 10) : null;
+    const page = req?.query?.page && parseInt(req.query.page, 10);
+    const limit = req?.query?.limit && parseInt(req.query.limit, 10);
     const startDate = req?.query?.startDate; // e.g. "2025-01-01"
     const endDate = req?.query?.endDate; // e.g. "2025-01-31"
     let totalItems = 0;
-    let totalPages = 0;
+    let totalPages = 1;
 
     let where = {};
 
@@ -320,10 +320,11 @@ const getAllTrucks = async (req, res) => {
             : [],
       }));
 
+      totalItems = await tx.truck.count({ where });
+
       if (limit) {
-        totalItems = await tx.truck.count({ where });
         totalPages = Math.ceil(totalItems / limit);
-      }
+      } 
 
       return { trucks: trucksWithOwners };
     });
