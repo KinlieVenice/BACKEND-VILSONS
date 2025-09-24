@@ -221,6 +221,7 @@ const editTruckOwner = async (req, res) => {
   }
 };
 
+// add check relation before delete
 const deleteTruck = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });

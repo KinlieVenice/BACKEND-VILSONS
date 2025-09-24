@@ -110,7 +110,7 @@ const editBranch = async (req, res) => {
       branchName: name ?? branch.branchName,
       ...(description ? { description } : {}),
       address: address ?? branch.address,
-      updatedByUser: req.branchname,
+      updatedByUser: req.username,
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -142,6 +142,7 @@ const editBranch = async (req, res) => {
   }
 };
 
+// add check for relation even if its for approval
 const deleteBranch = async (req, res) => {
   if (!req.params.id)
     return res.status(400).json({ message: "ID is required" });
@@ -226,7 +227,7 @@ const getAllBranches = async (req, res) => {
       ...(limit ? { take: limit } : {}),
     });
 
-    totalItems = await prisma.truck.count({ where });
+    totalItems = await prisma.branch.count({ where });
 
     if (limit) {
       totalPages = Math.ceil(totalItems / limit);

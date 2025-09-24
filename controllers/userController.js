@@ -493,6 +493,7 @@ const editUserPassword = async (req, res) => {
   }
 };
 
+// add for soft delete -> active to inactive
 const deleteUser = async (req, res) => {
   if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
@@ -614,7 +615,7 @@ const getAllUsers = async (req, res) => {
         },
       });
 
-      totalItems = await tx.truck.count({ where });
+      totalItems = await tx.user.count({ where });
 
       if (limit) {
         totalPages = Math.ceil(totalItems / limit);
