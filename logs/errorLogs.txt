@@ -597,3 +597,5 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20250923	23:19:53	7240e1f4-42db-46f4-ad83-b9aab5b5950c	Error: data and hash arguments required
 20250923	23:20:24	946d0c86-1a9f-4f0c-bf0e-d3bae0b8031e	Error: data and hash arguments required
 20250923	23:25:22	304ba69e-7732-4b05-b7f8-d876a31bb3e7	SyntaxError: Expected ',' or '}' after property value in JSON at position 104 (line 5 column 1)
+20250924	13:55:03	cf8985ac-6412-40a5-b83c-64c217c2a5fa	SyntaxError: Expected ',' or '}' after property value in JSON at position 29 (line 3 column 1)
+20250924	15:05:02	8664fa79-c5a4-4fa9-9bd4-f513ad71ec77	SyntaxError: Expected property name or '}' in JSON at position 3 (line 2 column 1)

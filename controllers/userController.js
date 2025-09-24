@@ -139,10 +139,13 @@ const createUser = async (req, res) => {
       return { user, roles, branches };
     });
 
+    const { hashPwd: _, refreshToken, ...safeUser } = result.user;
+
     return res.status(201).json({
       message,
       data: {
-        username: result.user.username,
+        ...safeUser,
+        // ...(({ hashPwd, refreshToken, ...safeUser }) => safeUser)(result.editedUser),
         roles: result.roles,
         branches: result.branches,
       },
@@ -281,12 +284,15 @@ const editUser = async (req, res) => {
       return { editedUser, roles, branches };
     });
 
+    const { hashPwd: _, refreshToken, ...safeUser } = result.user;
+
     return res.status(201).json({
       message,
       data: {
-        username: result.editedUser.username,
-        roles: result.roles ?? result.editedUser.roles,
-        branches: result.branches
+        ...safeUser,
+        // ...(({ hashPwd, refreshToken, ...safeUser }) => safeUser)(result.editedUser),
+        roles: result.roles,
+        branches: result.branches,
       },
     });
   } catch (error) {
@@ -346,10 +352,7 @@ const editProfile = async (req, res) => {
     return res.status(201).json({
       message,
       data: {
-        username: user.username,
-        phone: phone ?? user.phone,
-        email: email ?? user.email,
-        description: description ?? user.description
+        ...(({ id, hashPwd, refreshToken, ...safeUser }) => safeUser)(result),
       },
     });
   } catch (error) {
@@ -371,7 +374,10 @@ const editProfilePassword = async (req, res) => {
     /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
 
   if (!strongPasswordRegex.test(newPassword)) {
-    return res.status(400).json({ message: "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",});
+    return res.status(400).json({
+      message:
+        "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.",
+    });
   }
 
   const hashPwd = await bcrypt.hash(newPassword, 10);
@@ -480,7 +486,7 @@ const editUserPassword = async (req, res) => {
     });
 
     return res.status(201).json({
-      message
+      message,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -500,8 +506,10 @@ const deleteUser = async (req, res) => {
       .json({ message: `User with ID ${req.params.id} doesn't exist` });
   }
 
-  if (user.username === "superadmin") return res.status(400).json({ message: "Superadmin cannot be deleted" });
-  if (user.username === req.username) return res.status(400).json({ message: "Self cannot be deleted" });
+  if (user.username === "superadmin")
+    return res.status(400).json({ message: "Superadmin cannot be deleted" });
+  if (user.username === req.username)
+    return res.status(400).json({ message: "Self cannot be deleted" });
 
   try {
     const needsApproval = req.approval;
@@ -525,14 +533,12 @@ const deleteUser = async (req, res) => {
           })
         : await tx.user.delete({ where: { id: user.id } });
 
-      message = needsApproval
-        ? "Delete is awaiting approval"
-        : "User deleted";
+      message = needsApproval ? "Delete is awaiting approval" : "User deleted";
 
       return { deletedUser };
     });
 
-    return res.status(needsApproval ? 202 : 200).json({
+    return res.status(201).json({
       message,
       username: result.deletedUser.username,
     });
@@ -587,33 +593,41 @@ const getAllUsers = async (req, res) => {
       };
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      ...(page && limit ? { skip: (page - 1) * limit } : {}),
-      ...(limit ? { take: limit } : {}),
-      include: {
-        roles: {
-          include: {
-            role: { select: { roleName: true } },
+    const result = await prisma.$transaction(async (tx) => {
+      const users = await tx.user.findMany({
+        where,
+        ...(page && limit ? { skip: (page - 1) * limit } : {}),
+        ...(limit ? { take: limit } : {}),
+        include: {
+          roles: {
+            include: {
+              role: { select: { roleName: true } },
+            },
+          },
+          branches: {
+            include: {
+              branch: { select: { branchName: true } },
+            },
           },
         },
-        branches: {
-          include: {
-            branch: { select: { branchName: true } }, 
-          },
-        },
-      },
+      });
+
+      const total = await tx.user.count({ where });
+
+      const formattedUsers = users.map((user) => {
+        const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
+
+        return {
+          ...safeUser,
+          roles: roles.map((r) => r.role.roleName),
+          branches: branches.map((b) => b.branch.branchName),
+        };
+      });
+
+      return { data: formattedUsers, total };
     });
 
-    const total = await prisma.user.count({ where });
-
-    const formattedUsers = users.map(({ hashPwd, refreshToken, ...user }) => ({
-      ...user,
-      roles: user.roles.map((r) => r.role.roleName),
-      branches: user.branches.map((b) => b.branch.branchName),
-    }));
-
-    res.status(200).json(formattedUsers, total);
+    res.status(201).json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -627,41 +641,27 @@ const getUser = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
-        roles: {
-          include: {
-            role: { select: { roleName: true } },
-          },
-        },
-        branches: {
-          include: {
-            branch: { select: { branchName: true } },
-          },
-        },
+        roles: { include: { role: { select: { roleName: true } } } },
+        branches: { include: { branch: { select: { branchName: true } } } },
       },
     });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Destructure user to separate roles
-    const { roles, branches, hashPwd, refreshToken, ...filteredUser } = user;
+    const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
 
-    const formattedRoles = roles.map((r) => r.role.roleName);
-    const formattedBranches = branches.map((r) => r.branch.branchName);
-
-
-    return res.status(200).json({
+    res.status(200).json({
       data: {
-        ...filteredUser,
-        roles: formattedRoles,
-        branches: formattedBranches,
+        ...safeUser,
+        roles: roles.map((r) => r.role.roleName),
+        branches: branches.map((b) => b.branch.branchName),
       },
     });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports = {
   createUser,

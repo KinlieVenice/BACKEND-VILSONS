@@ -34,10 +34,10 @@ model User {
   updatedAt   DateTime @updatedAt
   updatedByUser String?
 
-  admin       Admin[]
-  customer    Customer[]
-  contractor  Contractor[]
-  employee    Employee[]
+  admin       Admin?
+  customer    Customer?
+  contractor  Contractor?
+  employee    Employee?
   activityLog ActivityLog[]
   roles       UserRole[]
   rolesEdit       UserRoleEdit[]
@@ -124,13 +124,13 @@ model UserEdit {
 
 model Admin {
   id     String @id @default(uuid())
-  userId String
+  userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Customer {
   id     String           @id @default(uuid())
-  userId String
+  userId String @unique
   trucks TruckOwnership[]
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobOrder JobOrder[] @relation("Customer")
@@ -139,7 +139,7 @@ model Customer {
 
 model Contractor {
   id         String  @id @default(uuid())
-  userId     String
+  userId     String @unique
   commission Decimal @db.Decimal(13, 2)
 
   contractorPay ContractorPay[]
@@ -151,7 +151,7 @@ model Contractor {
 
 model Employee {
   id             String           @id @default(uuid())
-  userId         String
+  userId         String @unique
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   employeeSalary EmployeeSalary[]
 }
@@ -603,8 +603,8 @@ model Overhead {
   edits OverheadEdit[]
 
   branch    Branch @relation(fields: [branchId], references: [id])
-  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username])
-  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model OverheadEdit {
@@ -625,8 +625,8 @@ model OverheadEdit {
 
   branch    Branch   @relation(fields: [branchId], references: [id])
   overhead  Overhead @relation(fields: [overheadId], references: [id])
-  createdBy User    @relation("CreatedBy", fields: [createdByUser], references: [username])
-  updatedBy User    @relation("UpdatedBy", fields: [updatedByUser], references: [username])
+  createdBy User    @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User    @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
 model UserRole {

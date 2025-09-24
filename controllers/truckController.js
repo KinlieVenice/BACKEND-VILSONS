@@ -1,3 +1,5 @@
+const truckIdFinder = require("../utils/truckIdFinder");
+const customerIdFinder = require("../utils/customerIdFinder");
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
@@ -58,7 +60,7 @@ const createTruck = async (req, res) => {
         ? "Truck is awaiting approval"
         : "Truck is successfully created";
 
-      return { truck };
+      return truck;
     });
 
     return res.status(201).json({ message, data: result });
@@ -71,17 +73,17 @@ const editTruck = async (req, res) => {
   const { plate, make, model } = req.body;
 
   try {
-    if (!req?.body?.id)
+    if (!req?.params?.id)
       return res.status(400).json({ message: "ID is required" });
 
     const truck = await prisma.truck.findFirst({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
 
     if (!truck)
       return res
         .status(404)
-        .json({ message: `Truck with ID: ${req.body.id} not found` });
+        .json({ message: `Truck with ID: ${req.params.id} not found` });
 
     if (plate) {
       const existingTruck = await prisma.truck.findFirst({
@@ -121,7 +123,7 @@ const editTruck = async (req, res) => {
             },
           })
         : await tx.truck.update({
-            where: { id: req.body.id },
+            where: { id: truck.id },
             data: truckData,
           });
 
@@ -142,37 +144,48 @@ const editTruck = async (req, res) => {
 };
 
 const editTruckOwner = async (req, res) => {
-  const { truckId, customerId } = req.body;
+  const { truckPlate, customerUsername } = req.body;
+
+  if (!truckPlate || !customerUsername) {
+    return res
+      .status(400)
+      .json({ message: "truckPlate and customerUsername are required" });
+  }
 
   try {
+    const truckId = await truckIdFinder(truckPlate);
+    const customerId = await customerIdFinder(customerUsername);
+
+    console.log("truck", truckId)
+    console.log("customer", customerId)
+
     const truckData = {
-      customerId,
       truckId,
+      customerId,
       transferredByUser: req.username,
     };
 
     const result = await prisma.$transaction(async (tx) => {
-      let newTruckOwner;
-      const truck = await tx.truck.findFirst({ where: { id: truckId } });
+      const truck = await tx.truck.findUnique({ where: { id: truckId } });
       if (!truck) return res.status(404).json({ message: "Truck not found" });
 
+      // Get latest ownership
       const truckOwner = await tx.truckOwnership.findFirst({
         where: { truckId },
-        orderBy: { startDate: "desc" }, // get the latest ownership
+        orderBy: { startDate: "desc" },
       });
 
+      let newTruckOwner;
       if (truckOwner) {
+        // End previous ownership
         await tx.truckOwnership.update({
           where: { id: truckOwner.id },
-          data: { endDate: new Date() }, // end previous ownership
+          data: { endDate: new Date() },
         });
-        newTruckOwner = await tx.truckOwnership.create({
-          data: truckData,
-        });
+
+        newTruckOwner = await tx.truckOwnership.create({ data: truckData });
       } else {
-        newTruckOwner = await tx.truckOwnership.create({
-          data: truckData,
-        });
+        newTruckOwner = await tx.truckOwnership.create({ data: truckData });
       }
 
       return newTruckOwner;
