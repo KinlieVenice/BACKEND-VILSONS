@@ -4,13 +4,13 @@ const userController = require("../../controllers/userController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST")
 
-router.route("/profile")
+router.route("/me")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), userController.editProfile)
 
 router.route("/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);
 
-router.route("/profile/password")
+router.route("/me/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_PASSWORD),userController.editProfilePassword);
 
 router.route("/")

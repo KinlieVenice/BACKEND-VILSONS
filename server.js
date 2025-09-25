@@ -35,10 +35,11 @@ app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));
 app.use("/api/branches", require("./routes/api/branches"));
 app.use("/api/trucks", require("./routes/api/trucks"));
-app.use("/api/joborders", require("./routes/api/jobOrders"));
+app.use("/api/job-orders", require("./routes/api/jobOrders"));
+app.use("/api/me", require("./routes/api/me"));
 app.use("/api/equipments", require("./routes/api/equipments"));
 app.use("/api/materials", require("./routes/api/materials"));
-app.use("/api/otherincomes", require("./routes/api/otherincomes"));
+app.use("/api/other-incomes", require("./routes/api/otherincomes"));
 app.use("/api/overheads", require("./routes/api/overheads"));
 
 app.all(/^.*$/, (req, res) => {

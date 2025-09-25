@@ -115,17 +115,21 @@ const editJobOrder = async (req, res) => {
         truck: { select: { id: true, plate: true } },
         customer: { include: { user: { select: { username: true, fullName: true } } } },
         contractor: contractorId ? { include: { user: { select: { username: true, fullName: true } } } } : false,
-        branch: { select: { id: true, branchName: true } }
+        branch: { select: { id: true, branchName: true } },
       };
 
       const editedJobOrder = needsApproval ? await tx.jobOrderEdit.create({ data: jobOrderData, include: jobOrderInclude }) : await tx.jobOrder.update({ where: { id: jobOrder.id }, data: jobOrderData, include: jobOrderInclude });
 
-      if (materials?.length) {
+      if (materials && materials.length > 0) {
         const invalid = materials.some((m) => !m.name || !m.price || !m.quantity);
         if (invalid) return res.status(400).json({ message: "Each material must include non-empty name, non-zero price, and non-zero quantity" });
 
         const materialData = materials.map((m) => ({ jobOrderId: jobOrder.id, materialName: m.name, quantity: m.quantity, price: m.price, ...(needsApproval && { requestType: "edit" }) }));
-        if (needsApproval) await tx.materialEdit.createMany({ data: materialData }); else { await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } }); await tx.material.createMany({ data: materialData }); }
+
+        if (needsApproval) await tx.materialEdit.createMany({ data: materialData }); 
+        else { 
+          await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } }); 
+          await tx.material.createMany({ data: materialData }); }
 
         totalMaterialCost = materials.reduce((sum, m) => sum + m.price * m.quantity, 0);
       }
@@ -135,11 +139,104 @@ const editJobOrder = async (req, res) => {
 
     const { truckId: _, customerId: __, contractorId: ___, branchId: ____, ...jobOrderFields } = result;
 
-    return res.status(201).json({ message: needsApproval ? "Job order awaiting approval" : "Job order successfully created", data: { ...jobOrderFields, contractorCommission, shopCommission, totalMaterialCost, materials: materials || [] } });
+    return res.status(201).json({ message: needsApproval ? "Job order awaiting approval" : "Job order successfully created", data: { ...jobOrderFields, contractorCommission, shopCommission, totalMaterialCost, materials: materials || result.materials } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
+const acceptJobOrder = async (req, res) => {
+  const { id, accept } = req.params;
+  if (!id) return res.status(400).json({ message: "ID is required" });
+  console.log(id)
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
+    if (!jobOrder) return res.status(404).json({ message: `Job order with ID: ${id} not found` });
+
+    if (!jobOrder.contractorId) return res.status(403).json({ message: "This job order has no contractor assigned" });
+
+    const contractor = await prisma.contractor.findFirst({ where: { id: jobOrder.contractorId } });
+    if (!contractor) return res.status(404).json({ message: `User is not a contractor` });
+
+
+    if (contractor.userId !== req.id || jobOrder.contractorId === null) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to accept this job order" });
+    }
+
+    const isAccepted = accept === "true";
+
+    const result = await prisma.jobOrder.update({
+      where: { id: jobOrder.id },
+      data: {
+        status: isAccepted ? "ongoing" : "pending",
+        contractorId: isAccepted ? jobOrder.contractorId : null,
+        updatedByUser: req.username,
+      },
+    });
+
+    let message = `Job order is now set to ${result.status}`;
+
+    return res.status(200).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+const verifyJobOrder = async (req, res) => {
+  const { id, accept } = req.params;
+  if (!id) return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
+    if (!jobOrder) return res.status(404).json({ message: `Job order with ID: ${id} not found` });
+
+    const contractor = await prisma.contractor.findFirst({ where: { id: jobOrder.contractorId } });
+    if (!contractor) return res.status(404).json({ message: `User is not a contractor` });
+
+
+    if (contractor.userId !== req.id) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to accept this job order" });
+    }
+
+    const isAccepted = accept === "true";
+    const needsApproval = req.approval; 
+    let message;
+
+    const jobOrderData = {
+      status: isAccepted ? "ongoing" : "pending",
+      contractorId: isAccepted ? jobOrder.contractorId : null,
+      updatedByUser: req.username,
+      jobOrderId: needsApproval ? jobOrder.id : undefined,
+      jobOrderCode: jobOrder.jobOrderCode,
+      requestType: needsApproval ? "edit" : undefined,
+      createdByUser: needsApproval ? req.username : jobOrder.createdByUser,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      message = needsApproval
+        ? "Job Order status awaiting approval"
+        : "Job order status successfully updated";
+
+      return needsApproval
+        ? tx.jobOrderEdit.create({ data: jobOrderData })
+        : tx.jobOrder.update({
+            where: { id: jobOrder.id },
+            data: jobOrderData,
+          });
+    });
+
+    return res.status(200).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 const deleteJobOrder = async (req, res) => {
   if (!req?.params?.id)
@@ -473,4 +570,5 @@ module.exports = {
   getAssignedJobOrders,
   getJobOrder,
   getMyJobOrders,
+  acceptJobOrder,
 };
