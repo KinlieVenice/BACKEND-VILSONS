@@ -418,15 +418,15 @@ const editProfilePassword = async (req, res) => {
 const editUserPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
-  if (!req?.body?.id) {
+  if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
   }
 
-  const user = await prisma.user.findFirst({ where: { id: req.body.id } });
+  const user = await prisma.user.findFirst({ where: { id: req.params.id } });
   if (!user) {
     return res
       .status(400)
-      .json({ message: `User with ID ${req.body.id} doesn't exist` });
+      .json({ message: `User with ID ${req.params.id} doesn't exist` });
   }
 
   const isMatch = await bcrypt.compare(oldPassword, user.hashPwd);
