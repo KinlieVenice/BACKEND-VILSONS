@@ -6,152 +6,83 @@ const usernameIdFinder = require("../utils/usernameIdFinder");
 const prisma = new PrismaClient();
 
 const createJobOrder = async (req, res) => {
-  const {
-    customerUsername,
-    truckPlate,
-    branchName,
-    contractorUsername,
-    description,
-    materials,
-    labor,
-  } = req.body;
-
-  if (!description || !customerUsername || !branchName || !truckPlate) {
-    return res
-      .status(400)
-      .json({ message: "Customer, truck, and description are required" });
-  }
+  const { customerUsername, truckPlate, branchName, contractorUsername, description, materials, labor } = req.body;
+  if (!description || !customerUsername || !branchName || !truckPlate) return res.status(400).json({ message: "Customer, truck, branch, and description are required" });
 
   try {
     const needsApproval = req.approval;
-    let message;
     const newCode = await generateJobOrderCode(prisma);
-    const customerId = await usernameIdFinder("customer", customerUsername);
-    const truckId = await truckIdFinder(truckPlate);
-    const branchId = await branchIdFinder(branchName);
-    const contractorId = await usernameIdFinder("contractor", contractorUsername);
 
-    const existingJob = await prisma.jobOrder.findUnique({
-      where: { jobOrderCode: newCode },
-    });
-    const pendingJob = await prisma.jobOrderEdit.findFirst({
-      where: { jobOrderCode: newCode },
-    });
+    const [customerId, truckId, branchId, contractorId] = await Promise.all([
+      usernameIdFinder("customer", customerUsername),
+      truckIdFinder(truckPlate),
+      branchIdFinder(branchName),
+      contractorUsername ? usernameIdFinder("contractor", contractorUsername) : null
+    ]);
 
-    if (existingJob || pendingJob) {
-      return res
-        .status(400)
-        .json({ message: "Job order already exists or awaiting approval" });
-    }
+    const existingJob = await prisma.jobOrder.findUnique({ where: { jobOrderCode: newCode } });
+    const pendingJob = await prisma.jobOrderEdit.findFirst({ where: { jobOrderCode: newCode } });
+    if (existingJob || pendingJob) return res.status(400).json({ message: "Job order already exists or awaiting approval" });
 
-    const jobOrderData = {
-      customerId,
-      branchId,
-      truckId,
-      description,
-      ...(contractorId ? { contractorId } : {}),
-      ...(labor ? { labor } : {}),
-      createdByUser: req.username,
-      updatedByUser: req.username,
-    };
-
-    let contractorPercent;
-    let contractorCommission;
-    let shopCommission;
-    let totalMaterialCost = 0;
+    const jobOrderData = { customerId, branchId, truckId, description, ...(contractorId && { contractorId }), ...(labor && { labor }), createdByUser: req.username, updatedByUser: req.username };
+    let contractorPercent = 0, contractorCommission = 0, shopCommission = 0, totalMaterialCost = 0;
 
     const result = await prisma.$transaction(async (tx) => {
-      let jobOrder;
-
       if (contractorId && labor) {
-        const contractor = await tx.contractor.findFirst({
-          where: { id: contractorId },
-        });
-
+        const contractor = await tx.contractor.findUnique({ where: { id: contractorId } });
         contractorPercent = contractor.commission;
         contractorCommission = labor * contractorPercent;
-        shopCommission = contractorCommission - labor;
+        shopCommission = labor - contractorCommission;
       }
 
       const jobOrderModel = needsApproval ? tx.jobOrderEdit : tx.jobOrder;
       const materialModel = needsApproval ? tx.materialEdit : tx.material;
 
-      jobOrder = await jobOrderModel.create({
-        data: {
-          ...jobOrderData,
-          jobOrderCode: needsApproval ? null : newCode,
-          jobOrderId: needsApproval ? null : undefined,
-          requestType: needsApproval ? "create" : undefined,
-          contractorPercent,
-        },
+      const jobOrderInclude = {
+        truck: { select: { id: true, plate: true } },
+        customer: { include: { user: { select: { username: true, fullName: true } } } },
+        contractor: contractorId ? { include: { user: { select: { username: true, fullName: true } } } } : false,
+        branch: { select: { id: true, branchName: true } }
+      };
+
+      const jobOrder = await jobOrderModel.create({
+        data: { ...jobOrderData, jobOrderCode: needsApproval ? null : newCode, requestType: needsApproval ? "create" : undefined, contractorPercent },
+        include: jobOrderInclude
       });
 
       if (materials && materials.length > 0) {
-         totalMaterialCost = materials.reduce((sum, m) => {
-           return sum + m.price * m.quantity;
-         }, 0);
-        await materialModel.createMany({
-          data: materials.map((m) => ({
-            jobOrderId: needsApproval ? null : jobOrder.id,
-            materialName: m.name,
-            quantity: m.quantity,
-            price: m.price,
-            ...(needsApproval ? { requestType: "create" } : {}),
-          })),
-        });
-      }
+        const invalid = materials.some((m) => !m.name || !m.price || !m.quantity);
+        if (invalid) return res.status(400).json({ message: "Each material must include non-empty name, non-zero price, and non-zero quantity" });
 
-      message = needsApproval
-        ? "Job order awaiting approval"
-        : "Job order successfully created";
+        await materialModel.createMany({ data: materials.map((m) => ({ jobOrderId: needsApproval ? null : jobOrder.id, materialName: m.name, quantity: m.quantity, price: m.price, ...(needsApproval && { requestType: "create" }) })) });
+        totalMaterialCost = materials.reduce((sum, m) => sum + m.price * m.quantity, 0);
+      }
 
       return jobOrder;
     });
 
-    return res.status(201).json({
-      message,
-      data: {
-        ...result,
-        contractorCommission,
-        shopCommission,
-        totalMaterialCost,
-        materials: materials || [],
-      },
-    });
+    const { truckId: _, customerId: __, contractorId: ___, branchId: ____, ...jobOrderFields } = result;
+
+    return res.status(201).json({ message: needsApproval ? "Job order awaiting approval" : "Job order successfully created", data: { ...jobOrderFields, contractorCommission, shopCommission, totalMaterialCost, materials: materials || [] } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
 
 const editJobOrder = async (req, res) => {
-   const {
-     customerUsername,
-     truckPlate,
-     branchName,
-     contractorUsername,
-     description,
-     materials,
-     labor,
-   } = req.body;
-
-  if (!req?.params?.id)
-    return res.status(404).json({ message: "ID is required" });
+  const { customerUsername, truckPlate, branchName, contractorUsername, description, materials, labor } = req.body;
+  if (!req?.params?.id) return res.status(404).json({ message: "ID is required" });
 
   try {
-    const customerId   = customerUsername   ? await usernameIdFinder("customer", customerUsername) : undefined;
-    const truckId      = truckPlate         ? await truckIdFinder(truckPlate) : undefined;
-    const branchId     = branchName         ? await branchIdFinder(branchName) : undefined;
+    const customerId = customerUsername ? await usernameIdFinder("customer", customerUsername) : undefined;
+    const truckId = truckPlate ? await truckIdFinder(truckPlate) : undefined;
+    const branchId = branchName ? await branchIdFinder(branchName) : undefined;
     const contractorId = contractorUsername ? await usernameIdFinder("contractor", contractorUsername) : undefined;
 
-    const jobOrder = await prisma.jobOrder.findFirst({
-      where: { id: req.params.id },
-    });
-    if (!jobOrder)
-      return res
-        .status(404)
-        .json({ message: `Job order with ID: ${req.params.id} not found` });
+    const jobOrder = await prisma.jobOrder.findFirst({ where: { id: req.params.id } });
+    if (!jobOrder) return res.status(404).json({ message: `Job order with ID: ${req.params.id} not found` });
 
-    const needsApproval = req.approval;
+    const needsApproval = true;
     let message;
 
     const jobOrderData = {
@@ -159,71 +90,52 @@ const editJobOrder = async (req, res) => {
       truckId: truckId ?? jobOrder.truckId,
       branchId: branchId ?? jobOrder.branchId,
       description: description ?? jobOrder.description,
-      ...(contractorId ? { contractorId } : {}),
-      ...(labor ? { labor } : {}),
+      contractorId: contractorUsername === "" ? null : contractorId ?? jobOrder.contractorId,
+      labor: labor === "" ? null : labor ?? jobOrder.labor,
       updatedByUser: req.username,
+      jobOrderId: needsApproval ? jobOrder.id : undefined,
+      jobOrderCode: jobOrder.jobOrderCode,
+      requestType: needsApproval ? "edit" : undefined,
+      createdByUser: needsApproval ? req.username : jobOrder.createdByUser
     };
+
+    let contractorPercent = 0, contractorCommission = 0, shopCommission = 0, totalMaterialCost = 0;
+
     const result = await prisma.$transaction(async (tx) => {
-      let editedJobOrder;
-      message = needsApproval
-        ? "Job Order edit awaiting approval"
-        : "Job order successfully edited";
+      message = needsApproval ? "Job Order edit awaiting approval" : "Job order successfully edited";
 
-      if (needsApproval) {
-        editedJobOrder = await tx.jobOrderEdit.create({
-          data: {
-            jobOrderId: jobOrder.id,
-            jobOrderCode: jobOrder.jobOrderCode,
-            ...jobOrderData,
-            requestType: "edit",
-            createdByUser: req.username,
-          },
-        });
+      if (contractorId && labor) {
+        const contractor = await tx.contractor.findUnique({ where: { id: contractorId } });
+        contractorPercent = contractor.commission;
+        contractorCommission = labor * contractorPercent;
+        shopCommission = labor - contractorCommission;
+      }
 
-        if (materials && materials.length > 0) {
-          await tx.materialEdit.createMany({
-            data: materials.map((m) => ({
-              jobOrderId: jobOrder.id,
-              materialName: m.name,
-              quantity: m.quantity,
-              price: m.price,
-              requestType: "edit",
-            })),
-          });
-        }
-      } else {
-        editedJobOrder = await tx.jobOrder.update({
-          where: { id: jobOrder.id },
-          data: jobOrderData,
-        });
+      const jobOrderInclude = {
+        truck: { select: { id: true, plate: true } },
+        customer: { include: { user: { select: { username: true, fullName: true } } } },
+        contractor: contractorId ? { include: { user: { select: { username: true, fullName: true } } } } : false,
+        branch: { select: { id: true, branchName: true } }
+      };
 
-        if (materials && materials.length > 0) {
-          await tx.material.deleteMany({
-            where: { jobOrderId: jobOrder.id },
-          });
+      const editedJobOrder = needsApproval ? await tx.jobOrderEdit.create({ data: jobOrderData, include: jobOrderInclude }) : await tx.jobOrder.update({ where: { id: jobOrder.id }, data: jobOrderData, include: jobOrderInclude });
 
-          // Insert new materials
-          await tx.material.createMany({
-            data: materials.map((m) => ({
-              jobOrderId: jobOrder.id,
-              materialName: m.name,
-              quantity: m.quantity,
-              price: m.price,
-            })),
-          });
-        }
+      if (materials?.length) {
+        const invalid = materials.some((m) => !m.name || !m.price || !m.quantity);
+        if (invalid) return res.status(400).json({ message: "Each material must include non-empty name, non-zero price, and non-zero quantity" });
+
+        const materialData = materials.map((m) => ({ jobOrderId: jobOrder.id, materialName: m.name, quantity: m.quantity, price: m.price, ...(needsApproval && { requestType: "edit" }) }));
+        if (needsApproval) await tx.materialEdit.createMany({ data: materialData }); else { await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } }); await tx.material.createMany({ data: materialData }); }
+
+        totalMaterialCost = materials.reduce((sum, m) => sum + m.price * m.quantity, 0);
       }
 
       return editedJobOrder;
     });
 
-    return res.status(201).json({
-      message,
-      data: {
-        ...result,
-        materials: materials || [],
-      },
-    });
+    const { truckId: _, customerId: __, contractorId: ___, branchId: ____, ...jobOrderFields } = result;
+
+    return res.status(201).json({ message: needsApproval ? "Job order awaiting approval" : "Job order successfully created", data: { ...jobOrderFields, contractorCommission, shopCommission, totalMaterialCost, materials: materials || [] } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -235,9 +147,7 @@ const deleteJobOrder = async (req, res) => {
 
   try {
     const needsApproval = req.approval;
-    let message;
     let deletedJobOrder;
-    let responseMaterials = [];
 
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
@@ -289,27 +199,18 @@ const deleteJobOrder = async (req, res) => {
           },
         });
 
-        message = "Job Order delete awaiting approval";
       } else {
         await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } });
         deletedJobOrder = await tx.jobOrder.delete({
           where: { id: jobOrder.id },
         });
 
-        responseMaterials = materials;
-        message = "Job order successfully deleted";
       }
 
       return deletedJobOrder;
     });
 
-    return res.status(201).json({
-      message,
-      data: {
-        ...result,
-        materials: responseMaterials,
-      },
-    });
+    return res.sendStatus(204);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -321,95 +222,63 @@ const getAllJobOrders = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  const startDate = req?.query?.startDate; // e.g. "2025-01-01"
-  const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+  const startDate = req?.query?.startDate;
+  const endDate = req?.query?.endDate;
 
   let where = {};
 
-  if (branch) {
-    where.branch = {
-      branchName: { contains: branch },
-    };
-  }
-
-  if (status) {
-    where.status = status;
-  }
+  if (branch) where.branch = { branchName: { contains: branch } };
+  if (status) where.status = status;
 
   if (search) {
     where.OR = [
       { jobOrderCode: { contains: search } },
-      {
-        truck: {
-          OR: [
-            { plate: { contains: search } },
-            { make: { contains: search } },
-            { model: { contains: search } },
-          ],
-        },
-      },
-      {
-        customer: {
-          user: {
-            OR: [
-              { username: { contains: search } },
-              { fullName: { contains: search } },
-              { phone: { contains: search } },
-              { email: { contains: search } },
-            ],
-          },
-        },
-      },
-      {
-        contractor: {
-          user: {
-            OR: [
-              { username: { contains: search } },
-              { fullName: { contains: search } },
-              { phone: { contains: search } },
-              { email: { contains: search } },
-            ],
-          },
-        },
-      },
+      { truck: { OR: [{ plate: { contains: search } }, { make: { contains: search } }, { model: { contains: search } }] } },
+      { customer: { user: { OR: [{ username: { contains: search } }, { fullName: { contains: search } }, { phone: { contains: search } }, { email: { contains: search } }] } } },
+      { contractor: { user: { OR: [{ username: { contains: search } }, { fullName: { contains: search } }, { phone: { contains: search } }, { email: { contains: search } }] } } }
     ];
   }
 
-  if (startDate && endDate) {
-    where.createdAt = {
-      gte: new Date(startDate),
-      lte: new Date(endDate),
-    };
-  }
+  if (startDate && endDate) where.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      return tx.jobOrder.findMany({
-        where,
-        ...(page && limit ? { skip: (page - 1) * limit } : {}),
-        ...(limit ? { take: limit } : {}),
-        include: {
-          truck: true,
-          branch: {
-            select: { branchName: true, address: true }, // single branch, not array
-          },
-          customer: {
-            include: {
-              user: true,
-            },
-          },
-          contractor: {
-            include: {
-              user: true,
-            },
-          },
-          materials: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
+    const jobOrderInclude = {
+      truck: { select: { id: true, plate: true } },
+      customer: { include: { user: { select: { username: true, fullName: true } } } },
+      contractor: { include: { user: { select: { username: true, fullName: true } } } },
+      branch: { select: { id: true, branchName: true } }
+    };
+
+    const jobOrders = await prisma.jobOrder.findMany({
+      where,
+      ...(page && limit ? { skip: (page - 1) * limit } : {}),
+      ...(limit ? { take: limit } : {}),
+      include: jobOrderInclude,
+      orderBy: { createdAt: "desc" }
     });
 
-    return res.status(200).json({ data: result });
+    // Calculate contractorCommission and shopCommission for each job order
+    const resultWithCommissions = await Promise.all(jobOrders.map(async (job) => {
+      let contractorCommission = 0, shopCommission = 0;
+      if (job.contractorId && job.labor) {
+        const contractor = await prisma.contractor.findUnique({ where: { id: job.contractorId } });
+        if (contractor) {
+          contractorCommission = job.labor * contractor.commission;
+          shopCommission = job.labor - contractorCommission;
+        }
+      }
+      return {
+        ...job,
+        contractorCommission,
+        shopCommission
+      };
+    }));
+
+    const cleanedResult = resultWithCommissions.map(
+      ({ truckId, customerId, contractorId, branchId, ...rest }) => rest
+    );
+
+    return res.status(200).json({ data: { joborders: cleanedResult } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -420,18 +289,44 @@ const getJobOrder = async (req, res) => {
     return res.status(400).json({ message: "ID is required" });
 
   try {
+    const jobOrderInclude = {
+      truck: { select: { id: true, plate: true } },
+      customer: { include: { user: { select: { username: true, fullName: true } } } },
+      contractor: { include: { user: { select: { username: true, fullName: true } } } },
+      branch: { select: { id: true, branchName: true } },
+      materials: true,
+    };
+
     const jobOrder = await prisma.jobOrder.findUnique({
       where: { id: req.params.id },
-      include: {
-        materials: true,
-      },
+      include: jobOrderInclude,
     });
 
     if (!jobOrder) {
       return res.status(404).json({ message: "Job Order not found" });
     }
 
-    return res.status(200).json({ data: jobOrder });
+    let contractorCommission = 0,
+      shopCommission = 0;
+    if (jobOrder.contractorId && jobOrder.labor) {
+      const contractor = await prisma.contractor.findUnique({
+        where: { id: jobOrder.contractorId },
+      });
+      if (contractor) {
+        contractorCommission = jobOrder.labor * contractor.commission;
+        shopCommission = jobOrder.labor - contractorCommission;
+      }
+    }
+
+    const { truckId, customerId, contractorId, branchId, ...jobOrderFields } = jobOrder;
+
+    return res.status(200).json({
+      data: {
+        ...jobOrderFields,
+        contractorCommission,
+        shopCommission,
+      },
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
