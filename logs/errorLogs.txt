@@ -607,3 +607,4 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20250925	14:35:14	24419bd5-093a-4696-a9a0-5f5ee5c12a13	SyntaxError: Expected double-quoted property name in JSON at position 165 (line 9 column 1)
 20250925	18:05:51	db4fa78b-a6f1-4183-b3f8-4138b6dbae60	SyntaxError: Expected double-quoted property name in JSON at position 45 (line 9 column 1)
 20250925	18:06:46	961ff4ea-c1b8-4274-9fc0-0a5a1a85c19f	SyntaxError: Expected double-quoted property name in JSON at position 33 (line 9 column 1)
+20250925	23:27:24	db896a41-0ddc-484a-9ff5-6053fef82d01	Error: Cannot set headers after they are sent to the client
