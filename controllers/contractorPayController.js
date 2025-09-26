@@ -117,6 +117,36 @@ const deleteContractorPay = async (req, res) => {
     }
 }
 
+const getContractorPay = async (req, res) => {
+    if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
+
+    try {
+        const contractorPay = await prisma.contractorPay.findFirst({
+            where: { id: req.params.id },
+            include: { contractor: { include: { user: { select: { username: true, fullName: true } } } } },
+        });
+        if (!contractorPay) return res.status((400).json({ message: "Contractor pay not found"}));
+
+        return res.status(201).json({ data: contractorPay})
+    } catch (err) {
+        return res.status(500).json({ message: err.message })
+    }
+}
+
+const getAllContractorPay = async (req, res) => {
+    try {
+        const contractorPay = await prisma.contractorPay.findMany({            
+            contractor: {
+            include: { user: { select: { username: true, fullName: true } } },
+          },
+        });
+
+        return res.status(201).json({ data: contractorPay})
+    } catch (err) {
+        return res.status(500).json({ message: err.message })
+    }
+}
+
 
 
 
