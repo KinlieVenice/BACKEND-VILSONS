@@ -869,7 +869,7 @@ const getMyJobOrder = async (req, res) => {
   try {
     const result = await prisma.$transaction(async (tx) => {
       const customer = await tx.customer.findFirst({
-        where: { userId: "0bee52b7-cd89-4817-bb9d-4d664358075b" },
+        where: { userId: req.id },
       });
 
       if (!customer)
