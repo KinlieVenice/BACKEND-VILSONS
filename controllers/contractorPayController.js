@@ -79,5 +79,46 @@ const editContractorPay = async (req, res) => {
 };
 
 
+const deleteContractorPay = async (req, res) => {
+    if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
+
+    try {
+        const contractorPay = await prisma.contractorPay.findFirst({            
+            where: { id: req.params.id }
+        });
+        if (!contractorPay) return res.status((400).json({ message: "Contractor pay not found"}));
+
+        const needsApproval = req.approval;
+        let message = needsApproval ? "Contractor pay delete awaiting approval" : "Contactor pay deleted";
+
+        const contractorPayData = {
+            contractorId:  contractorPay.contractorId,
+            type: contractorPay.type,
+            amount: contractorPay.amount,
+            updatedByUser: req.username,
+            createdByUser: req.username
+        }
+
+
+        const result = await prisma.$transaction(async (tx) => {
+            const deletedContractorPay = needsApproval 
+                ? await tx.contractorPayEdit.create({
+                    data: contractorPayData
+                })
+                : await tx.contractorPay.delete({
+                    where: { id: contractorPay.id }
+                })
+            return deletedContractorPay;
+        })
+
+        return res.status(201).json({ message })
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+}
+
+
+
+
 
 module.exports = { createContractorPay, editContractorPay, deleteContractorPay, getContractorPay }
