@@ -1,9 +1,11 @@
 const { PrismaClient } = require("../generated/prisma");
+const prisma = new PrismaClient();
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const truckIdFinder = require("../utils/truckIdFinder");
 const branchIdFinder = require("../utils/branchIdFinder");
 const usernameIdFinder = require("../utils/usernameIdFinder");
-const prisma = new PrismaClient();
+const relationsChecker = require("../utils/relationsChecker");
+
 
 const createJobOrder = async (req, res) => {
   const {
@@ -35,7 +37,6 @@ const createJobOrder = async (req, res) => {
         : null,
     ]);
 
-    
     const jobOrderData = {
       customerId,
       branchId,
@@ -408,10 +409,15 @@ const deleteJobOrder = async (req, res) => {
   try {
     const needsApproval = req.approval;
     let deletedJobOrder;
+    let message;
 
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
+      include: {
+        transactions: true,
+      }
     });
+
     if (!jobOrder)
       return res
         .status(404)
@@ -451,24 +457,30 @@ const deleteJobOrder = async (req, res) => {
           })),
         });
 
-        responseMaterials = await tx.materialEdit.findMany({
-          where: {
-            jobOrderId: jobOrder.id,
-            requestType: "delete",
-            approvalStatus: "pending",
-          },
-        });
+        message = "Job order delete awaiting approval"
       } else {
+        const excludedKeys = ["labor", "contractorPercent"]
+        const hasRelations = relationsChecker(jobOrder, excludedKeys);
+        console.log(hasRelations)
+
+        if (hasRelations) {
+          throw new Error("Job order cannot be deleted as its connnected to other records"); 
+        }
+        
         await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } });
+        await tx.materialEdit.deleteMany({ where: { jobOrderId: jobOrder.id } });
+        await tx.jobOrderEdit.deleteMany({ where: { jobOrderId: jobOrder.id } });
+
         deletedJobOrder = await tx.jobOrder.delete({
           where: { id: jobOrder.id },
         });
-      }
 
+        message = "Job Order successfully deleted as well as materials"
+      }
       return deletedJobOrder;
     });
 
-    return res.sendStatus(204);
+    return res.status(200).json({ message });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
