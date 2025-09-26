@@ -768,6 +768,11 @@ enum RequestType {
   create
 }
 
+enum LaborType {
+  employee
+  contractor
+}
+
 enum PaymentType {
   regular
   advance
