@@ -77,7 +77,7 @@ const createUser = async (req, res) => {
             data: { ...userData, requestType: "create" },
           })
         : await tx.user.create({
-            data: { ...userData },
+            data: { ...userData, status: "active", },
           });
 
       //this is an object with function as value
@@ -494,7 +494,7 @@ const editUserPassword = async (req, res) => {
 };
 
 // add for soft delete -> active to inactive
-const deleteUser = async (req, res) => {
+const deleteUserSS = async (req, res) => {
   if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
   }
@@ -543,6 +543,133 @@ const deleteUser = async (req, res) => {
       message,
       username: result.deletedUser.username,
     });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        admin: true,
+        customer: {
+          include: {
+            trucks: true,
+            trucksEdit: true,
+            jobOrder: true,
+            jobOrderEdit: true,
+          },
+        },
+        contractor: {
+          include: {
+            contractorPay: true,
+            contractorPayEdit: true,
+            JobOrder: true,
+            JobOrderEdit: true,
+          },
+        },
+        employee: {
+          include: {
+            employeeSalary: true,
+          },
+        },
+
+        // exclude these from relation checking
+        roles: true,
+        rolesEdit: true,
+        branches: true,
+        branchesEdit: true,
+        edits: true,
+
+        // keep all other created/updated relations
+        activityLog: true,
+        createdUsers: true,
+        updatedUsers: true,
+        createdUserEdit: true,
+        createdRole: true,
+        createdBranches: true,
+        createdBranchEdit: true,
+        createdTrucks: true,
+        createdTruckEdit: true,
+        createdTransaction: true,
+        createdTransactionEdit: true,
+        createdJobOrder: true,
+        createdJobOrderEdit: true,
+        createdContractorPay: true,
+        createdContractorPayEdit: true,
+        createdEmployeeSalary: true,
+        createdEmployeeSalaryEdit: true,
+        createdEquipment: true,
+        createdEquipmentEdit: true,
+        createdOtherIncome: true,
+        createdOtherIncomeEdit: true,
+        createdOverhead: true,
+        createdOverheadEdit: true,
+        transferredTruckOwnership: true,
+        transferredTruckOwnershipEdit: true,
+        updatedUserEdits: true,
+        updatedBranches: true,
+        updatedBranchEdits: true,
+        updatedTruck: true,
+        updatedTruckEdit: true,
+        updatedTransaction: true,
+        updatedTransactionEdit: true,
+        updatedJobOrder: true,
+        updatedJobOrderEdit: true,
+        updatedContractorPay: true,
+        updatedContractorPayEdit: true,
+        updatedEmployeeSalary: true,
+        updatedEmployeeSalaryEdit: true,
+        updatedEquipment: true,
+        updatedEquipmentEdit: true,
+        updatedOtherIncome: true,
+        updatedOtherIncomeEdit: true,
+        updatedOverhead: true,
+        updatedOverheadEdit: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔍 Check relations, but ignore roles/branches/edits
+    const excludedKeys = ["roles", "rolesEdit", "branches", "branchesEdit", "edits"];
+    const hasRelations = Object.entries(user).some(([key, value]) => {
+      if (excludedKeys.includes(key)) return false;
+      if (Array.isArray(value) && value.length > 0) return true;
+      if (typeof value === "object" && value !== null) {
+        if (Object.values(value).some(v => Array.isArray(v) && v.length > 0)) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    let message;
+    if (hasRelations) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { status: "inactive" },
+      });
+      message = "User marked as inactive (has related records)";
+    } else {
+      // delete excluded relations first
+      await prisma.userRole.deleteMany({ where: { userId: user.id } });
+      await prisma.userRoleEdit.deleteMany({ where: { userId: user.id } });
+      await prisma.userBranch.deleteMany({ where: { userId: user.id } });
+      await prisma.userBranchEdit.deleteMany({ where: { userId: user.id } });
+      await prisma.userEdit.deleteMany({ where: { userId: user.id } });
+
+      // finally delete the user
+      await prisma.user.delete({ where: { id: user.id } });
+
+      message = "User and related roles/branches/edits deleted successfully";
+    }
+
+    return res.status(200).json({ message });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

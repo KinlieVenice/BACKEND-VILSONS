@@ -27,6 +27,8 @@ model User {
   description String?
   refreshToken String?
 
+  status AccountStatus?
+
   createdAt   DateTime @default(now())
   createdByUser String?
   updatedAt   DateTime @updatedAt
@@ -744,6 +746,11 @@ enum OrderStatus {
   ongoing
   completed
   forRelease
+}
+
+enum AccountStatus {
+  active
+  inactive
 }
 
 enum ApprovalStatus {

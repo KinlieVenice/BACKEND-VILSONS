@@ -35,17 +35,7 @@ const createJobOrder = async (req, res) => {
         : null,
     ]);
 
-    const existingJob = await prisma.jobOrder.findUnique({
-      where: { jobOrderCode: newCode },
-    });
-    const pendingJob = await prisma.jobOrderEdit.findFirst({
-      where: { jobOrderCode: newCode },
-    });
-    if (existingJob || pendingJob)
-      return res
-        .status(400)
-        .json({ message: "Job order already exists or awaiting approval" });
-
+    
     const jobOrderData = {
       customerId,
       branchId,

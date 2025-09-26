@@ -1467,3 +1467,17 @@
 20250925	23:28:34	c0196f48-5690-4d18-b018-7824f7ddc718	GET	undefined	/api/me/job-orders/assigned/e7cdde41-4925-47e5-aa20-69847d4e5d4e
 20250925	23:28:41	51832668-1903-488e-aef0-9fdfa2bb9d43	GET	undefined	/api/me/job-orders/assigned/9d411b2e-8715-4152-ae17-366339d64456
 20250925	23:32:43	b6f95d0e-bac4-4321-ace1-838fae99edab	GET	undefined	/api/me/job-orders/171aedaa-4a75-49d9-87b4-2dc0814179a4
+20250926	14:12:39	24c20ee6-d58b-405e-bb4b-dc31af748081	POST	undefined	/auth
+20250926	14:13:37	48df873e-0470-4621-afc9-e8977c03b411	POST	undefined	/api/users
+20250926	14:14:30	77bf54da-ec48-43ec-a0eb-5262a01411ad	DELETE	undefined	/api/users/39d80cf7-9e8e-4a29-b658-80b070bea25e
+20250926	14:14:46	9867af2f-ce31-452f-8ea9-5c7fd61566ba	GET	undefined	/api/users/39d80cf7-9e8e-4a29-b658-80b070bea25e
+20250926	14:14:59	6846e067-326e-4125-a547-7c2435524e4d	POST	undefined	/api/users
+20250926	14:15:26	a7d6d9f3-5ef2-4d6a-af5b-1efc0aa5165b	POST	undefined	/api/users
+20250926	14:15:41	11a1e0dd-9950-43ed-a1cf-2c8e1c609941	POST	undefined	/auth
+20250926	14:17:45	00f85a91-9b4c-4a74-b8a5-bb5cfc9bb9b8	POST	undefined	/api/job-orders
+20250926	14:18:37	3476324c-98e8-48b1-afff-4a0aacef2942	POST	undefined	/api/job-orders
+20250926	14:19:03	4b882086-d668-49f6-8867-34869c648cc2	POST	undefined	/api/job-orders
+20250926	14:20:03	e0d57362-d004-4a4a-9ecc-8e876d851b44	POST	undefined	/api/job-orders
+20250926	14:20:17	8b49b1ea-37bc-4190-9698-f4e5ce26cc60	POST	undefined	/api/job-orders
+20250926	14:21:24	5ff4e1eb-f85f-4878-b2b5-7bfeb176cb7e	POST	undefined	/auth
+20250926	14:22:14	f0757cdb-56b7-46eb-93f3-9f8c596a3029	DELETE	undefined	/api/users/4db26b6b-9258-4817-b680-e2b8d376f304
