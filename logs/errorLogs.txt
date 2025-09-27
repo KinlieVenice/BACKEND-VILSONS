@@ -613,3 +613,4 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20250926	17:50:11	bafc78b2-aa8f-4a74-a41d-06aae56d386c	Error: Cannot set headers after they are sent to the client
 20250926	17:51:01	4f0e62b2-46fe-48df-a813-6659597ba098	Error: Cannot set headers after they are sent to the client
 20250926	17:54:04	1d4e6b9c-20bf-4a37-8840-4a6fd59a1adb	Error: Cannot set headers after they are sent to the client
+20250927	22:10:07	a82f363a-e44c-46b8-9084-99f689461ebc	TypeError: 500.json is not a function

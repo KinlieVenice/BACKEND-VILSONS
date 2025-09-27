@@ -148,9 +148,25 @@ const deleteEmployeePay = async (req, res) => {
     }
 }
 
-const getAllEmployeePay = async (req, res) => {
-  
+const getAllEmployeePays = async (req, res) => {
+  try {
+    const allEmployeePays  = await prisma.employeePay.findMany({
+      include: { payComponents: { include: { component: true } } }
+    });
+
+
+    const withTotals = allEmployeePays.map(employeePay => ({
+      ...employeePay,
+      totalComponentCost: employeePay.payComponents.reduce(
+        (sum, pc) => sum + Number(pc.amount), 
+        0
+      )
+    }));
+    return res.status(201).json({ data: { employeePay: withTotals }})
+  } catch (err) {
+    return res.status(500).json({ message: err.message })
+  }
 }
 
 
-module.exports = { createEmployeePay, editEmployeePay, deleteEmployeePay }
+module.exports = { createEmployeePay, editEmployeePay, deleteEmployeePay, getAllEmployeePays }
