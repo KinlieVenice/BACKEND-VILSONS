@@ -7,6 +7,7 @@ const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 //PERM FIX
 router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), contractorPayController.createContractorPay)
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), contractorPayController.getAllContractorPays)
 
 router.route("/:id")
 .put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), contractorPayController.editContractorPay)

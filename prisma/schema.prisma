@@ -62,6 +62,9 @@ model User {
   createdContractorPayEdit ContractorPayEdit[] @relation("CreatedBy")
   createdEmployeeSalary     EmployeeSalary[]     @relation("CreatedBy")
   createdEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("CreatedBy")
+  createdEmployeePay     EmployeePay[]     @relation("CreatedBy")
+  // createdEmployeePayEdit EmployeePayEdit[] @relation("CreatedBy")
+  createdPayComponent     PayComponent[]     @relation("CreatedBy")
   createdEquipment     Equipment[]     @relation("CreatedBy")
   createdEquipmentEdit EquipmentEdit[] @relation("CreatedBy")
   createdOtherIncome     OtherIncome[]     @relation("CreatedBy")
@@ -85,6 +88,9 @@ model User {
   updatedContractorPayEdit ContractorPayEdit[] @relation("UpdatedBy")
   updatedEmployeeSalary     EmployeeSalary[]     @relation("UpdatedBy")
   updatedEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("UpdatedBy")
+  updatedEmployeePay     EmployeePay[]     @relation("UpdatedBy")
+  // updatedEmployeePayEdit EmployeePayEdit[] @relation("UpdatedBy")
+  updatedPayComponent     PayComponent[]     @relation("UpdatedBy")
   updatedEquipment     Equipment[]     @relation("UpdatedBy")
   updatedEquipmentEdit EquipmentEdit[] @relation("UpdatedBy")
   updatedOtherIncome     OtherIncome[]     @relation("UpdatedBy")
@@ -153,6 +159,7 @@ model Employee {
   userId         String @unique
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   employeeSalary EmployeeSalary[]
+  employeePay EmployeePay[]
   employeeSalaryEdit EmployeeSalaryEdit[]
 }
 
@@ -302,7 +309,7 @@ model ContractorPay {
 
 model ContractorPayEdit {
   id              String  @id @default(uuid())
-  contractorPayId String
+  contractorPayId String?
   contractorId String
 
   type   PaymentType
@@ -319,22 +326,17 @@ model ContractorPayEdit {
   contractor Contractor @relation(fields: [contractorId], references: [id])
   createdBy     User          @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy     User          @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  contractorPay ContractorPay @relation(fields: [contractorPayId], references: [id])
+  contractorPay ContractorPay? @relation(fields: [contractorPayId], references: [id])
 }
 
-model PayComponent {
-  id                 String               @id @default(uuid())
-  payComponentName               String               @db.VarChar(20)
-  employeeSalary     EmployeeSalary[]
-  employeeSalaryEdit EmployeeSalaryEdit[]
-}
+
 
 model EmployeeSalary {
   id         String @id @default(uuid())
   employeeId String
 
   componentId String
-  component   PayComponent @relation(fields: [componentId], references: [id])
+  // component   PayComponent @relation(fields: [componentId], references: [id])
 
   type   PaymentType @default(regular)
   amount Decimal     @db.Decimal(13, 2)
@@ -358,7 +360,7 @@ model EmployeeSalaryEdit {
   employeeSalaryId String
 
   componentId String
-  component   PayComponent @relation(fields: [componentId], references: [id])
+  // component   PayComponent @relation(fields: [componentId], references: [id])
 
   type   PaymentType @default(regular)
   amount Decimal     @db.Decimal(13, 2)
@@ -377,12 +379,51 @@ model EmployeeSalaryEdit {
   employeeSalary EmployeeSalary @relation(fields: [employeeSalaryId], references: [id])
 }
 
+model EmployeePay {
+  id        String   @id @default(uuid())
+  employeeId String
+  payComponents    PayComponent[] 
+  type PaymentType @default(regular)
+  
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: NoAction)
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model PayComponent {
+  id        String   @id @default(uuid())
+  componentId String
+  employeePayId String
+  amount Decimal @db.Decimal(13, 2)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  component      Component     @relation(fields: [componentId], references: [id], onDelete: NoAction)
+  employeePay      EmployeePay     @relation(fields: [employeePayId], references: [id], onDelete: NoAction)
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Component {
+  id                 String               @id @default(uuid())
+  componentName               String   
+  payComponents     PayComponent[]
+}
+
 model ActivityLog {
   id        String   @id @default(uuid())
   userName    String
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userName], references: [id], onDelete: NoAction)
+  user      User     @relation(fields: [userName], references: [username], onDelete: NoAction)
 }
 
 model Transaction {

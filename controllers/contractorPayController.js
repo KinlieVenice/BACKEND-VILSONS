@@ -1,24 +1,26 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
-const usernameFinder = require('../utils/usernameFinder');
 
 /*
   contractorId String
-
   type   PaymentType
   amount Decimal     @db.Decimal(13, 2)
 */
 
 const createContractorPay = async (req, res)  => {
-    const { contractorId, type, amount } = req.body;
-    if (!contractorId || !type || !amount) return res.status(400).json({ message: "ContractorId, type, and amount required"});
+    const { userId, type, amount } = req.body;
+    if (!userId || !type || !amount) return res.status(400).json({ message: "ContractorId, type, and amount required"});
+
+    const contractor = await prisma.contractor.findFirst({ where: { userId }})
+    if (!contractor) return res.status(400).json({ message: "User is not a contractor"})
 
     try {
         const needsApproval = req.approval;
         let message = needsApproval ? "Contractor pay awaiting approval" : "Contractor pay successful"
 
         let contractorPayData = {
-            contractorId, type, amount,
+            contractorId: contractor.id, 
+            type, amount,
             createdByUser: req.username,
             updatedByUser: req.username
         }
@@ -26,7 +28,7 @@ const createContractorPay = async (req, res)  => {
         const result = await prisma.$transaction(async (tx) => {
             const contractoyPay = needsApproval 
             ? await tx.contractorPayEdit.create({
-                data: contractorPayData
+                data: {...contractorPayData, requestType: "create", contractorPayId: null}
             }) : await tx.contractorPay.create({
                 data: contractorPayData
             });
@@ -40,7 +42,8 @@ const createContractorPay = async (req, res)  => {
 };
 
 const editContractorPay = async (req, res) => {
-    const { contractorId, type, amount } = req.body;
+     const { userId, type, amount } = req.body;
+
     if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
 
     try {
@@ -50,11 +53,20 @@ const editContractorPay = async (req, res) => {
         });
         if (!contractorPay) return res.status((400).json({ message: "Contractor pay not found"}));
 
+        let contractorId;
+        if (userId) { 
+            const contractor = await prisma.contractor.findFirst({ where: { userId }});
+            contractorId = contractor.id
+        } else {
+            contractorId = contractorPay.contractorId
+        }
+
+
         const needsApproval = req.approval;
         let message = needsApproval ? "Contractor pay edit is awaiting approval" : "Contractor pay edit successful";
 
         const contractorPayData = {
-            contractorId: contractorId ?? contractorPay.contractorId,
+            contractorId,
             type: type ?? contractorPay.type,
             amount: amount ?? contractorPay.amount,
             updatedByUser: req.username
@@ -63,7 +75,7 @@ const editContractorPay = async (req, res) => {
         const result = await prisma.$transaction(async (tx) => {
             const editedContractorPay = needsApproval 
                 ? await tx.contractorPayEdit.create({
-                    data: { ...contractorPayData, requestType: "edit", createdByUser: req.username }
+                    data: { ...contractorPayData, requestType: "edit", contractorPayId: req.params.id, createdByUser: req.username }
                 })
                 : await tx.contractorPay.update({
                     where: { id: contractorPay.id },
@@ -77,7 +89,6 @@ const editContractorPay = async (req, res) => {
     }
 
 };
-
 
 const deleteContractorPay = async (req, res) => {
     if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
@@ -133,22 +144,16 @@ const getContractorPay = async (req, res) => {
     }
 }
 
-const getAllContractorPay = async (req, res) => {
+const getAllContractorPays = async (req, res) => {
     try {
         const contractorPay = await prisma.contractorPay.findMany({            
-            contractor: {
-            include: { user: { select: { username: true, fullName: true } } },
-          },
+            include: { contractor: { include: { user: { select: { username: true, fullName: true } } } } },
         });
 
-        return res.status(201).json({ data: contractorPay})
+        return res.status(201).json({ data: { contractorPay }})
     } catch (err) {
         return res.status(500).json({ message: err.message })
     }
 }
 
-
-
-
-
-module.exports = { createContractorPay, editContractorPay, deleteContractorPay, getContractorPay }
+module.exports = { createContractorPay, editContractorPay, deleteContractorPay, getContractorPay, getAllContractorPays }

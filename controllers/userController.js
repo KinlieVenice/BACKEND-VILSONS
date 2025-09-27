@@ -738,6 +738,10 @@ const getAllUsers = async (req, res) => {
               branch: { select: { branchName: true } },
             },
           },
+          contractor: true,
+          customer: true,
+          employee: true,
+          admin: true
         },
       });
 
