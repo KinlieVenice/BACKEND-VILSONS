@@ -134,7 +134,7 @@ const deleteEmployeePay = async (req, res) => {
 
     try {
       const employeePay = await prisma.employeePay.findFirst({ where: { id: req.params.id }, });
-      if (!employeePay) return res.status(404).json({ message: `Job order with ID: ${req.params.id} not found` });
+      if (!employeePay) return res.status(404).json({ message: `Employee pay with ID: ${req.params.id} not found` });
 
       const result = await prisma.$transaction(async (tx) => {
         await tx.payComponent.deleteMany({
@@ -168,5 +168,30 @@ const getAllEmployeePays = async (req, res) => {
   }
 }
 
+const getEmployeePay = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(404).json({ message: "ID is required" });
 
-module.exports = { createEmployeePay, editEmployeePay, deleteEmployeePay, getAllEmployeePays }
+  try {
+    const employeePay  = await prisma.employeePay.findFirst({
+      where: { id: req.params.id },
+      include: { payComponents: { include: { component: true } } }
+    });
+
+    if (!employeePay) {
+      return res.status(404).json({ message: "Employee pay not found" });
+    }
+
+    const totalComponentCost = employeePay.payComponents.reduce(
+      (sum, pc) => sum + Number(pc.amount),
+      0
+    );
+
+    return res.status(200).json({ data: { ...employeePay, totalComponentCost } });
+  } catch (err) {
+    return res.status(500).json({ message: err.message })
+  }
+}
+
+
+module.exports = { createEmployeePay, editEmployeePay, deleteEmployeePay, getAllEmployeePays, getEmployeePay }

@@ -11,6 +11,7 @@ router.route("/")
 
 router.route("/:id")
 .put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.editEmployeePay)
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.getEmployeePay)
 .delete(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.deleteEmployeePay);
 
 module.exports = router;
