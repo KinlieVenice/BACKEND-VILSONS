@@ -1,23 +1,20 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
-const truckIdFinder = require("../utils/truckIdFinder");
-const branchIdFinder = require("../utils/branchIdFinder");
-const usernameIdFinder = require("../utils/usernameIdFinder");
 const relationsChecker = require("../utils/relationsChecker");
 
 
 const createJobOrder = async (req, res) => {
   const {
-    customerUsername,
-    truckPlate,
-    branchName,
-    contractorUsername,
+    customerId,
+    truckId,
+    branchId,
+    contractorId,
     description,
     materials,
     labor,
   } = req.body;
-  if (!description || !customerUsername || !branchName || !truckPlate)
+  if (!description || !customerId || !branchId || !truckId)
     return res
       .status(400)
       .json({
@@ -27,15 +24,6 @@ const createJobOrder = async (req, res) => {
   try {
     const needsApproval = req.approval;
     const newCode = await generateJobOrderCode(prisma);
-
-    const [customerId, truckId, branchId, contractorId] = await Promise.all([
-      usernameIdFinder("customer", customerUsername),
-      truckIdFinder(truckPlate),
-      branchIdFinder(branchName),
-      contractorUsername
-        ? usernameIdFinder("contractor", contractorUsername)
-        : null,
-    ]);
 
     const jobOrderData = {
       customerId,
@@ -147,28 +135,19 @@ const createJobOrder = async (req, res) => {
 
 const editJobOrder = async (req, res) => {
   const {
-    customerUsername,
-    truckPlate,
-    branchName,
-    contractorUsername,
+    customerId,
+    truckId,
+    branchId,
+    contractorId,
     description,
     materials,
     labor,
   } = req.body;
-  
+
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    const customerId = customerUsername
-      ? await usernameIdFinder("customer", customerUsername)
-      : undefined;
-    const truckId = truckPlate ? await truckIdFinder(truckPlate) : undefined;
-    const branchId = branchName ? await branchIdFinder(branchName) : undefined;
-    const contractorId = contractorUsername
-      ? await usernameIdFinder("contractor", contractorUsername)
-      : undefined;
-
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
     });

@@ -1601,3 +1601,6 @@
 20250927	23:25:51	2a279ff0-a790-4581-a9ee-90ef31d36a3b	GET	undefined	/api/users
 20250927	23:26:26	5f4857ef-e83a-414d-95dc-ffced569e45f	GET	undefined	/api/users
 20250927	23:27:48	1d043f0c-8e17-483e-962e-7e6674feb6ed	GET	undefined	/api/users/450ba9c6-50a2-4363-a656-2e8bdecfc50e
+20250927	23:40:46	e646eb7c-82c4-45f4-beaa-09664f9a77da	POST	undefined	/api/job-order
+20250927	23:40:49	ff2d3bd0-da68-4afd-b272-4781e29703f5	POST	undefined	/api/job-orders
+20250927	23:41:42	2f83600e-0de9-49b2-8ee4-b8ed4d0bd35c	POST	undefined	/api/job-orders
