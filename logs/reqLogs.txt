@@ -1569,3 +1569,4 @@
 20250927	21:32:34	0c2aeb92-ccee-4050-ac9e-962299786272	PUT	undefined	/api/employee-pay/0c4f4b26-4e2e-427b-8d3d-eb404c1ff50a
 20250927	21:34:01	8f9c6f3b-23bd-4b54-9767-1d886d3a90e1	PUT	undefined	/api/employee-pay/0c4f4b26-4e2e-427b-8d3d-eb404c1ff50a
 20250927	21:34:49	b6cb36d0-b854-4489-9e9e-840cff7cc877	PUT	undefined	/api/employee-pay/0c4f4b26-4e2e-427b-8d3d-eb404c1ff50a
+20250927	21:45:39	0d4cba2c-393b-4422-a5f2-8e8de0c96c1f	DELETE	undefined	/api/employee-pay/0c4f4b26-4e2e-427b-8d3d-eb404c1ff50a

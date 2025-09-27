@@ -148,5 +148,9 @@ const deleteEmployeePay = async (req, res) => {
     }
 }
 
+const getAllEmployeePay = async (req, res) => {
+  
+}
+
 
 module.exports = { createEmployeePay, editEmployeePay, deleteEmployeePay }

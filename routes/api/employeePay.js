@@ -9,6 +9,7 @@ router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.createEmployeePay);
 
 router.route("/:id")
-.put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.editEmployeePay);
+.put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.editEmployeePay)
+.delete(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), employeePayController.deleteEmployeePay);
 
 module.exports = router;
