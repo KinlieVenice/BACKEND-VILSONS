@@ -155,6 +155,7 @@ const editJobOrder = async (req, res) => {
     materials,
     labor,
   } = req.body;
+  
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
 
