@@ -54,9 +54,11 @@ const createUser = async (req, res) => {
   }
 
   try {
-    let message;
     let needsApproval = req.approval;
-
+    let  message = needsApproval
+        ? "User created is awaiting approval"
+        : "User is successfully created";
+        
     const hashPwd = await bcrypt.hash(
       password || process.env.DEFAULT_PASSWORD,
       10
@@ -96,17 +98,27 @@ const createUser = async (req, res) => {
             }),
         };
 
+        // Fetch role names for all roleIds in one go
+        const roleRecords = await tx.role.findMany({
+          where: { id: { in: roles } },
+          select: { roleName: true },
+        });
+
+        // Extract just the role names
+        const roleNames = roleRecords.map((r) => r.roleName);
+
+        // Run mapped role table functions
         await Promise.all(
-          roles
-            .filter((role) => roleTableMap[role])
-            .map((role) => roleTableMap[role]()) // call value function
+          roleNames
+            .filter((roleName) => roleTableMap[roleName]) // keep only valid roles
+            .map((roleName) => roleTableMap[roleName]())  // call value function
         );
       }
 
       const userRoleData = await Promise.all(
         roles.map(async (role) => {
           return {
-            roleId: await roleIdFinder(role),
+            roleId: role,
             userId: user.id,
           };
         })
@@ -121,7 +133,7 @@ const createUser = async (req, res) => {
       const userBranchData = await Promise.all(
         branches.map(async (branch) => {
           return {
-            branchId: await branchIdFinder(branch),
+            branchId: branch,
             userId: user.id,
           };
         })
@@ -132,23 +144,25 @@ const createUser = async (req, res) => {
         : await tx.userBranch.createMany({
             data: userBranchData,
           });
+      
+      const userDetails = await tx.user.findFirst({
+        where: { id: user.id },
+        include: {
+          roles: { include: { role: true } },
+          branches: { include: { branch: true } },
+        }
+      });
 
-      message = needsApproval
-        ? "User created is awaiting approval"
-        : "User is successfully created";
-
-      return { user, roles, branches };
+      return { userDetails };
     });
 
-    const { hashPwd: _, refreshToken, ...safeUser } = result.user;
+    const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
 
     return res.status(201).json({
       message,
       data: {
         ...safeUser,
         // ...(({ hashPwd, refreshToken, ...safeUser }) => safeUser)(result.editedUser),
-        roles: result.roles,
-        branches: result.branches,
       },
     });
   } catch (error) {
@@ -169,8 +183,10 @@ const editUser = async (req, res) => {
       .json({ message: `User with ${req.params.id} doesn't exist` });
 
   try {
-    let message;
     let needsApproval = req.approval;
+    let message = needsApproval
+        ? "User edit awaiting approval"
+        : "User edited successfully";
     let existingUser;
     let pendingUser;
 
@@ -231,7 +247,7 @@ const editUser = async (req, res) => {
           data: await Promise.all(
             roles.map(async (role) => ({
               userId: user.id,
-              roleId: await roleIdFinder(role),
+              roleId: role,
             }))
           ),
         });
@@ -258,10 +274,19 @@ const editUser = async (req, res) => {
             }),
         };
 
+        const roleRecords = await tx.role.findMany({
+          where: { id: { in: roles } },
+          select: { roleName: true },
+        });
+
+        // Extract just the role names
+        const roleNames = roleRecords.map((r) => r.roleName);
+
+        // Run mapped role table functions
         await Promise.all(
-          roles
-            .filter((role) => roleTableMap[role])
-            .map((role) => roleTableMap[role]())
+          roleNames
+            .filter((roleName) => roleTableMap[roleName]) // keep only valid roles
+            .map((roleName) => roleTableMap[roleName]())  // call value function
         );
       }
 
@@ -272,28 +297,30 @@ const editUser = async (req, res) => {
           data: await Promise.all(
             branches.map(async (branch) => ({
               userId: user.id,
-              branchId: await branchIdFinder(branch),
+              branchId: branch,
             }))
           ),
         });
       }
 
-      message = needsApproval
-        ? "User edit awaiting approval"
-        : "User edited successfully";
+      const userDetails = await tx.user.findFirst({
+        where: { id: editedUser.id },
+        include: {
+          roles: { include: { role: true } },
+          branches: { include: { branch: true } },
+        }
+      });
 
-      return { editedUser, roles, branches };
+      return { userDetails };
     });
 
-    const { hashPwd: _, refreshToken, ...safeUser } = result.user;
+    const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
 
     return res.status(201).json({
       message,
       data: {
         ...safeUser,
         // ...(({ hashPwd, refreshToken, ...safeUser }) => safeUser)(result.editedUser),
-        roles: result.roles,
-        branches: result.branches,
       },
     });
   } catch (error) {
@@ -730,12 +757,12 @@ const getAllUsers = async (req, res) => {
         include: {
           roles: {
             include: {
-              role: { select: { roleName: true } },
+              role: true,
             },
           },
           branches: {
             include: {
-              branch: { select: { branchName: true } },
+              branch: true,
             },
           },
           contractor: true,
@@ -752,12 +779,12 @@ const getAllUsers = async (req, res) => {
       } 
 
       const formattedUsers = users.map((user) => {
-        const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
+        const { hashPwd, refreshToken, ...safeUser } = user;
 
         return {
           ...safeUser,
-          roles: roles.map((r) => r.role.roleName),
-          branches: branches.map((b) => b.branch.branchName),
+          // roles: roles.map((r) => r.role.roleName),
+          // branches: branches.map((b) => b.branch.branchName),
         };
       });
 
@@ -780,20 +807,20 @@ const getUser = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
-        roles: { include: { role: { select: { roleName: true } } } },
-        branches: { include: { branch: { select: { branchName: true } } } },
+        roles: { include: { role: true } },
+        branches: { include: { branch: true } },
       },
     });
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
+    const { hashPwd, refreshToken, ...safeUser } = user;
 
     res.status(200).json({
       data: {
         ...safeUser,
-        roles: roles.map((r) => r.role.roleName),
-        branches: branches.map((b) => b.branch.branchName),
+        // roles: roles.map((r) => r.role.roleName),
+        // branches: branches.map((b) => b.branch.branchName),
       },
     });
   } catch (err) {
