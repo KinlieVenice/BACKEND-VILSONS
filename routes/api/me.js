@@ -1,11 +1,19 @@
 const express = require("express");
 const router = express.Router();
 const jobOrderController = require("../../controllers/jobOrderController");
+const userController = require("../../controllers/userController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 
 //FIX ALL PERM HERE
+
+router.route("/")
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), userController.editProfile)
+
+router.route("/password")
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_PASSWORD),userController.editProfilePassword);
+
 router.route("/job-orders")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), jobOrderController.getAllMyJobOrders);
 
