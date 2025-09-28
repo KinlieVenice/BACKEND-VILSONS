@@ -43,6 +43,7 @@ app.use("/api/equipments", require("./routes/api/equipments"));
 app.use("/api/materials", require("./routes/api/materials"));
 app.use("/api/other-incomes", require("./routes/api/otherincomes"));
 app.use("/api/overheads", require("./routes/api/overheads"));
+app.use("/api/pay-mongo", require("./routes/api/payMongo"));
 
 app.all(/^.*$/, (req, res) => {
   res.status(404);
