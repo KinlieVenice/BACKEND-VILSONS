@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
 const { PrismaClient } = require('./generated/prisma');
 const prisma = new PrismaClient();
 const app = express();
@@ -44,6 +45,9 @@ app.use("/api/materials", require("./routes/api/materials"));
 app.use("/api/other-incomes", require("./routes/api/otherincomes"));
 app.use("/api/overheads", require("./routes/api/overheads"));
 app.use("/api/pay-mongo", require("./routes/api/payMongo"));
+app.use("/api/pay-mongo/webhook", bodyParser.raw({ type: "application/json" }));
+app.use("/api/transactions", require("./routes/api/onlineTransactions"));
+
 
 app.all(/^.*$/, (req, res) => {
   res.status(404);

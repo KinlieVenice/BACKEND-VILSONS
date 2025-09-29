@@ -1,7 +1,6 @@
 const axios = require("axios");
 
 const createCheckoutSession = async (req, res) => {
-  console.log(process.env.PAYMONGO_SECRET)
   try {
     const { amount, description } = req.body;
 

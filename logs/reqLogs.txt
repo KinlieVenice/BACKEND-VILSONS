@@ -1614,3 +1614,9 @@
 20250929	00:01:26	a6b4b78f-8624-4119-a80e-d79e87a94688	POST	undefined	/api/pay-mongo/create-checkout
 20250929	00:04:25	e4b24f58-9059-4f45-b963-2c9ceff6b9cf	POST	undefined	/api/pay-mongo/create-checkout
 20250929	00:06:58	db5d36ce-a223-4fca-90b9-a6f4dd8a28ff	POST	undefined	/api/pay-mongo/create-checkout
+20250929	17:24:21	14f9e55e-d48a-4d9a-b356-c9cadd68029d	POST	undefined	/auth
+20250929	17:26:53	98cd33ff-f32c-4d75-8b59-26040fdabe8d	POST	undefined	/api/transactions/checkout-session
+20250929	17:27:10	cb96f3d2-664d-4b62-b1a3-d117da813255	POST	undefined	/api/transactions/checkout-session
+20250929	17:40:34	cb84fd95-68cd-4603-8cc7-968f1307d3de	POST	undefined	/api/transactions/checkout-session
+20250929	17:51:22	8aae6142-1b67-4de9-904e-5ac9fc841b73	POST	undefined	/api/transactions/checkout-session
+20250929	17:53:21	7f301371-4e86-455b-bd85-8551fedce53b	POST	undefined	/api/transactions/checkout-session

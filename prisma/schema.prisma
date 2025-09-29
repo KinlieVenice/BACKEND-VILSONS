@@ -54,8 +54,9 @@ model User {
   createdBranchEdit      BranchEdit[]      @relation("CreatedBy")
   createdTrucks          Truck[]           @relation("CreatedBy")
   createdTruckEdit          TruckEdit[]           @relation("CreatedBy")
+  createdTransactionZ     TransactionZ[]     @relation("CreatedBy")
   createdTransaction     Transaction[]     @relation("CreatedBy")
-  createdTransactionEdit TransactionEdit[] @relation("CreatedBy")
+  createdTransactionEditZ TransactionEditZ[] @relation("CreatedBy")
   createdJobOrder        JobOrder[]        @relation("CreatedBy")
   createdJobOrderEdit    JobOrderEdit[]    @relation("CreatedBy")
   createdContractorPay     ContractorPay[]     @relation("CreatedBy")
@@ -80,8 +81,9 @@ model User {
   updatedBranchEdits     BranchEdit[]      @relation("UpdatedBy")
   updatedTruck          Truck[]           @relation("UpdatedBy")
   updatedTruckEdit          TruckEdit[]           @relation("UpdatedBy")
+  updatedTransactionZ     TransactionZ[]     @relation("UpdatedBy")
   updatedTransaction     Transaction[]     @relation("UpdatedBy")
-  updatedTransactionEdit TransactionEdit[] @relation("UpdatedBy")
+  updatedTransactionEditZ TransactionEditZ[] @relation("UpdatedBy")
   updatedJobOrder        JobOrder[]        @relation("UpdatedBy")
   updatedJobOrderEdit    JobOrderEdit[]    @relation("UpdatedBy")
   updatedContractorPay     ContractorPay[]     @relation("UpdatedBy")
@@ -426,7 +428,7 @@ model ActivityLog {
   user      User     @relation(fields: [userName], references: [username], onDelete: NoAction)
 }
 
-model Transaction {
+model TransactionZ {
   id         String @id @default(uuid())
   jobOrderId String
 
@@ -441,13 +443,13 @@ model Transaction {
   updatedAt   DateTime @updatedAt
   updatedByUser String
 
-  edits     TransactionEdit[]
+  edits     TransactionEditZ[]
   jobOrder  JobOrder          @relation(fields: [jobOrderId], references: [id])
   createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
-model TransactionEdit {
+model TransactionEditZ {
   id            String @id @default(uuid())
   transactionId String
 
@@ -463,10 +465,31 @@ model TransactionEdit {
   updatedAt   DateTime @updatedAt
   updatedByUser String
 
-  transaction Transaction @relation(fields: [transactionId], references: [id])
+  transaction TransactionZ @relation(fields: [transactionId], references: [id])
   createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
+
+model Transaction {
+  id              String   @id @default(uuid())
+  jobOrderCode    String
+  senderName      String   @db.VarChar(100)
+  sessionId       String   @unique
+  referenceNumber String?
+  mop             String?  @db.VarChar(20)
+  amount          Decimal  @db.Decimal(13, 2)
+  email           String
+  status          String   @default("pending") // pending | paid | failed
+  createdAt       DateTime @default(now())
+  createdByUser String?
+  updatedAt   DateTime @updatedAt
+  updatedByUser String?
+
+  jobOrder JobOrder @relation(fields: [jobOrderCode], references: [jobOrderCode])
+  createdBy User?             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User?             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
 
 model OtherIncome {
   id String @id @default(uuid())
@@ -594,6 +617,7 @@ model JobOrder {
   contractorPercent Decimal? @db.Decimal(13, 2)
   completedAt DateTime?
 
+  transactionZ TransactionZ[]
   transactions Transaction[]
   materials    Material[] 
   materialEdit    MaterialEdit[] 
