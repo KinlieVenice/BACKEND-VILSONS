@@ -474,11 +474,11 @@ model Transaction {
   id              String   @id @default(uuid())
   jobOrderCode    String
   senderName      String   @db.VarChar(100)
-  sessionId       String   @unique
+  sessionId       String?   @unique
   referenceNumber String?
   mop             String?  @db.VarChar(20)
   amount          Decimal  @db.Decimal(13, 2)
-  email           String
+  email           String?
   status          String   @default("pending") // pending | paid | failed
   createdAt       DateTime @default(now())
   createdByUser String?
