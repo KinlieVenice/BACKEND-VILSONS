@@ -11,5 +11,6 @@ router.route("/")
 router.route("/:id")
 .put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.editTransaction)
 .delete(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.deleteTransaction)
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.getTransaction)
 
 module.exports = router;

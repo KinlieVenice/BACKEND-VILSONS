@@ -80,11 +80,23 @@ const getAllTransactions = async (req, res) => {
     try {
         const transactions = await prisma.transaction.findMany();
        
-        return res.status(201).json({ transactions })
+        return res.status(201).json({ data: { transactions } })
     } catch (err) {
         return res.status(500).json({ message: err.message })
     }
 }
 
+const getTransaction = async (req, res) => {
+    if (!req?.params?.id) return res.status(404).json({ message: "ID required"});
+
+    try {
+        const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
+        if (!transaction) return res.status(404).json({ message: "Transaction not found" });
+       
+        return res.status(201).json({ data: transaction })
+    } catch (err) {
+        return res.status(500).json({ message: err.message })
+    }
+}
 
 module.exports = { createTransaction , editTransaction, deleteTransaction,getAllTransactions, getTransaction}
