@@ -57,4 +57,23 @@ const editTransaction = async (req, res) => {
     }
 }
 
-module.exports = { createTransaction , editTransaction}
+const deleteTransaction = async (req, res) => {
+    if (!req?.params?.id) return res.status(404).json({ message: "ID required"});
+
+    try {
+        const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
+        if (!transaction) return res.status(404).json({ message: "Transaction not found" });
+         const result = await prisma.$transaction(async (tx) => {
+            
+            const deletedTransaction = await tx.transaction.delete({
+                where: { id: transaction.id },
+            })
+            return deletedTransaction
+        })
+        return res.status(201).json({ message: "Transaction delete completed" })
+    } catch (err) {
+        return res.status(500).json({ message: err.message })
+    }
+}
+
+module.exports = { createTransaction , editTransaction, deleteTransaction }

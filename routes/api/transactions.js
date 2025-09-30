@@ -8,6 +8,7 @@ router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.createTransaction);
 
 router.route("/:id")
-.put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.editTransaction);
+.put(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.editTransaction)
+.delete(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), transactionController.deleteTransaction)
 
 module.exports = router;
