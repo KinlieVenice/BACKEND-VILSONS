@@ -1635,3 +1635,5 @@
 20250930	22:39:24	368df443-6801-480f-8fe0-bf2d90bf52a3	PUT	undefined	/api/transactions/ded3b7df-c469-49af-a7d9-c9794cb1af04
 20250930	22:41:32	a61b02ad-2aa2-4d8b-bad2-55e8762f0e48	DELETE	undefined	/api/transactions/ded3b7df-c469-49af-a7d9-c9794cb1af04
 20250930	22:42:05	454a2c2a-41cd-4694-ba24-4b223a9c0537	DELETE	undefined	/api/transactions/2d2f9a65-9554-4a1d-86bd-cd5c720a19a0
+20250930	22:44:29	f1e4e4c9-0b98-4bc1-91a8-09dabae3b564	GET	undefined	/api/transactions/2d2f9a65-9554-4a1d-86bd-cd5c720a19a0
+20250930	22:44:35	5ea15053-9ee9-4bb9-8032-bfd709f588d1	GET	undefined	/api/transactions

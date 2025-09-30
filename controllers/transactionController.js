@@ -76,4 +76,15 @@ const deleteTransaction = async (req, res) => {
     }
 }
 
-module.exports = { createTransaction , editTransaction, deleteTransaction }
+const getAllTransactions = async (req, res) => {
+    try {
+        const transactions = await prisma.transaction.findMany();
+       
+        return res.status(201).json({ transactions })
+    } catch (err) {
+        return res.status(500).json({ message: err.message })
+    }
+}
+
+
+module.exports = { createTransaction , editTransaction, deleteTransaction,getAllTransactions, getTransaction}
