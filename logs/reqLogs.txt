@@ -1640,3 +1640,16 @@
 20250930	22:48:39	9c346399-9687-480b-aa07-e142f2a1b435	GET	undefined	/api/transactions/e455a4b8-f795-4b5c-9baa-2ca4d81cba86
 20250930	22:49:50	5b78bad1-a14b-4e29-8f96-2b2ab92725fe	GET	undefined	/api/transactions
 20250930	22:50:06	52851a8e-27c0-490f-b802-677741def591	GET	undefined	/api/transactions
+20250930	22:52:23	ad87ba03-6d65-4616-acc7-e30d23484059	GET	undefined	/
+20250930	22:52:23	d98c05b7-f1b1-459c-8297-f2fb44af0371	GET	undefined	/favicon.ico
+20250930	23:11:44	d37c93ee-05c1-40a1-a027-3fcac7b9bd41	GET	undefined	/
+20250930	23:11:46	9d2c6d88-e392-47f9-a706-70dc189b8b5f	GET	undefined	/favicon.ico
+20250930	23:13:20	769fd584-6117-4814-960b-7b7e5b7d4cc5	GET	undefined	/
+20250930	23:13:20	ba35991d-abd2-4bfa-a1d8-9fc55aa2cc46	GET	undefined	/favicon.ico
+20251001	19:02:50	19f5b921-7b4b-4a86-9df2-ab465341b489	POST	undefined	/auth
+20251001	19:03:41	31f1cd13-543d-4beb-9e72-14f5b60f026e	GET	undefined	/api/revenues/year=2025&month=9
+20251001	19:03:51	8fc90f96-0305-48d1-9d5d-1c2410f98ce3	GET	undefined	/api/revenues?year=2025&month=9
+20251001	19:04:45	68804f32-8d39-47fe-bcc4-efd9ec3c99e1	GET	undefined	/api/transactions
+20251001	19:06:57	4e3604c6-50bf-4a7f-afd1-526970e779b8	GET	undefined	/api/revenues?year=2025&month=9
+20251001	20:54:53	24738b26-cde3-4f39-855a-f886cc280094	GET	undefined	/api/revenues?year=2025&month=9
+20251001	21:04:14	c8525951-7199-4f56-bc1b-0f9edd1a964d	GET	undefined	/api/revenues?year=2025

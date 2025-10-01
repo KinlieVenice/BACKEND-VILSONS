@@ -31,6 +31,8 @@ app.use("/auth", require("./routes/auth"));
 app.use("/refresh", require("./routes/refresh"));
 app.use("/logout", require("./routes/logout"));
 
+app.use(express.static(path.join(__dirname, "views")));
+
 app.use(verifyJWT);
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));
@@ -48,6 +50,7 @@ app.use("/api/pay-mongo", require("./routes/api/payMongo"));
 app.use("/api/pay-mongo/webhook", bodyParser.raw({ type: "application/json" }));
 app.use("/api/online-transactions", require("./routes/api/onlineTransactions"));
 app.use("/api/transactions", require("./routes/api/transactions"));
+app.use("/api/revenues", require("./routes/api/revenues"));
 
 
 app.all(/^.*$/, (req, res) => {
