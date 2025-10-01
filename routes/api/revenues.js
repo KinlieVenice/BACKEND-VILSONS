@@ -5,6 +5,6 @@ const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 router.route("/")
-.get(verifyPermission(PERMISSIONS_LIST.CREATE_OTHER_INCOME), revenueController.getRevenue);
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_OTHER_INCOME), revenueController.getRevenueProfit);
 
 module.exports = router

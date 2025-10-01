@@ -1,7 +1,7 @@
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
-const getRevenue = async (req, res) => {
+const getRevenueProfit = async (req, res) => {
   try {
     let { month, year } = req.query;
 
@@ -23,45 +23,94 @@ const getRevenue = async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-        const transactions = await tx.transaction.findMany({
-        where: {
-            updatedAt: {
-                gte: startDate,
-                lt: endDate
-            }
-        }
-        });
 
-        const otherIncomes = await tx.otherIncome.findMany({
-        where: {
-            updatedAt: {
-                gte: startDate,
-                lt: endDate
-            }
+      const where = {
+        createdAt: {
+            gte: startDate,
+            lt: endDate
         }
-        });
+      }
 
-        const totalTransactions = transactions.reduce(
-          (sum, t) => sum + Number(t.amount), // ✅ force to number
+      const transactions = await tx.transaction.findMany({
+        where, 
+      });
+
+      const otherIncomes = await tx.otherIncome.findMany({
+        where,
+      });
+
+      const totalTransactions = transactions.reduce(
+        (sum, t) => sum + Number(t.amount), 
+        0
+      );
+
+      const totalOtherIncomes = otherIncomes.reduce(
+        (sum, t) => sum + Number(t.amount), 
+        0
+      );
+
+      const totalRevenue = totalTransactions + totalOtherIncomes;
+
+      const materials = await tx.material.findMany({
+        where,
+      });
+
+      const overheads = await tx.overhead.findMany({
+        where,
+      });
+
+      const equipments = await tx.equipment.findMany({
+        where,
+      });
+
+      const employeePays = await tx.employeePay.findMany({
+        where,
+        include: {
+          payComponents: true, 
+        },
+      });
+
+      const totalMaterials = materials.reduce(
+        (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
+        0
+      );
+
+      const totalOverheads = overheads.reduce(
+        (sum, t) => sum + Number(t.amount), 
+        0
+      );
+
+      const totalEquipmments = equipments.reduce(
+        (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
+        0
+      );
+
+      const totalEmployeePays = employeePays.reduce((sum, employeePay) => {
+        const totalComponents = employeePay.payComponents.reduce(
+          (pcSum, pc) => pcSum + Number(pc.amount),
           0
         );
+        return sum + totalComponents;
+      }, 0);
 
-        const totalOtherIncomes = otherIncomes.reduce(
-          (sum, t) => sum + Number(t.amount), // ✅ force to number
-          0
-        );
+      const totalProfit = totalMaterials + totalOverheads + totalEquipmments + totalEmployeePays;
 
-        const totalRevenue = totalTransactions + totalOtherIncomes;
-
-        return totalRevenue
+      return { totalRevenue, totalTransactions, totalOtherIncomes, totalProfit, totalMaterials, totalOverheads, totalEquipmments, totalEmployeePays}
     })
 
     return res.json({
         data: {
             type: month ? "monthly" : "yearly",
-            year,
-            month: month !== undefined ? month + 1 : undefined,
-            totalRevenue: result
+            // year,
+            // month: month !== undefined ? month + 1 : undefined,
+            totalRevenue: result.totalRevenue,
+            totalTransactions: result.totalTransactions,
+            totalOtherIncomes: result.totalOtherIncomes,
+            totalProfit: result.totalProfit,
+            totalMaterials: result.totalMaterials,
+            totalOverheads: result.totalOverheads,
+            totalEquipmments: result.totalEquipmments,
+            totalEmployeePays: result.totalEmployeePays
         }      
     });
   } catch (err) {
@@ -69,4 +118,4 @@ const getRevenue = async (req, res) => {
   }
 };
 
-module.exports = { getRevenue }
+module.exports = { getRevenueProfit }
