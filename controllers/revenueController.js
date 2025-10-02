@@ -70,6 +70,10 @@ const getRevenueProfit = async (req, res) => {
         },
       });
 
+      const contractorPays = await tx.contractorPay.findMany({
+        where,
+      });
+
       const totalMaterials = materials.reduce(
         (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
         0
@@ -93,9 +97,14 @@ const getRevenueProfit = async (req, res) => {
         return sum + totalComponents;
       }, 0);
 
-      const totalProfit = totalMaterials + totalOverheads + totalEquipmments + totalEmployeePays;
+      const totalContractorPays = contractorPays.reduce(
+        (sum, t) => sum + Number(t.amount), 
+        0
+      );
 
-      return { totalRevenue, totalTransactions, totalOtherIncomes, totalProfit, totalMaterials, totalOverheads, totalEquipmments, totalEmployeePays}
+      const totalProfit = totalMaterials + totalOverheads + totalEquipmments + totalEmployeePays + totalContractorPays;
+
+      return { totalRevenue, totalTransactions, totalOtherIncomes, totalProfit, totalMaterials, totalOverheads, totalEquipmments, totalEmployeePays, totalContractorPays}
     })
 
     return res.json({
@@ -110,7 +119,8 @@ const getRevenueProfit = async (req, res) => {
             totalMaterials: result.totalMaterials,
             totalOverheads: result.totalOverheads,
             totalEquipmments: result.totalEquipmments,
-            totalEmployeePays: result.totalEmployeePays
+            totalEmployeePays: result.totalEmployeePays,
+            totalContractorPays: result.totaContractorPays
         }      
     });
   } catch (err) {

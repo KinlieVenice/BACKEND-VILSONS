@@ -53,16 +53,16 @@ const createOverhead = async (req, res) => {
 
 const editOverhead = async (req, res) => {
   const { description, amount, branchId } = req.body;
-  if (!req?.body?.id)
+  if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
   try {
     const overhead = await prisma.overhead({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
     if (!overhead)
       return res.status(404).json({
-        message: `Overhead with id: ${req.body.id} does not exist`,
+        message: `Overhead with id: ${req.params.id} does not exist`,
       });
 
     const needsApproval = req.approval;
@@ -102,16 +102,16 @@ const editOverhead = async (req, res) => {
 };
 
 const deleteOverhead = async (req, res) => {
-  if (!req.body.id) return res.status(404).json({ message: "Id is required" });
+  if (!req.params.id) return res.status(404).json({ message: "Id is required" });
 
   try {
     const overhead = await prisma.overhead.findFirst({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
     if (!overhead)
       return res
         .status(404)
-        .json({ message: `Overhead with id: ${req.body.id.id} not found` });
+        .json({ message: `Overhead with id: ${req.params.id.id} not found` });
 
     const needsApproval = req.approval;
     let message;

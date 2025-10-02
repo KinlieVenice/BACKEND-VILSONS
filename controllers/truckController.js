@@ -144,7 +144,7 @@ const editTruck = async (req, res) => {
 };
 
 const editTruckOwner = async (req, res) => {
-  const { truckPlate, customerUsername } = req.body;
+  const { truckId, customerId } = req.body;
 
   if (!truckPlate || !customerUsername) {
     return res
@@ -155,8 +155,6 @@ const editTruckOwner = async (req, res) => {
   try {
     const needsApproval = req.approval;
     let message;
-    const truckId = await truckIdFinder(truckPlate);
-    const customerId = await customerIdFinder(customerUsername);
     let newTruckOwner;
 
     const truckData = {
@@ -214,7 +212,7 @@ const editTruckOwner = async (req, res) => {
 
     return res.status(201).json({
       message,
-      data: {...result, newOwner: customerUsername},
+      data: { result },
     });
   } catch (err) {
       return res.status(500).json({ message: err.message });

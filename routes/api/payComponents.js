@@ -5,6 +5,6 @@ const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 router.route("/:id")
-.post(verifyPermission(PERMISSIONS_LIST.CREATE_OVERHEAD), payComponentController.getPayComponents);
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_OVERHEAD), payComponentController.getPayComponents);
 
 module.exports = router;

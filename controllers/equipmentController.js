@@ -54,17 +54,17 @@ const createEquipment = async (req, res) => {
 
 const editEquipment = async (req, res) => {
   const { name, quantity, price, branchId } = req.body;
-  if (!req?.body?.id)
+  if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
 
   try {
     const equipment = await prisma.equipment.findFirst({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
     if (!equipment)
       return res
         .status(404)
-        .json({ message: `Equipment with ${req.body.id} not found` });
+        .json({ message: `Equipment with ${req.params.id} not found` });
 
     const needsApproval = req.approval;
     let message;

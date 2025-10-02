@@ -53,16 +53,16 @@ const createOtherIncome = async (req, res) => {
 
 const editOtherIncome = async (req, res) => {
   const { description, amount, branchId } = req.body;
-  if (!req?.body?.id)
+  if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
   try {
     const otherIncome = await prisma.otherIncome({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
     if (!otherIncome)
       return res.status(404).json({
-        message: `Other income with id: ${req.body.id} does not exist`,
+        message: `Other income with id: ${req.params.id} does not exist`,
       });
 
     const needsApproval = req.approval;
@@ -102,16 +102,16 @@ const editOtherIncome = async (req, res) => {
 };
 
 const deleteOtherIncome = async (req, res) => {
-  if (!req.body.id) return res.status(404).json({ message: "Id is required" });
+  if (!req.params.id) return res.status(404).json({ message: "Id is required" });
 
   try {
     const otherIncome = await prisma.otherIncome.findFirst({
-      where: { id: req.body.id },
+      where: { id: req.params.id },
     });
     if (!otherIncome)
       return res
         .status(404)
-        .json({ message: `Other income with id: ${req.body.id.id} not found` });
+        .json({ message: `Other income with id: ${req.params.id} not found` });
 
     const needsApproval = req.approval;
     let message;
