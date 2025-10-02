@@ -218,7 +218,7 @@ const getOverhead = async (req, res) => {
     if (!overhead)
       return res
         .status(404)
-        .json({ message: `Overhead with id: ${req.params.id.id} not found` });
+        .json({ message: `Overhead with id: ${req.params.id} not found` });
 
     return res.status(201).json({ data: overhead }) 
 } catch (err) {
