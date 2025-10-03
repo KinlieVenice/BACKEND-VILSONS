@@ -523,6 +523,9 @@ const getAllJobOrders = async (req, res) => {
     where.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
 
   try {
+    const totalItems = await prisma.jobOrder.count({ where });
+    const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
+
     const jobOrders = await prisma.jobOrder.findMany({
       where,
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
@@ -577,16 +580,16 @@ const getAllJobOrders = async (req, res) => {
         jobOrderId: job.id,
         jobOrderCode: job.jobOrderCode,
         status: job.status,
-        plateNumber: job.truck?.plate || null,
-        truckId: job.truck?.id || null,
+        plateNumber: job.truck?.plate,
+        truckId: job.truck?.id,
 
         contractorId: job.contractor?.id || null,
         contractorUserId: job.contractor?.userId || null,
         contractorName: job.contractor?.user?.fullName || null,
 
-        customerId: job.customer?.id || null,
-        customerUserId: job.customer?.userId || null,
-        customerName: job.customer?.user?.fullName || null,
+        customerId: job.customer?.id,
+        customerUserId: job.customer?.userId,
+        customerName: job.customer?.user?.fullName,
 
         branchId: job.branch?.id || null,
         branchName: job.branch?.branchName || null,
@@ -605,7 +608,16 @@ const getAllJobOrders = async (req, res) => {
       };
     });
 
-    return res.status(200).json({ data: { jobOrders: result } });
+    return res.status(200).json({
+      data: {
+        jobOrders: result,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page || 1,
+        },
+      },
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -670,14 +682,14 @@ const getJobOrder = async (req, res) => {
         status: jobOrder.status,
         plateNumber: jobOrder.truck?.plate,
         truckId: jobOrder.truck?.id,
-        contractorId: jobOrder.contractor?.id,
-        contractorUserId: jobOrder.contractor?.user?.id,
-        contractorName: jobOrder.contractor?.user?.fullName,
+        contractorId: jobOrder.contractor?.id  || null,
+        contractorUserId: jobOrder.contractor?.user?.id  || null,
+        contractorName: jobOrder.contractor?.user?.fullName  || null,
         customerId: jobOrder.customer?.id,
         customerUserId: jobOrder.customer?.user?.id,
         customerName: jobOrder.customer?.user?.fullName,
-        branchId: jobOrder.branch?.id,
-        branchName: jobOrder.branch?.branchName,
+        branchId: jobOrder.branch?.id  || null,
+        branchName: jobOrder.branch?.branchName  || null,
         totalBill,
         balance: jobOrder.balance,
         description: jobOrder.description,
@@ -695,7 +707,6 @@ const getJobOrder = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 
 const getAllAssignedJobOrders = async (req, res) => {
   const search = req?.query?.search;

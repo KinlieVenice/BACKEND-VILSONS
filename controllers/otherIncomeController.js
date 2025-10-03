@@ -191,6 +191,9 @@ const getAllOtherIncomes = async (req, res) => {
   }
 
   try {
+    const totalItems = await prisma.jobOrder.count({ where });
+    const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
+
     const otherIncome = await prisma.otherIncome.findMany({
       where,
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
@@ -202,7 +205,19 @@ const getAllOtherIncomes = async (req, res) => {
       },
     });
 
-    return res.status(200).json({ data: otherIncome });
+    const totalAmount = otherIncome.reduce((sum, inc) => sum + Number(inc.amount), 0);
+
+    return res.status(200).json({
+      data: {
+        otherIncome,
+        totalAmount,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page || 1,
+        },
+      },
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
