@@ -523,71 +523,96 @@ const getAllJobOrders = async (req, res) => {
     where.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
 
   try {
-    const jobOrderInclude = {
-      truck: { select: { id: true, plate: true } },
-      customer: {
-        include: { user: { select: { username: true, fullName: true } } },
-      },
-      contractor: {
-        include: { user: { select: { username: true, fullName: true } } },
-      },
-      branch: { select: { id: true, branchName: true } },
-      materials: {
-        select: { materialName: true, quantity: true, price: true },
-      },
-    };
-
     const jobOrders = await prisma.jobOrder.findMany({
       where,
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
-      include: jobOrderInclude,
+      include: {
+        truck: { select: { id: true, plate: true } },
+        customer: {
+          select: {
+            id: true,
+            userId: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        contractor: {
+          select: {
+            id: true,
+            userId: true,
+            commission: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        branch: { select: { id: true, branchName: true } },
+        materials: {
+          select: { price: true, quantity: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 
-    // Calculate contractorCommission and shopCommission for each job order
-    const resultWithExtras = await Promise.all(
-      jobOrders.map(async (job) => {
-        let contractorCommission = 0,
-          shopCommission = 0,
-          totalMaterialCost = 0;
+    // compute commissions & flatten output
+    const result = jobOrders.map((job) => {
+      let contractorCommission = 0,
+        shopCommission = 0,
+        totalMaterialCost = 0;
 
-        // compute commissions
-        if (job.contractorId && job.labor) {
-          const contractor = await prisma.contractor.findUnique({
-            where: { id: job.contractorId },
-          });
-          if (contractor) {
-            contractorCommission = job.labor * contractor.commission;
-            shopCommission = job.labor - contractorCommission;
-          }
-        }
+      if (job.contractor && job.labor) {
+        contractorCommission = job.labor * Number(job.contractor.commission);
+        shopCommission = job.labor - contractorCommission;
+      }
 
-        // compute total material cost
-        if (job.materials && job.materials.length > 0) {
-          totalMaterialCost = job.materials.reduce(
-            (sum, m) => sum + m.price * m.quantity,
-            0
-          );
-        }
+      if (job.materials?.length) {
+        totalMaterialCost = job.materials.reduce(
+          (sum, m) => sum + Number(m.price) * Number(m.quantity),
+          0
+        );
+      }
 
-        return {
-          ...job,
-          contractorCommission,
-          shopCommission,
-          totalMaterialCost,
-        };
-      })
-    );
-    const cleanedResult = resultWithExtras.map(
-      ({ truckId, customerId, contractorId, branchId, ...rest }) => rest
-    );
+      const totalBill =
+        Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
 
-    return res.status(200).json({ data: { joborders: cleanedResult } });
+      return {
+        jobOrderId: job.id,
+        jobOrderCode: job.jobOrderCode,
+        status: job.status,
+        plateNumber: job.truck?.plate || null,
+        truckId: job.truck?.id || null,
+
+        contractorId: job.contractor?.id || null,
+        contractorUserId: job.contractor?.userId || null,
+        contractorName: job.contractor?.user?.fullName || null,
+
+        customerId: job.customer?.id || null,
+        customerUserId: job.customer?.userId || null,
+        customerName: job.customer?.user?.fullName || null,
+
+        branchId: job.branch?.id || null,
+        branchName: job.branch?.branchName || null,
+
+        totalMaterialCost,
+        contractorCommission,
+        shopCommission,
+        totalBill,
+        balance: totalBill, // adjust if you track payments separately
+
+        // new audit fields
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        createdBy: job.createdByUser,
+        updatedBy: job.updatedByUser,
+      };
+    });
+
+    return res.status(200).json({ data: { jobOrders: result } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
+
+
 
 const getJobOrder = async (req, res) => {
   if (!req?.params?.id)
