@@ -611,9 +611,6 @@ const getAllJobOrders = async (req, res) => {
   }
 };
 
-
-
-
 const getJobOrder = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -622,15 +619,13 @@ const getJobOrder = async (req, res) => {
     const jobOrderInclude = {
       truck: { select: { id: true, plate: true } },
       customer: {
-        include: { user: { select: { username: true, fullName: true } } },
+        include: { user: { select: { id: true, username: true, fullName: true } } },
       },
       contractor: {
-        include: { user: { select: { username: true, fullName: true } } },
+        include: { user: { select: { id: true, username: true, fullName: true } } },
       },
       branch: { select: { id: true, branchName: true } },
-      materials: {
-        select: { materialName: true, quantity: true, price: true },
-      },
+      materials: { select: { materialName: true, quantity: true, price: true } },
     };
 
     const jobOrder = await prisma.jobOrder.findUnique({
@@ -665,21 +660,42 @@ const getJobOrder = async (req, res) => {
       );
     }
 
-    const { truckId, customerId, contractorId, branchId, ...jobOrderFields } =
-      jobOrder;
+    const totalBill =
+        Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
 
     return res.status(200).json({
       data: {
-        ...jobOrderFields,
+        id: jobOrder.id,
+        jobOrderCode: jobOrder.jobOrderCode,
+        status: jobOrder.status,
+        plateNumber: jobOrder.truck?.plate,
+        truckId: jobOrder.truck?.id,
+        contractorId: jobOrder.contractor?.id,
+        contractorUserId: jobOrder.contractor?.user?.id,
+        contractorName: jobOrder.contractor?.user?.fullName,
+        customerId: jobOrder.customer?.id,
+        customerUserId: jobOrder.customer?.user?.id,
+        customerName: jobOrder.customer?.user?.fullName,
+        branchId: jobOrder.branch?.id,
+        branchName: jobOrder.branch?.branchName,
+        totalBill,
+        balance: jobOrder.balance,
+        description: jobOrder.description,
+        createdAt: jobOrder.createdAt,
+        updatedAt: jobOrder.updatedAt,
+        createdBy: jobOrder.createdByUser,
+        updatedBy: jobOrder.updatedByUser,
         contractorCommission,
         shopCommission,
         totalMaterialCost,
+        materials: jobOrder.materials,
       },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 const getAllAssignedJobOrders = async (req, res) => {
   const search = req?.query?.search;

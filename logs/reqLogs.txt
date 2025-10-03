@@ -1700,3 +1700,12 @@
 20251003	23:13:37	177b9029-e176-46b0-896b-91aa002ea6b8	GET	undefined	/api/job-orders?search=JO-25-037
 20251003	23:14:47	14d1f048-4eb7-4c61-922c-7d38c1042cde	GET	undefined	/api/job-orders?search=JO-25-037
 20251003	23:17:14	c7f0c584-4d0c-40ce-a7a7-3a8440a71b2e	GET	undefined	/api/job-orders?search=JO-25-037
+20251003	23:18:09	5083bda9-3d5e-401c-b3f2-3f606dc63c57	GET	undefined	/api/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:18:17	230385c7-7212-4c1c-823f-abc886cf3ca1	GET	undefined	/api/job-orders/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:21:57	3fab7846-8f4e-4319-892c-bb27dc9980b0	GET	undefined	/api/job-orders/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:23:48	0772052a-6a53-4a97-b11a-e1297c034db7	GET	undefined	/api/job-orders/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:26:02	3b93ca15-0c8a-40f8-93bc-fd61ac03825a	GET	undefined	/api/job-orders/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:28:11	d61b7458-21e9-4d01-87a0-0d06d800f0c1	GET	undefined	/api/job-orders/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:28:39	0fc4e2ed-bc37-4364-a3ac-b6c79edfb08f	GET	undefined	/api/job-orders/40f3f15c-1307-4b26-b7e2-c5db054498b9
+20251003	23:28:46	9500c0c9-2e47-4285-9165-b5978054452a	GET	undefined	/api/job-orders
+20251003	23:29:51	fb4c083a-0a07-48a2-a57d-f4062f2fb356	GET	undefined	/api/job-orders/9d411b2e-8715-4152-ae17-366339d64456

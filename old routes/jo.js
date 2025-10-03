@@ -123,3 +123,70 @@ const getAllJobOrders = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+const getJobOrder = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const jobOrderInclude = {
+      truck: { select: { id: true, plate: true } },
+      customer: {
+        include: { user: { select: { username: true, fullName: true } } },
+      },
+      contractor: {
+        include: { user: { select: { username: true, fullName: true } } },
+      },
+      branch: { select: { id: true, branchName: true } },
+      materials: {
+        select: { materialName: true, quantity: true, price: true },
+      },
+    };
+
+    const jobOrder = await prisma.jobOrder.findUnique({
+      where: { id: req.params.id },
+      include: jobOrderInclude,
+    });
+
+    if (!jobOrder) {
+      return res.status(404).json({ message: "Job Order not found" });
+    }
+
+    let contractorCommission = 0,
+      shopCommission = 0,
+      totalMaterialCost = 0;
+
+    // calculate commissions
+    if (jobOrder.contractorId && jobOrder.labor) {
+      const contractor = await prisma.contractor.findUnique({
+        where: { id: jobOrder.contractorId },
+      });
+      if (contractor) {
+        contractorCommission = jobOrder.labor * contractor.commission;
+        shopCommission = jobOrder.labor - contractorCommission;
+      }
+    }
+
+    // calculate total material cost
+    if (jobOrder.materials && jobOrder.materials.length > 0) {
+      totalMaterialCost = jobOrder.materials.reduce(
+        (sum, m) => sum + m.price * m.quantity,
+        0
+      );
+    }
+
+    const { truckId, customerId, contractorId, branchId, ...jobOrderFields } =
+      jobOrder;
+
+    return res.status(200).json({
+      data: {
+        ...jobOrderFields,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
