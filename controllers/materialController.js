@@ -43,12 +43,36 @@ const getAllMaterials = async (req, res) => {
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
         ...(limit ? { take: limit } : {}),
-      });
+        include: {
+          jobOrder: {
+          select: {
+            id: true, 
+            truck: {
+              select: {
+                plate: true, 
+              },
+            },
+          },
+        },
+      },
+    });
+        
+       const materialsWithTotal = materials.map((m) => ({
+        ...m,
+        totalAmount: Number(m.price) * Number(m.quantity),
+      }));
 
-      return materials;
+      const totalMaterialsAmount = materials.reduce(
+        (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
+        0
+      );
+
+
+      return { materialsWithTotal, totalMaterialsAmount };
     });
 
-    return res.status(201).json({ data: result });
+
+    return res.status(201).json({ data: { materials: result.materialsWithTotal, totalMaterialsAmount: result.totalMaterialsAmount } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

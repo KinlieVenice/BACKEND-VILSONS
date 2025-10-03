@@ -49,8 +49,6 @@ const getRevenueProfit = async (req, res) => {
         0
       );
 
-      const totalRevenue = totalTransactions + totalOtherIncomes;
-
       const materials = await tx.material.findMany({
         where,
       });
@@ -102,9 +100,15 @@ const getRevenueProfit = async (req, res) => {
         0
       );
 
-      const totalProfit = totalMaterials + totalOverheads + totalEquipmments + totalEmployeePays + totalContractorPays;
+      // const totalProfit = totalMaterials + totalOverheads + totalEquipmments + totalEmployeePays + totalContractorPays;
+      const totalRevenue = totalTransactions + totalOtherIncomes;
+      const totalLabor = totalEmployeePays + totalContractorPays;
+      const totalOperationals = totalMaterials + totalEquipmments + totalLabor;
+      const grossProfit = totalRevenue - (totalOperationals - totalOverheads)
 
-      return { totalRevenue, totalTransactions, totalOtherIncomes, totalProfit, totalMaterials, totalOverheads, totalEquipmments, totalEmployeePays, totalContractorPays}
+
+
+      return { grossProfit, totalRevenue, totalTransactions, totalOtherIncomes, totalMaterials, totalOverheads, totalEquipmments, totalLabor, totalOperationals}
     })
 
     return res.json({
@@ -115,12 +119,13 @@ const getRevenueProfit = async (req, res) => {
             totalRevenue: result.totalRevenue,
             totalTransactions: result.totalTransactions,
             totalOtherIncomes: result.totalOtherIncomes,
-            totalProfit: result.totalProfit,
+            grossProfit: result.grossProfit,
+            totalOperationals: result.totalOperationals,
             totalMaterials: result.totalMaterials,
-            totalOverheads: result.totalOverheads,
             totalEquipmments: result.totalEquipmments,
-            totalEmployeePays: result.totalEmployeePays,
-            totalContractorPays: result.totaContractorPays
+            totalLabor: result.totalLabor,
+            totalOverheads: result.totalOverheads,
+
         }      
     });
   } catch (err) {

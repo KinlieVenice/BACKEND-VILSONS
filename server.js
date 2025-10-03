@@ -50,7 +50,7 @@ app.use("/api/pay-mongo", require("./routes/api/payMongo"));
 app.use("/api/pay-mongo/webhook", bodyParser.raw({ type: "application/json" }));
 app.use("/api/online-transactions", require("./routes/api/onlineTransactions"));
 app.use("/api/transactions", require("./routes/api/transactions"));
-app.use("/api/revenues", require("./routes/api/revenues"));
+app.use("/api/finances", require("./routes/api/finances"));
 
 
 app.all(/^.*$/, (req, res) => {
