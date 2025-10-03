@@ -191,7 +191,7 @@ const getAllOtherIncomes = async (req, res) => {
   }
 
   try {
-    const totalItems = await prisma.jobOrder.count({ where });
+    const totalItems = await prisma.otherIncome.count({ where });
     const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
 
     const otherIncome = await prisma.otherIncome.findMany({
