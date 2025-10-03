@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const overheadController = require("../../controllers/overheadController");
+const laborController = require("../../controllers/laborController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
-router.route("/contractor")
+router.route("/")
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_EQUIPMENT), laborController.getAllLaborPays);
+
+module.exports = router;

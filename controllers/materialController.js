@@ -57,7 +57,7 @@ const getAllMaterials = async (req, res) => {
       },
     });
         
-       const materialsWithTotal = materials.map((m) => ({
+      const materialsWithTotal = materials.map((m) => ({
         ...m,
         totalAmount: Number(m.price) * Number(m.quantity),
       }));

@@ -151,13 +151,31 @@ const deleteEmployeePay = async (req, res) => {
 const getAllEmployeePays = async (req, res) => {
   try {
     const allEmployeePays  = await prisma.employeePay.findMany({
-      include: { payComponents: { include: { component: true } } }
+      include: {
+        employee: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
+        payComponents: {
+          select: {
+            componentId: true,
+            amount: true,
+            component: true,
+          },
+        },
+      },
     });
 
 
     const withTotals = allEmployeePays.map(employeePay => ({
       ...employeePay,
-      totalComponentCost: employeePay.payComponents.reduce(
+      totalAmount: employeePay.payComponents.reduce(
         (sum, pc) => sum + Number(pc.amount), 
         0
       )

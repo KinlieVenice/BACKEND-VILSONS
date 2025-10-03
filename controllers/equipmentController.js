@@ -208,10 +208,20 @@ const getAllEquipments = async (req, res) => {
         },
       });
 
-      return equipments;
+      const equipmentsWithTotal = equipments.map((m) => ({
+        ...m,
+        totalAmount: Number(m.price) * Number(m.quantity),
+      }));
+
+      const totalEquipmentsAmount = equipments.reduce(
+        (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
+        0
+      );
+
+      return { equipmentsWithTotal, totalEquipmentsAmount } ;
     });
 
-    return res.status(201).json({ data: result });
+    return res.status(201).json({ data: { equipments:result.equipmentsWithTotal, totalEquipmentsAmount: result.totalEquipmentsAmount } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

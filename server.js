@@ -41,6 +41,7 @@ app.use("/api/trucks", require("./routes/api/trucks"));
 app.use("/api/job-orders", require("./routes/api/jobOrders"));
 app.use("/api/contractor-pay", require("./routes/api/contractorPay"));
 app.use("/api/employee-pay", require("./routes/api/employeePay"));
+app.use("/api/labors", require("./routes/api/labors"));
 app.use("/api/me", require("./routes/api/me"));
 app.use("/api/equipments", require("./routes/api/equipments"));
 app.use("/api/materials", require("./routes/api/materials"));
