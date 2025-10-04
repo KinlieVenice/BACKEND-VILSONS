@@ -828,6 +828,38 @@ const getUser = async (req, res) => {
   }
 };
 
+const getMyProfile = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.id },
+      include: {
+        roles: { select: { role: { select: { id: true, roleName: true } } } },
+        branches: { select: { branch: { select: { id: true, branchName: true } } } },
+      },
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const transformedUser = {
+      ...user,
+      roles: user.roles.map(r => r.role),
+      branches: user.branches.map(b => b.branch),
+    };
+
+    const { hashPwd, refreshToken, ...safeUser } = transformedUser;
+
+    res.status(200).json({
+      data: {
+        ...safeUser,
+        // roles: roles.map((r) => r.role.roleName),
+        // branches: branches.map((b) => b.branch.branchName),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   createUser,
   editUser,
@@ -837,4 +869,5 @@ module.exports = {
   editUserPassword,
   deleteUser,
   getUser,
+  getMyProfile
 };

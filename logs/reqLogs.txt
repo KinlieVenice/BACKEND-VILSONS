@@ -1832,3 +1832,10 @@
 20251004	13:27:34	79dedfe9-332f-4854-855b-9d1583ed2ac1	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50?filter=active
 20251004	13:27:44	6ed7274f-ba78-4158-af9a-ef0524679e74	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50?filter=archive
 20251004	13:27:58	d0d706b2-e4f0-4083-91fe-537589fd2252	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50?filter=archived
+20251004	15:45:42	a523c1f1-5cb8-48ce-9d52-b1cd14014d83	GET	undefined	/api/me
+20251004	15:47:51	bbb422d8-847e-4567-b543-0a143c5d929d	GET	undefined	/api/me
+20251004	15:50:21	d36d2ae4-db39-4755-a495-9c95cb2239f7	GET	undefined	/api/me
+20251004	15:51:40	072a606a-fb56-4ae5-98b8-0cfd15b78b00	GET	undefined	/api/me
+20251004	15:53:19	c92642dc-692f-4a2a-aeee-344609853fe4	GET	undefined	/api/trucks
+20251004	15:54:07	e67743bb-b429-413d-b769-1cbf147048b7	GET	undefined	/api/trucks/13964e64-94fb-4cff-941f-b78043530178
+20251004	15:54:29	a265542e-6342-4aaa-9b84-5de96ed896bb	GET	undefined	/api/trucks/13964e64-94fb-4cff-941f-b78043530178

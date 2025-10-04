@@ -337,7 +337,6 @@ const getAllTrucks = async (req, res) => {
   }
 };
 
-
 const getTruck = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -431,7 +430,7 @@ const getTruck = async (req, res) => {
       },
     };
 
-    return res.status(200).json({ truck: truckWithOwnersAndJobOrders });
+    return res.status(200).json({ data: truckWithOwnersAndJobOrders });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

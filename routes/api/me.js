@@ -10,6 +10,7 @@ const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 router.route("/")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), userController.editProfile)
+.get(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), userController.getMyProfile)
 
 router.route("/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_PASSWORD),userController.editProfilePassword);
