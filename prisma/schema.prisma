@@ -479,7 +479,7 @@ model Transaction {
   mop             String?  @db.VarChar(20)
   amount          Decimal  @db.Decimal(13, 2)
   email           String?
-  status          String   @default("pending") // pending | paid | failed
+  status          TransactionStatus   @default(pending) // pending | paid | failed
   createdAt       DateTime @default(now())
   createdByUser String?
   updatedAt   DateTime @updatedAt
@@ -842,6 +842,12 @@ enum LaborType {
 enum PaymentType {
   regular
   advance
+}
+
+enum TransactionStatus {
+  pending
+  successful
+  failed
 }
 
 enum Method {

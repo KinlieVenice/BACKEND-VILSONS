@@ -11,7 +11,7 @@ const createTransaction = async (req, res) => {
         if (!jobOrder) return res.status(404).json({ message: "Job order not found" });
 
         const result = await prisma.$transaction(async (tx) => {
-            const phpAmount = amount*100
+            const phpAmount = amount;
             const transactionData = {
                 jobOrderCode, senderName, amount: phpAmount, mop, status,
                 createdByUser: req.username,
@@ -36,7 +36,6 @@ const editTransaction = async (req, res) => {
         const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
         if (!transaction) return res.status(404).json({ message: "Transaction not found" });
          const result = await prisma.$transaction(async (tx) => {
-            if (amount) amount = amount*100
             const transactionData = {
                 jobOrderCode: jobOrderCode ?? transaction.jobOrderCode,
                 senderName: senderName ?? transaction.senderName, 

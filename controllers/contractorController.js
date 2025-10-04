@@ -17,9 +17,11 @@ const getContractor = async (req, res) => {
             id: true,
             jobOrderCode: true,
             status: true,
+            createdAt: true,
             contractorPercent: true,
             labor: true,
-            materials: { select: { price: true, quantity: true } }
+            materials: { select: { price: true, quantity: true } },
+            truck: { select: { plate: true, id: true }}
           }
         },
         user: {
@@ -57,15 +59,14 @@ const getContractor = async (req, res) => {
     ).length;
 
 
-    // --- map job orders ---
+    // map job orders 
     const jobOrders = filteredJobOrders.map(jo => {
       const totalMaterials = jo.materials.reduce(
         (sum, m) => sum + Number(m.price) * Number(m.quantity),
         0
       );
 
-      const contractorCommission =
-        Number(jo.labor) * Number(jo.contractorPercent);
+      const contractorCommission = Number(jo.labor) * Number(jo.contractorPercent);
       const shopCommission = Number(jo.labor) - contractorCommission;
       const totalBill = Number(jo.labor) + totalMaterials;
 
@@ -73,8 +74,11 @@ const getContractor = async (req, res) => {
         id: jo.id,
         jobOrderCode: jo.jobOrderCode,
         status: jo.status,
+        createdAt: jo.createdAt,
         contractorPercent: jo.contractorPercent,
         labor: jo.labor,
+        plate: jo.truck.plate,
+        truckId: jo.truck.id,
         contractorCommission,
         shopCommission,
         totalMaterials,
@@ -98,6 +102,7 @@ const getContractor = async (req, res) => {
       user: contractor.user
         ? {
             id: contractor.user.id,
+            contractorId: req.params.id,
             fullName: contractor.user.fullName,
             username: contractor.user.username,
             email: contractor.user.email,
@@ -113,7 +118,7 @@ const getContractor = async (req, res) => {
           }
         : null,
       JobOrder: jobOrders,
-      jobOrderSummary: { activeCount, archivedCount, totalContractorCommission,totalContractorPays, totalBalance }
+      jobOrderSummary: { activeCount, archivedCount, totalContractorCommission, totalContractorPays, totalBalance }
     };
 
     res.status(200).json({ data: cleanContractor });
