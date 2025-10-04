@@ -43,6 +43,7 @@ app.use("/api/contractor-pay", require("./routes/api/contractorPay"));
 app.use("/api/employee-pay", require("./routes/api/employeePay"));
 app.use("/api/labors", require("./routes/api/labors"));
 app.use("/api/me", require("./routes/api/me"));
+app.use("/api/contractors", require("./routes/api/contractors"));
 app.use("/api/equipments", require("./routes/api/equipments"));
 app.use("/api/materials", require("./routes/api/materials"));
 app.use("/api/other-incomes", require("./routes/api/otherincomes"));
