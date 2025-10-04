@@ -1829,3 +1829,6 @@
 20251004	13:15:46	ffaae047-a0c0-47d7-93d9-49a3e1a17d77	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50
 20251004	13:17:23	f870a86f-f687-4436-bad7-71d6cee62ea4	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50
 20251004	13:20:42	61da2415-00d9-4529-aca5-b6bbb4e63722	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50
+20251004	13:27:34	79dedfe9-332f-4854-855b-9d1583ed2ac1	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50?filter=active
+20251004	13:27:44	6ed7274f-ba78-4158-af9a-ef0524679e74	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50?filter=archive
+20251004	13:27:58	d0d706b2-e4f0-4083-91fe-537589fd2252	GET	undefined	/api/trucks/927c5a3d-cf6b-436e-be26-60f8b8d65a50?filter=archived

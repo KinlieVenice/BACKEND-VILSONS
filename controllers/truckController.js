@@ -343,6 +343,7 @@ const getTruck = async (req, res) => {
     return res.status(400).json({ message: "ID is required" });
 
   try {
+
     const truck = await prisma.truck.findUnique({
       where: { id: req.params.id },
       include: {
@@ -402,19 +403,28 @@ const getTruck = async (req, res) => {
             };
           })
         : [];
-      
+    
+    const filter = req?.query?.filter;
     const activeStatuses = ["pending", "ongoing", "completed", "for release"];
+
+    let filteredJobOrders = jobOrders;
+    if (filter === "active") {
+      filteredJobOrders = jobOrders.filter((jo) =>
+        activeStatuses.includes(jo.status)
+      );
+    } else if (filter === "archived") {
+      filteredJobOrders = jobOrders.filter((jo) => jo.status === "archive");
+    }
+
     const activeCount = jobOrders.filter((jo) =>
       activeStatuses.includes(jo.status)
     ).length;
-    const archivedCount = jobOrders.filter(
-      (jo) => jo.status === "archive"
-    ).length;
+    const archivedCount = jobOrders.filter((jo) => jo.status === "archive").length;
 
     const truckWithOwnersAndJobOrders = {
       ...truck,
       owners,
-      jobOrders,
+      jobOrders: filteredJobOrders,
       jobOrderSummary: {
         activeCount,
         archivedCount,
