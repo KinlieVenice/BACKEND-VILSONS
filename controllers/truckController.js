@@ -1,5 +1,6 @@
 const truckIdFinder = require("../utils/truckIdFinder");
 const customerIdFinder = require("../utils/customerIdFinder");
+const jobOwnerFinder = require("../utils/jobOwnerFinder");
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
@@ -268,8 +269,8 @@ const getAllTrucks = async (req, res) => {
     const search = req?.query?.search;
     const page = req?.query?.page && parseInt(req.query.page, 10);
     const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-    const startDate = req?.query?.startDate; // e.g. "2025-01-01"
-    const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+    const startDate = req?.query?.startDate;
+    const endDate = req?.query?.endDate;
     let totalItems = 0;
     let totalPages = 1;
 
@@ -297,35 +298,35 @@ const getAllTrucks = async (req, res) => {
         ...(limit ? { take: limit } : {}),
         include: {
           owners: {
+            where: { endDate: null }, // ✅ only active owners
             include: {
               customer: {
-                include: { user: true },
+                include: {
+                  user: { select: { fullName: true, id: true } },
+                },
               },
             },
           },
         },
       });
 
-      const trucksWithOwners = trucks.map((truck) => ({
-        ...truck,
-        owners:
-          truck.owners.length > 0
-            ? truck.owners.map((owner) => ({
-                customer: owner.customer?.user?.username,
-                transferredByUser: owner.transferredByUser,
-                startDate: owner.startDate,
-                endDate: owner.endDate,
-              }))
-            : [],
+      const trucksWithOwner = trucks.map((truck) => ({
+        id: truck.id,
+        plate: truck.plate,
+        make: truck.make,
+        model: truck.model,
+        customerId: truck.owners[0]?.customer?.id || null,
+        customerUserId: truck.owners[0]?.customer?.user?.id || null,
+        customerFullName: truck.owners[0]?.customer?.user?.fullName || null, // ✅ first active owner only
+        createdAt: truck.createdAt,
       }));
 
       totalItems = await tx.truck.count({ where });
-
       if (limit) {
         totalPages = Math.ceil(totalItems / limit);
-      } 
+      }
 
-      return { trucks: trucksWithOwners };
+      return { trucks: trucksWithOwner };
     });
 
     return res.status(200).json({
@@ -335,6 +336,7 @@ const getAllTrucks = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 const getTruck = async (req, res) => {
   if (!req?.params?.id)
@@ -351,6 +353,11 @@ const getTruck = async (req, res) => {
             },
           },
         },
+        jobOrders: {
+          include: {
+            materials: true,
+          },
+        },
       },
     });
 
@@ -358,24 +365,68 @@ const getTruck = async (req, res) => {
       return res.status(404).json({ message: "Truck not found" });
     }
 
-    const truckWithOwners = {
+    const owners =
+      truck.owners.length > 0
+        ? truck.owners.map((owner) => ({
+            customerId: owner.customer?.id || null,
+            customerUserId: owner.customer?.user?.id || null,
+            ownerFullName: owner.customer?.user?.fullName || null,
+            transferredByUser: owner.transferredByUser,
+            startDate: owner.startDate,
+            endDate: owner.endDate,
+          }))
+        : [];
+
+    const jobOrders =
+      truck.jobOrders.length > 0
+        ? truck.jobOrders.map((jo) => {
+            // Find the active owner at job order creation time
+            const ownerAtCreation = jobOwnerFinder(owners, jo.createdAt);
+
+            const materialsTotal = jo.materials.reduce(
+              (sum, m) => sum + Number(m.price) * Number(m.quantity),
+              0
+            );
+
+            const totalBill = (Number(jo.labor) || 0) + materialsTotal;
+
+            return {
+              jobOrderId: jo.id,
+              jobOrderCode: jo.jobOrderCode,
+              customerId: ownerAtCreation?.customerId,
+              customerUserId: ownerAtCreation?.customerUserId,
+              ownerFullName: ownerAtCreation?.ownerFullName,
+              createdAt: jo.createdAt,
+              totalBill,
+              status: jo.status,
+            };
+          })
+        : [];
+      
+    const activeStatuses = ["pending", "ongoing", "completed", "for release"];
+    const activeCount = jobOrders.filter((jo) =>
+      activeStatuses.includes(jo.status)
+    ).length;
+    const archivedCount = jobOrders.filter(
+      (jo) => jo.status === "archive"
+    ).length;
+
+    const truckWithOwnersAndJobOrders = {
       ...truck,
-      owners:
-        truck.owners.length > 0
-          ? truck.owners.map((owner) => ({
-              customer: owner.customer?.user?.username || null,
-              transferredByUser: owner.transferredByUser,
-              startDate: owner.startDate,
-              endDate: owner.endDate,
-            }))
-          : [],
+      owners,
+      jobOrders,
+      jobOrderSummary: {
+        activeCount,
+        archivedCount,
+      },
     };
 
-    return res.status(200).json({ truck: truckWithOwners });
+    return res.status(200).json({ truck: truckWithOwnersAndJobOrders });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports = {
   createTruck,

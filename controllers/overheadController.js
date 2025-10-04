@@ -191,7 +191,7 @@ const getAllOverheads = async (req, res) => {
   }
 
   try {
-    const overhead = await prisma.overhead.findMany({
+    const overheads = await prisma.overhead.findMany({
       where,
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
@@ -202,7 +202,14 @@ const getAllOverheads = async (req, res) => {
       },
     });
 
-    return res.status(200).json({ data: overhead });
+    const totalAmount = overheads.reduce(
+        (sum, pc) => sum + Number(pc.amount),
+        0
+      )
+
+
+
+    return res.status(200).json({ data: { overheads, totalAmount } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

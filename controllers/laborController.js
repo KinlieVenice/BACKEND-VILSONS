@@ -81,7 +81,14 @@ const getAllLaborPays = async (req, res) => {
     // --- Combine Both ---
     const allLaborPays = [...formattedEmployees, ...formattedContractors];
 
-    return res.status(200).json({ data: { laborPays: allLaborPays } });
+    const totalAmount = allLaborPays.reduce((sum, lp) => sum + lp.amount, 0);
+
+    return res.status(200).json({ 
+      data: { 
+        laborPays: allLaborPays,
+        totalAmount 
+      } 
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

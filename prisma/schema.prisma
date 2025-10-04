@@ -814,6 +814,7 @@ enum OrderStatus {
   ongoing
   completed
   forRelease
+  archive
 }
 
 enum AccountStatus {
