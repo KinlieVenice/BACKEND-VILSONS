@@ -6,6 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server",
     "dev": "nodemon server",
+    "postinstall": "prisma migrate deploy && prisma db seed",
+    "migrate:deploy": "prisma migrate deploy",
     "seed": "prisma db seed"
   },
   "author": "Kinlie de Guzman",
@@ -21,7 +23,6 @@
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",

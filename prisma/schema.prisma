@@ -490,7 +490,6 @@ model Transaction {
   updatedBy User?             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
-
 model OtherIncome {
   id String @id @default(uuid())
 
@@ -738,7 +737,7 @@ model UserRoleEdit {
 
 model UserBranch {
   id     String @id @default(uuid())
-  userId String
+  userId String 
   branchId String
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -904,4 +903,5 @@ enum TableName {
   My_Trucks
   My_Salary
   Profile
+
 }

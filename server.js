@@ -6,6 +6,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const app = express();
 const path = require("path");
+const cors = require("cors");
 
 const PORT = process.env.PORT || 3550;
 
@@ -19,6 +20,19 @@ app.use(logger);
 
 // urlencoded date
 app.use(express.urlencoded({ extended: false }));
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173", // your local frontend
+    "https://peak-telephony-mix-female.trycloudflare.com" // your public tunnel
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+
+app.options(/.*/, cors());
+
 
 // json middleware for auto parse
 app.use(express.json());
