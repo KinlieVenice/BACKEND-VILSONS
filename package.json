@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server",
     "dev": "nodemon server",
-    "postinstall": "prisma migrate deploy && prisma db seed",
+    "postinstall": "prisma db seed", 
     "migrate:deploy": "prisma migrate deploy",
     "seed": "prisma db seed"
   },
@@ -35,3 +35,4 @@
     "seed": "node prisma/seed.js"
   }
 }
+
