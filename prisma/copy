@@ -102,8 +102,6 @@ model User {
 
   createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("user")
 }
 
 model UserEdit {
@@ -128,16 +126,12 @@ model UserEdit {
   user      User? @relation("UserEditedVer", fields: [userId], references: [id], onDelete: Cascade)
   updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
-
-  @@map("useredit")
 }
 
 model Admin {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("admin")
-
 }
 
 model Customer {
@@ -148,8 +142,6 @@ model Customer {
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobOrder JobOrder[] @relation("Customer")
   jobOrderEdit JobOrderEdit[] @relation("Customer")
-  @@map("customer")
-
 }
 
 model Contractor {
@@ -162,8 +154,6 @@ model Contractor {
   JobOrder      JobOrder[]
   JobOrderEdit      JobOrderEdit[]
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("contractor")
-
 }
 
 model Employee {
@@ -173,8 +163,6 @@ model Employee {
   employeeSalary EmployeeSalary[]
   employeePay EmployeePay[]
   employeeSalaryEdit EmployeeSalaryEdit[]
-  @@map("employee")
-
 }
 
 model Branch {
@@ -206,9 +194,6 @@ model Branch {
 
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("branch")
-
 }
 
 model BranchEdit {
@@ -230,9 +215,6 @@ model BranchEdit {
   branch    Branch? @relation(fields: [branchId], references: [id])
   createdBy User   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User   @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("branchedit")
-
 }
 
 model Truck {
@@ -255,9 +237,6 @@ model Truck {
   edits    TruckEdit[]
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("truck")
-
 }
 
 model TruckEdit {
@@ -277,9 +256,6 @@ model TruckEdit {
   truck   Truck?  @relation(fields: [truckId], references: [id], onDelete: Cascade)
   createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("truckedit")
-
 }
 
 model TruckOwnership {
@@ -295,8 +271,6 @@ model TruckOwnership {
 
   startDate DateTime  @default(now())
   endDate   DateTime?
-  @@map("truckownership")
-
 }
 
 model TruckOwnershipEdit {
@@ -314,8 +288,6 @@ model TruckOwnershipEdit {
 
   startDate DateTime  @default(now())
   endDate   DateTime?
-  @@map("truckownershipedit")
-
 }
 
 model ContractorPay {
@@ -335,8 +307,6 @@ model ContractorPay {
   contractor Contractor @relation(fields: [contractorId], references: [id])
   createdBy  User      @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy  User      @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("contractorpay")
-
 }
 
 model ContractorPayEdit {
@@ -359,8 +329,6 @@ model ContractorPayEdit {
   createdBy     User          @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy     User          @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   contractorPay ContractorPay? @relation(fields: [contractorPayId], references: [id])
-  @@map("contractorpayedit")
-
 }
 
 
@@ -386,9 +354,6 @@ model EmployeeSalary {
   employee  Employee             @relation(fields: [employeeId], references: [id])
   createdBy User                @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User                @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("employeesalary")
-
 }
 
 model EmployeeSalaryEdit {
@@ -414,9 +379,6 @@ model EmployeeSalaryEdit {
   createdBy      User           @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy      User           @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   employeeSalary EmployeeSalary @relation(fields: [employeeSalaryId], references: [id])
-
-  @@map("employeesalaryedit")
-
 }
 
 model EmployeePay {
@@ -433,8 +395,6 @@ model EmployeePay {
   employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: NoAction)
   createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("employeepay")
-
 }
 
 model PayComponent {
@@ -452,17 +412,12 @@ model PayComponent {
   employeePay      EmployeePay     @relation(fields: [employeePayId], references: [id], onDelete: NoAction)
   createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("paycomponent")
-
 }
 
 model Component {
   id                 String               @id @default(uuid())
   componentName               String   
   payComponents     PayComponent[]
-  @@map("component")
-
 }
 
 model ActivityLog {
@@ -471,9 +426,6 @@ model ActivityLog {
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userName], references: [username], onDelete: NoAction)
-
-  @@map("activitylog")
-
 }
 
 model TransactionZ {
@@ -495,9 +447,6 @@ model TransactionZ {
   jobOrder  JobOrder          @relation(fields: [jobOrderId], references: [id])
   createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("transactionz")
-
 }
 
 model TransactionEditZ {
@@ -519,9 +468,6 @@ model TransactionEditZ {
   transaction TransactionZ @relation(fields: [transactionId], references: [id])
   createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("transactioneditz")
-
 }
 
 model Transaction {
@@ -542,9 +488,6 @@ model Transaction {
   jobOrder JobOrder @relation(fields: [jobOrderCode], references: [jobOrderCode])
   createdBy User?             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User?             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("transaction")
-
 }
 
 model OtherIncome {
@@ -563,9 +506,6 @@ model OtherIncome {
   edits     OtherIncomeEdit[]
   createdBy User             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("otherincome")
-
 }
 
 model OtherIncomeEdit {
@@ -588,9 +528,6 @@ model OtherIncomeEdit {
   otherIncome OtherIncome? @relation(fields: [otherIncomeId], references: [id])
   createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-
-  @@map("otherincomeedit")
-
 }
 
 model Equipment {
@@ -611,8 +548,6 @@ model Equipment {
   branch    Branch @relation(fields: [branchId], references: [id])
   createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("equipment")
-
 }
 
 model EquipmentEdit {
@@ -636,8 +571,6 @@ model EquipmentEdit {
   equipment Equipment? @relation(fields: [equipmentId], references: [id])
   createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("equipmentedit")
-
 }
 
 model Material {
@@ -651,8 +584,6 @@ model Material {
   createdAt DateTime @default(now())
 
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id])
-  @@map("material")
-
 }
 
 model MaterialEdit {
@@ -668,8 +599,6 @@ model MaterialEdit {
   createdAt DateTime @default(now())
 
   jobOrder JobOrder? @relation(fields: [jobOrderId], references: [id])
-  @@map("materialedit")
-
 }
 
 model JobOrder {
@@ -705,8 +634,6 @@ model JobOrder {
   customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy  User       @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("joborder")
-
 }
 
 model JobOrderEdit {
@@ -741,8 +668,6 @@ model JobOrderEdit {
   customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
   createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("joborderedit")
-
 }
 
 model Overhead {
@@ -762,8 +687,6 @@ model Overhead {
   branch    Branch @relation(fields: [branchId], references: [id])
   createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("overhead")
-
 }
 
 model OverheadEdit {
@@ -786,8 +709,6 @@ model OverheadEdit {
   overhead  Overhead @relation(fields: [overheadId], references: [id])
   createdBy User    @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User    @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
-  @@map("overheadedit")
-
 }
 
 model UserRole {
@@ -799,8 +720,6 @@ model UserRole {
   role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
-  @@map("userrole")
-
 }
 
 model UserRoleEdit {
@@ -812,8 +731,6 @@ model UserRoleEdit {
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  @@map("userroleedit")
-
 
   @@unique([userId, roleId])
 }
@@ -827,8 +744,6 @@ model UserBranch {
   branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@unique([userId, branchId])
-  @@map("userbranch")
-
 }
 
 model UserBranchEdit {
@@ -842,8 +757,6 @@ model UserBranchEdit {
   branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@unique([userId, branchId])
-  @@map("userbranchedit")
-
 }
 
 model Role {
@@ -859,8 +772,6 @@ model Role {
 
   createdByUser String?
   createdBy   User?   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
-  @@map("role")
-
 }
 
 model Permission {
@@ -870,8 +781,6 @@ model Permission {
   method      Method
   description String?
   roles       RolePermission[]
-  @@map("permission")
-
 }
 
 model RolePermission {
@@ -885,8 +794,6 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
-  @@map("rolepermission")
-
 }
 
 model ApprovalLog {
@@ -896,8 +803,6 @@ model ApprovalLog {
   moduleId String
   requestComment  String
   responseComment String
-  @@map("approvallog")
-
 }
 
 
