@@ -1,0 +1,908 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Tables
+
+model User {
+  id String @id @default(uuid())
+
+  fullName        String  @db.VarChar(100)
+  username    String  @unique @db.VarChar(100)
+  phone       String @db.VarChar(13)
+  email       String  @unique @db.VarChar(100)
+  hashPwd     String  @db.VarChar(255)
+  description String?
+  refreshToken String?
+
+  status AccountStatus?
+
+  createdAt   DateTime @default(now())
+  createdByUser String?
+  updatedAt   DateTime @updatedAt
+  updatedByUser String?
+
+  admin       Admin?
+  customer    Customer?
+  contractor  Contractor?
+  employee    Employee?
+  activityLog ActivityLog[]
+  roles       UserRole[]
+  rolesEdit       UserRoleEdit[]
+  branches       UserBranch[]
+  branchesEdit       UserBranchEdit[]
+
+  edits           UserEdit[] @relation("UserEditedVer")
+  createdUsers    User[]     @relation("CreatedBy")
+  updatedUsers    User[]     @relation("UpdatedBy")
+  createdUserEdit UserEdit[] @relation("CreatedBy")
+
+  createdRole            Role[]            @relation("CreatedBy")
+  createdBranches        Branch[]          @relation("CreatedBy")
+  createdBranchEdit      BranchEdit[]      @relation("CreatedBy")
+  createdTrucks          Truck[]           @relation("CreatedBy")
+  createdTruckEdit          TruckEdit[]           @relation("CreatedBy")
+  createdTransactionZ     TransactionZ[]     @relation("CreatedBy")
+  createdTransaction     Transaction[]     @relation("CreatedBy")
+  createdTransactionEditZ TransactionEditZ[] @relation("CreatedBy")
+  createdJobOrder        JobOrder[]        @relation("CreatedBy")
+  createdJobOrderEdit    JobOrderEdit[]    @relation("CreatedBy")
+  createdContractorPay     ContractorPay[]     @relation("CreatedBy")
+  createdContractorPayEdit ContractorPayEdit[] @relation("CreatedBy")
+  createdEmployeeSalary     EmployeeSalary[]     @relation("CreatedBy")
+  createdEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("CreatedBy")
+  createdEmployeePay     EmployeePay[]     @relation("CreatedBy")
+  // createdEmployeePayEdit EmployeePayEdit[] @relation("CreatedBy")
+  createdPayComponent     PayComponent[]     @relation("CreatedBy")
+  createdEquipment     Equipment[]     @relation("CreatedBy")
+  createdEquipmentEdit EquipmentEdit[] @relation("CreatedBy")
+  createdOtherIncome     OtherIncome[]     @relation("CreatedBy")
+  createdOtherIncomeEdit OtherIncomeEdit[] @relation("CreatedBy")
+  createdOverhead     Overhead[]     @relation("CreatedBy")
+  createdOverheadEdit OverheadEdit[] @relation("CreatedBy")
+
+  transferredTruckOwnership TruckOwnership[] @relation("TransferredBy")
+  transferredTruckOwnershipEdit TruckOwnershipEdit[] @relation("TransferredBy")
+
+  updatedUserEdits UserEdit[] @relation("UpdatedBy")
+  updatedBranches        Branch[]          @relation("UpdatedBy")
+  updatedBranchEdits     BranchEdit[]      @relation("UpdatedBy")
+  updatedTruck          Truck[]           @relation("UpdatedBy")
+  updatedTruckEdit          TruckEdit[]           @relation("UpdatedBy")
+  updatedTransactionZ     TransactionZ[]     @relation("UpdatedBy")
+  updatedTransaction     Transaction[]     @relation("UpdatedBy")
+  updatedTransactionEditZ TransactionEditZ[] @relation("UpdatedBy")
+  updatedJobOrder        JobOrder[]        @relation("UpdatedBy")
+  updatedJobOrderEdit    JobOrderEdit[]    @relation("UpdatedBy")
+  updatedContractorPay     ContractorPay[]     @relation("UpdatedBy")
+  updatedContractorPayEdit ContractorPayEdit[] @relation("UpdatedBy")
+  updatedEmployeeSalary     EmployeeSalary[]     @relation("UpdatedBy")
+  updatedEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("UpdatedBy")
+  updatedEmployeePay     EmployeePay[]     @relation("UpdatedBy")
+  // updatedEmployeePayEdit EmployeePayEdit[] @relation("UpdatedBy")
+  updatedPayComponent     PayComponent[]     @relation("UpdatedBy")
+  updatedEquipment     Equipment[]     @relation("UpdatedBy")
+  updatedEquipmentEdit EquipmentEdit[] @relation("UpdatedBy")
+  updatedOtherIncome     OtherIncome[]     @relation("UpdatedBy")
+  updatedOtherIncomeEdit OtherIncomeEdit[] @relation("UpdatedBy")
+  updatedOverhead     Overhead[]     @relation("UpdatedBy")
+  updatedOverheadEdit OverheadEdit[] @relation("UpdatedBy")
+
+  createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model UserEdit {
+  id     String  @id @default(uuid())
+  userId String?
+
+  fullName        String  @db.VarChar(100)
+  username    String  @db.VarChar(100)
+  phone       String @db.VarChar(13)
+  email       String  @db.VarChar(100)
+  hashPwd     String  @db.VarChar(255)
+  description String?
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime  @default(now())
+  createdByUser String?
+  updatedAt   DateTime? @updatedAt
+  updatedByUser String?
+
+  user      User? @relation("UserEditedVer", fields: [userId], references: [id], onDelete: Cascade)
+  updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id     String           @id @default(uuid())
+  userId String @unique
+  trucks TruckOwnership[]
+  trucksEdit TruckOwnershipEdit[]
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobOrder JobOrder[] @relation("Customer")
+  jobOrderEdit JobOrderEdit[] @relation("Customer")
+}
+
+model Contractor {
+  id         String  @id @default(uuid())
+  userId     String @unique
+  commission Decimal @db.Decimal(13, 2)
+
+  contractorPay ContractorPay[]
+  contractorPayEdit ContractorPayEdit[]
+  JobOrder      JobOrder[]
+  JobOrderEdit      JobOrderEdit[]
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Employee {
+  id             String           @id @default(uuid())
+  userId         String @unique
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeSalary EmployeeSalary[]
+  employeePay EmployeePay[]
+  employeeSalaryEdit EmployeeSalaryEdit[]
+}
+
+model Branch {
+  id String @id @default(uuid())
+
+  branchName           String        @unique @db.VarChar(100)
+  description    String?
+  address        String
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  JobOrders    JobOrder[]
+  OtherIncomes OtherIncome[]
+  Equipments   Equipment[]
+  Overheads    Overhead[]
+
+  usersBranch       UserBranch[]
+  usersBranchEdit       UserBranchEdit[]
+
+  JobOrderEdit         JobOrderEdit[]
+  OtherIncomeEdit      OtherIncomeEdit[]
+  EquipmentEdit        EquipmentEdit[]
+  OverheadExpensesEdit OverheadEdit[]
+
+  edits BranchEdit[]
+
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model BranchEdit {
+  id       String  @id @default(uuid())
+  branchId String?
+
+  branchName        String @db.VarChar(100)
+  description String?
+  address     String
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime  @default(now())
+  createdByUser String
+  updatedAt   DateTime? @updatedAt
+  updatedByUser String
+
+  branch    Branch? @relation(fields: [branchId], references: [id])
+  createdBy User   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User   @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Truck {
+  id String @id @default(uuid())
+
+  plate       String   @db.VarChar(10) @unique
+  make        String   @db.VarChar(20) 
+  model       String   @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  owners    TruckOwnership[]
+  ownersEdit    TruckOwnershipEdit[]
+  jobOrders JobOrder[]
+  jobOrdersEdit JobOrderEdit[]
+
+
+  edits    TruckEdit[]
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model TruckEdit {
+  id String @id @default(uuid())
+  truckId String?
+
+  plate       String   @db.VarChar(10)
+  make        String   @db.VarChar(20)
+  model       String   @db.VarChar(20)
+  approvalStatus ApprovalStatus @default(pending)
+  requestType RequestType @default(create)
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  truck   Truck?  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model TruckOwnership {
+  id      String @id @default(uuid())
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  transferredByUser String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)
+
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+}
+
+model TruckOwnershipEdit {
+  id      String @id @default(uuid())
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  requestType RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  transferredByUser String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)
+
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+}
+
+model ContractorPay {
+  id           String @id @default(uuid())
+  contractorId String
+
+  type   PaymentType
+  amount Decimal     @db.Decimal(13, 2)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits ContractorPayEdit[]
+
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+  createdBy  User      @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy  User      @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model ContractorPayEdit {
+  id              String  @id @default(uuid())
+  contractorPayId String?
+  contractorId String
+
+  type   PaymentType
+  amount Decimal     @db.Decimal(13, 2)
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+  createdBy     User          @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy     User          @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  contractorPay ContractorPay? @relation(fields: [contractorPayId], references: [id])
+}
+
+
+
+model EmployeeSalary {
+  id         String @id @default(uuid())
+  employeeId String
+
+  componentId String
+  // component   PayComponent @relation(fields: [componentId], references: [id])
+
+  type   PaymentType @default(regular)
+  amount Decimal     @db.Decimal(13, 2)
+
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits     EmployeeSalaryEdit[]
+  employee  Employee             @relation(fields: [employeeId], references: [id])
+  createdBy User                @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User                @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model EmployeeSalaryEdit {
+  id               String @id @default(uuid())
+  employeeId String
+  employeeSalaryId String
+
+  componentId String
+  // component   PayComponent @relation(fields: [componentId], references: [id])
+
+  type   PaymentType @default(regular)
+  amount Decimal     @db.Decimal(13, 2)
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  employee  Employee             @relation(fields: [employeeId], references: [id])
+  createdBy      User           @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy      User           @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  employeeSalary EmployeeSalary @relation(fields: [employeeSalaryId], references: [id])
+}
+
+model EmployeePay {
+  id        String   @id @default(uuid())
+  employeeId String
+  payComponents    PayComponent[] 
+  type PaymentType @default(regular)
+  
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: NoAction)
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model PayComponent {
+  id        String   @id @default(uuid())
+  componentId String
+  employeePayId String
+  amount Decimal @db.Decimal(13, 2)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  component      Component     @relation(fields: [componentId], references: [id], onDelete: NoAction)
+  employeePay      EmployeePay     @relation(fields: [employeePayId], references: [id], onDelete: NoAction)
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Component {
+  id                 String               @id @default(uuid())
+  componentName               String   
+  payComponents     PayComponent[]
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userName    String
+  activity  String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userName], references: [username], onDelete: NoAction)
+}
+
+model TransactionZ {
+  id         String @id @default(uuid())
+  jobOrderId String
+
+  transactionName   String  @db.VarChar(100)
+  mop    String  @db.VarChar(20)
+  amount Decimal @db.Decimal(13, 2)
+
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits     TransactionEditZ[]
+  jobOrder  JobOrder          @relation(fields: [jobOrderId], references: [id])
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model TransactionEditZ {
+  id            String @id @default(uuid())
+  transactionId String
+
+  transactionName   String  @db.VarChar(100)
+  mop    String  @db.VarChar(20)
+  amount Decimal @db.Decimal(13, 2)
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  transaction TransactionZ @relation(fields: [transactionId], references: [id])
+  createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  jobOrderCode    String
+  senderName      String   @db.VarChar(100)
+  sessionId       String?   @unique
+  referenceNumber String?
+  mop             String?  @db.VarChar(20)
+  amount          Decimal  @db.Decimal(13, 2)
+  email           String?
+  status          TransactionStatus   @default(pending) // pending | paid | failed
+  createdAt       DateTime @default(now())
+  createdByUser String?
+  updatedAt   DateTime @updatedAt
+  updatedByUser String?
+
+  jobOrder JobOrder @relation(fields: [jobOrderCode], references: [jobOrderCode])
+  createdBy User?             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User?             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+
+model OtherIncome {
+  id String @id @default(uuid())
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch  @relation(fields: [branchId], references: [id])
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits     OtherIncomeEdit[]
+  createdBy User             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model OtherIncomeEdit {
+  id            String @id @default(uuid())
+  otherIncomeId String?
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch  @relation(fields: [branchId], references: [id])
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  otherIncome OtherIncome? @relation(fields: [otherIncomeId], references: [id])
+  createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Equipment {
+  id String @id @default(uuid())
+
+  equipmentName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  branchId String
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits EquipmentEdit[]
+
+  branch    Branch @relation(fields: [branchId], references: [id])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model EquipmentEdit {
+  id          String @id @default(uuid())
+  equipmentId String?
+
+  equipmentName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  branchId String
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  branch    Branch    @relation(fields: [branchId], references: [id])
+  equipment Equipment? @relation(fields: [equipmentId], references: [id])
+  createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Material {
+  id         String @id @default(uuid())
+  jobOrderId String
+
+  materialName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+
+  createdAt DateTime @default(now())
+
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id])
+}
+
+model MaterialEdit {
+  id         String @id @default(uuid())
+  jobOrderId String?
+
+  materialName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt DateTime @default(now())
+
+  jobOrder JobOrder? @relation(fields: [jobOrderId], references: [id])
+}
+
+model JobOrder {
+  id String @id @default(uuid())
+
+  jobOrderCode String @unique
+  truckId      String
+  branchId     String
+  customerId String
+  contractorId String?
+
+  status      OrderStatus @default(pending)
+  description String
+  labor       Decimal?     @db.Decimal(13, 2)
+  contractorPercent Decimal? @db.Decimal(13, 2)
+  completedAt DateTime?
+
+  transactionZ TransactionZ[]
+  transactions Transaction[]
+  materials    Material[] 
+  materialEdit    MaterialEdit[] 
+
+  edits JobOrderEdit[]
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  truck      Truck      @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  branch     Branch     @relation(fields: [branchId], references: [id])
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+  customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
+  createdBy  User       @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model JobOrderEdit {
+  id           String @id @default(uuid())
+  jobOrderId   String?
+  jobOrderCode String?
+  branchId     String
+  truckId      String
+  customerId String
+  contractorId String?
+
+  status      OrderStatus @default(pending)
+  description String
+  labor       Decimal?     @db.Decimal(13, 2)
+  contractorPercent Decimal? @db.Decimal(13, 2)
+  completedAt DateTime?
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+
+  jobOrder  JobOrder? @relation(fields: [jobOrderId], references: [id])
+  truck      Truck      @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+
+
+  customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
+  createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Overhead {
+  id String @id @default(uuid())
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits OverheadEdit[]
+
+  branch    Branch @relation(fields: [branchId], references: [id])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model OverheadEdit {
+  id         String @id @default(uuid())
+  overheadId String
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  overhead  Overhead @relation(fields: [overheadId], references: [id])
+  createdBy User    @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User    @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model UserRoleEdit {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model UserBranch {
+  id     String @id @default(uuid())
+  userId String
+  branchId String
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId])
+}
+
+model UserBranchEdit {
+  id     String @id @default(uuid())
+  userId String
+  branchId String
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId])
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  roleName           String           @db.VarChar(100) @unique
+  baseRoleId     String?
+  baseRole       Role?             @relation("BaseRole", fields: [baseRoleId], references: [id], onDelete: Cascade)
+  baseRoles      Role[]           @relation("BaseRole")
+  isCustom       Boolean?
+  users          UserRole[]
+  userEdits          UserRoleEdit[]
+  permissions    RolePermission[]
+
+  createdByUser String?
+  createdBy   User?   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  module      Module 
+  permissionName      String           @db.VarChar(100) @unique
+  method      Method
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  approval Boolean
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model ApprovalLog {
+  id              String @id @default(uuid())
+  module          Module
+  table           TableName
+  moduleId String
+  requestComment  String
+  responseComment String
+}
+
+
+// enum
+
+enum OrderStatus {
+  pending
+  ongoing
+  completed
+  forRelease
+  archive
+}
+
+enum AccountStatus {
+  active
+  inactive
+}
+
+enum ApprovalStatus {
+  pending
+  published
+  rejected
+}
+
+enum RequestType {
+  edit
+  delete
+  create
+}
+
+enum LaborType {
+  employee
+  contractor
+}
+
+enum PaymentType {
+  regular
+  advance
+}
+
+enum TransactionStatus {
+  pending
+  successful
+  failed
+}
+
+enum Method {
+  view
+  create
+  edit
+  delete
+}
+
+enum Module {
+  Dashboard
+  Job_Orders @map("Job Orders")
+  Other_Incomes @map("Other Incomes")
+  Transactions @map("Transactions")
+  Branches
+  Finances_Revenue_And_Profit @map("Finances - Revenue and Profit")
+  Finances_Operational_Materials @map("Finances - Operational - Materials")
+  Finances_Operational_Equipment @map("Finances - Operational - Equipment")
+  Finances_Operational_Labor @map("Finances - Operational - Labor")
+  Finances_Overhead @map("Finances - Overhead")
+  Trucks @map("Trucks")
+  Activity_Logs @map("Activity Logs")
+  Users_All_Users @map("Users - All Users")
+  Users_Roles_And_Permissions @map("Users - Roles and Permissions")
+  My_Dashboard @map("My Dashboard")
+  Assigned_Orders @map("Assigned Orders")
+  My_Payout @map("My Payout")
+  My_Orders @map("My Orders")
+  My_Transactions @map("My Transactions")
+  My_Trucks @map("My Trucks")
+  My_Salary @map("My Salary")
+  Profile @map("Profile")
+}
+
+enum TableName {
+  Dashboard 
+  Job_Orders @map("Job Orders")
+  Other_Incomes @map("Other_Incomes")
+  Transactions @map("Transactions")
+  Revenue_And_Profit @map("Revenue and Profit")
+  Material_Expenses @map("Material Expenses")
+  Equipment_Expenses @map("Equipment Expenses")
+  Labor_Expenses @map("Labor Expenses")
+  Trucks
+  Activity_Logs @map("Activity Logs")
+  All_Users @map("All Users")
+  Roles_And_Permissions @map("Roles and Permissions")
+  My_Profile @map("My Profile")
+  My_Dashboard @map("My Dashboard")
+  Assigned_Orders @map("Assigned Orders")
+  My_Payout @map("My Payout")
+  My_Orders
+  My_Transactions
+  My_Trucks
+  My_Salary
+  Profile
+
+}
