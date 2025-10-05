@@ -1972,3 +1972,7 @@
 20251005	16:48:10	4a80284e-48b9-4a39-8f97-108413569e74	POST	http://localhost:5173	/auth
 20251005	16:48:13	a969a3ee-5455-4c8c-9981-26d04a0641bb	POST	http://localhost:5173	/auth
 20251005	17:45:05	a3475258-8d70-4fe9-ab93-75d40b779b66	GET	undefined	/api/users?branch=main
+20251005	19:29:53	16f60ae6-4f9c-49ce-aee6-6734e9cf980b	POST	undefined	/auth
+20251005	19:30:31	398a53a1-033a-44f6-b356-76c1cc0d504e	GET	undefined	/api/users?branch=main
+20251005	19:30:58	d6a914f9-6807-40c6-8253-ea11f61d042e	POST	undefined	/auth
+20251005	19:31:20	e518e4db-1146-475a-b82b-1d99e28fd27d	GET	undefined	/api/users?branch=main
