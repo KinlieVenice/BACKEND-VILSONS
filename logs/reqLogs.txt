@@ -1917,3 +1917,6 @@
 20251005	08:51:34	ae58318c-4ce1-4f41-9644-f77c80823bc3	GET	undefined	/
 20251005	08:51:35	7a5c35da-4a7d-4c5c-834a-99d9fb7fa2f5	GET	undefined	/favicon.ico
 20251005	08:58:29	7cd61a3f-b563-493a-9fa8-29621a26637c	GET	undefined	/
+20251005	12:07:49	5c58a91d-4b56-4af5-87ed-65521cda7c83	GET	undefined	/api/users
+20251005	12:10:07	99f8b09e-f2d2-4f23-b479-d980ccd4d7d7	GET	undefined	/api/users
+20251005	12:29:39	bca4eaee-94b7-4a87-ad6c-d0aa34dacfb0	GET	undefined	/api/users
