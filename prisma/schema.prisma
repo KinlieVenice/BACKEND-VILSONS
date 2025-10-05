@@ -1,5 +1,12 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -7,1109 +14,866 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model activitylog {
-  id        String   @id
-  userName  String
+// Tables
+
+model User {
+  id String @id @default(uuid())
+
+  fullName        String  @db.VarChar(100)
+  username    String  @unique @db.VarChar(100)
+  phone       String @db.VarChar(13)
+  email       String  @unique @db.VarChar(100)
+  hashPwd     String  @db.VarChar(255)
+  description String?
+  refreshToken String?
+
+  status AccountStatus?
+
+  createdAt   DateTime @default(now())
+  createdByUser String?
+  updatedAt   DateTime @updatedAt
+  updatedByUser String?
+
+  admin       Admin?
+  customer    Customer?
+  contractor  Contractor?
+  employee    Employee?
+  activityLog ActivityLog[]
+  roles       UserRole[]
+  rolesEdit       UserRoleEdit[]
+  branches       UserBranch[]
+  branchesEdit       UserBranchEdit[]
+
+  edits           UserEdit[] @relation("UserEditedVer")
+  createdUsers    User[]     @relation("CreatedBy")
+  updatedUsers    User[]     @relation("UpdatedBy")
+  createdUserEdit UserEdit[] @relation("CreatedBy")
+
+  createdRole            Role[]            @relation("CreatedBy")
+  createdBranches        Branch[]          @relation("CreatedBy")
+  createdBranchEdit      BranchEdit[]      @relation("CreatedBy")
+  createdTrucks          Truck[]           @relation("CreatedBy")
+  createdTruckEdit          TruckEdit[]           @relation("CreatedBy")
+  createdTransactionZ     TransactionZ[]     @relation("CreatedBy")
+  createdTransaction     Transaction[]     @relation("CreatedBy")
+  createdTransactionEditZ TransactionEditZ[] @relation("CreatedBy")
+  createdJobOrder        JobOrder[]        @relation("CreatedBy")
+  createdJobOrderEdit    JobOrderEdit[]    @relation("CreatedBy")
+  createdContractorPay     ContractorPay[]     @relation("CreatedBy")
+  createdContractorPayEdit ContractorPayEdit[] @relation("CreatedBy")
+  createdEmployeeSalary     EmployeeSalary[]     @relation("CreatedBy")
+  createdEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("CreatedBy")
+  createdEmployeePay     EmployeePay[]     @relation("CreatedBy")
+  // createdEmployeePayEdit EmployeePayEdit[] @relation("CreatedBy")
+  createdPayComponent     PayComponent[]     @relation("CreatedBy")
+  createdEquipment     Equipment[]     @relation("CreatedBy")
+  createdEquipmentEdit EquipmentEdit[] @relation("CreatedBy")
+  createdOtherIncome     OtherIncome[]     @relation("CreatedBy")
+  createdOtherIncomeEdit OtherIncomeEdit[] @relation("CreatedBy")
+  createdOverhead     Overhead[]     @relation("CreatedBy")
+  createdOverheadEdit OverheadEdit[] @relation("CreatedBy")
+
+  transferredTruckOwnership TruckOwnership[] @relation("TransferredBy")
+  transferredTruckOwnershipEdit TruckOwnershipEdit[] @relation("TransferredBy")
+
+  updatedUserEdits UserEdit[] @relation("UpdatedBy")
+  updatedBranches        Branch[]          @relation("UpdatedBy")
+  updatedBranchEdits     BranchEdit[]      @relation("UpdatedBy")
+  updatedTruck          Truck[]           @relation("UpdatedBy")
+  updatedTruckEdit          TruckEdit[]           @relation("UpdatedBy")
+  updatedTransactionZ     TransactionZ[]     @relation("UpdatedBy")
+  updatedTransaction     Transaction[]     @relation("UpdatedBy")
+  updatedTransactionEditZ TransactionEditZ[] @relation("UpdatedBy")
+  updatedJobOrder        JobOrder[]        @relation("UpdatedBy")
+  updatedJobOrderEdit    JobOrderEdit[]    @relation("UpdatedBy")
+  updatedContractorPay     ContractorPay[]     @relation("UpdatedBy")
+  updatedContractorPayEdit ContractorPayEdit[] @relation("UpdatedBy")
+  updatedEmployeeSalary     EmployeeSalary[]     @relation("UpdatedBy")
+  updatedEmployeeSalaryEdit EmployeeSalaryEdit[] @relation("UpdatedBy")
+  updatedEmployeePay     EmployeePay[]     @relation("UpdatedBy")
+  // updatedEmployeePayEdit EmployeePayEdit[] @relation("UpdatedBy")
+  updatedPayComponent     PayComponent[]     @relation("UpdatedBy")
+  updatedEquipment     Equipment[]     @relation("UpdatedBy")
+  updatedEquipmentEdit EquipmentEdit[] @relation("UpdatedBy")
+  updatedOtherIncome     OtherIncome[]     @relation("UpdatedBy")
+  updatedOtherIncomeEdit OtherIncomeEdit[] @relation("UpdatedBy")
+  updatedOverhead     Overhead[]     @relation("UpdatedBy")
+  updatedOverheadEdit OverheadEdit[] @relation("UpdatedBy")
+
+  createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model UserEdit {
+  id     String  @id @default(uuid())
+  userId String?
+
+  fullName        String  @db.VarChar(100)
+  username    String  @db.VarChar(100)
+  phone       String @db.VarChar(13)
+  email       String  @db.VarChar(100)
+  hashPwd     String  @db.VarChar(255)
+  description String?
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime  @default(now())
+  createdByUser String?
+  updatedAt   DateTime? @updatedAt
+  updatedByUser String?
+
+  user      User? @relation("UserEditedVer", fields: [userId], references: [id], onDelete: Cascade)
+  updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id     String           @id @default(uuid())
+  userId String @unique
+  trucks TruckOwnership[]
+  trucksEdit TruckOwnershipEdit[]
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobOrder JobOrder[] @relation("Customer")
+  jobOrderEdit JobOrderEdit[] @relation("Customer")
+}
+
+model Contractor {
+  id         String  @id @default(uuid())
+  userId     String @unique
+  commission Decimal @db.Decimal(13, 2)
+
+  contractorPay ContractorPay[]
+  contractorPayEdit ContractorPayEdit[]
+  JobOrder      JobOrder[]
+  JobOrderEdit      JobOrderEdit[]
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Employee {
+  id             String           @id @default(uuid())
+  userId         String @unique
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeSalary EmployeeSalary[]
+  employeePay EmployeePay[]
+  employeeSalaryEdit EmployeeSalaryEdit[]
+}
+
+model Branch {
+  id String @id @default(uuid())
+
+  branchName           String        @unique @db.VarChar(100)
+  description    String?
+  address        String
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  JobOrders    JobOrder[]
+  OtherIncomes OtherIncome[]
+  Equipments   Equipment[]
+  Overheads    Overhead[]
+
+  usersBranch       UserBranch[]
+  usersBranchEdit       UserBranchEdit[]
+
+  JobOrderEdit         JobOrderEdit[]
+  OtherIncomeEdit      OtherIncomeEdit[]
+  EquipmentEdit        EquipmentEdit[]
+  OverheadExpensesEdit OverheadEdit[]
+
+  edits BranchEdit[]
+
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model BranchEdit {
+  id       String  @id @default(uuid())
+  branchId String?
+
+  branchName        String @db.VarChar(100)
+  description String?
+  address     String
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime  @default(now())
+  createdByUser String
+  updatedAt   DateTime? @updatedAt
+  updatedByUser String
+
+  branch    Branch? @relation(fields: [branchId], references: [id])
+  createdBy User   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User   @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Truck {
+  id String @id @default(uuid())
+
+  plate       String   @db.VarChar(10) @unique
+  make        String   @db.VarChar(20) 
+  model       String   @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  owners    TruckOwnership[]
+  ownersEdit    TruckOwnershipEdit[]
+  jobOrders JobOrder[]
+  jobOrdersEdit JobOrderEdit[]
+
+
+  edits    TruckEdit[]
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model TruckEdit {
+  id String @id @default(uuid())
+  truckId String?
+
+  plate       String   @db.VarChar(10)
+  make        String   @db.VarChar(20)
+  model       String   @db.VarChar(20)
+  approvalStatus ApprovalStatus @default(pending)
+  requestType RequestType @default(create)
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  truck   Truck?  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model TruckOwnership {
+  id      String @id @default(uuid())
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  transferredByUser String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)
+
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+}
+
+model TruckOwnershipEdit {
+  id      String @id @default(uuid())
+  truckId String
+  truck   Truck  @relation(fields: [truckId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  requestType RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  transferredByUser String
+  transferredBy   User   @relation("TransferredBy", fields: [transferredByUser], references: [username], onDelete: NoAction)
+
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+}
+
+model ContractorPay {
+  id           String @id @default(uuid())
+  contractorId String
+
+  type   PaymentType
+  amount Decimal     @db.Decimal(13, 2)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits ContractorPayEdit[]
+
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+  createdBy  User      @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy  User      @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model ContractorPayEdit {
+  id              String  @id @default(uuid())
+  contractorPayId String?
+  contractorId String
+
+  type   PaymentType
+  amount Decimal     @db.Decimal(13, 2)
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+  createdBy     User          @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy     User          @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  contractorPay ContractorPay? @relation(fields: [contractorPayId], references: [id])
+}
+
+
+
+model EmployeeSalary {
+  id         String @id @default(uuid())
+  employeeId String
+
+  componentId String
+  // component   PayComponent @relation(fields: [componentId], references: [id])
+
+  type   PaymentType @default(regular)
+  amount Decimal     @db.Decimal(13, 2)
+
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits     EmployeeSalaryEdit[]
+  employee  Employee             @relation(fields: [employeeId], references: [id])
+  createdBy User                @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User                @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model EmployeeSalaryEdit {
+  id               String @id @default(uuid())
+  employeeId String
+  employeeSalaryId String
+
+  componentId String
+  // component   PayComponent @relation(fields: [componentId], references: [id])
+
+  type   PaymentType @default(regular)
+  amount Decimal     @db.Decimal(13, 2)
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  employee  Employee             @relation(fields: [employeeId], references: [id])
+  createdBy      User           @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy      User           @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+  employeeSalary EmployeeSalary @relation(fields: [employeeSalaryId], references: [id])
+}
+
+model EmployeePay {
+  id        String   @id @default(uuid())
+  employeeId String
+  payComponents    PayComponent[] 
+  type PaymentType @default(regular)
+  
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: NoAction)
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model PayComponent {
+  id        String   @id @default(uuid())
+  componentId String
+  employeePayId String
+  amount Decimal @db.Decimal(13, 2)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  component      Component     @relation(fields: [componentId], references: [id], onDelete: NoAction)
+  employeePay      EmployeePay     @relation(fields: [employeePayId], references: [id], onDelete: NoAction)
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Component {
+  id                 String               @id @default(uuid())
+  componentName               String   
+  payComponents     PayComponent[]
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userName    String
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
-  user      user     @relation(fields: [userName], references: [username], map: "ActivityLog_userName_fkey")
-
-  @@index([userName], map: "ActivityLog_userName_fkey")
+  user      User     @relation(fields: [userName], references: [username], onDelete: NoAction)
 }
 
-model admin {
-  id     String @id
-  userId String @unique(map: "Admin_userId_key")
-  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Admin_userId_fkey")
+model TransactionZ {
+  id         String @id @default(uuid())
+  jobOrderId String
+
+  transactionName   String  @db.VarChar(100)
+  mop    String  @db.VarChar(20)
+  amount Decimal @db.Decimal(13, 2)
+
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits     TransactionEditZ[]
+  jobOrder  JobOrder          @relation(fields: [jobOrderId], references: [id])
+  createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 }
 
-model approvallog {
-  id              String             @id
-  module          approvallog_module
-  table           approvallog_table
-  moduleId        String
+model TransactionEditZ {
+  id            String @id @default(uuid())
+  transactionId String
+
+  transactionName   String  @db.VarChar(100)
+  mop    String  @db.VarChar(20)
+  amount Decimal @db.Decimal(13, 2)
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  transaction TransactionZ @relation(fields: [transactionId], references: [id])
+  createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  jobOrderCode    String
+  senderName      String   @db.VarChar(100)
+  sessionId       String?   @unique
+  referenceNumber String?
+  mop             String?  @db.VarChar(20)
+  amount          Decimal  @db.Decimal(13, 2)
+  email           String?
+  status          TransactionStatus   @default(pending) // pending | paid | failed
+  createdAt       DateTime @default(now())
+  createdByUser String?
+  updatedAt   DateTime @updatedAt
+  updatedByUser String?
+
+  jobOrder JobOrder @relation(fields: [jobOrderCode], references: [jobOrderCode])
+  createdBy User?             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User?             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+
+model OtherIncome {
+  id String @id @default(uuid())
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch  @relation(fields: [branchId], references: [id])
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits     OtherIncomeEdit[]
+  createdBy User             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model OtherIncomeEdit {
+  id            String @id @default(uuid())
+  otherIncomeId String?
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+  branch      Branch  @relation(fields: [branchId], references: [id])
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  otherIncome OtherIncome? @relation(fields: [otherIncomeId], references: [id])
+  createdBy   User        @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy   User        @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Equipment {
+  id String @id @default(uuid())
+
+  equipmentName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  branchId String
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits EquipmentEdit[]
+
+  branch    Branch @relation(fields: [branchId], references: [id])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model EquipmentEdit {
+  id          String @id @default(uuid())
+  equipmentId String?
+
+  equipmentName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  branchId String
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  branch    Branch    @relation(fields: [branchId], references: [id])
+  equipment Equipment? @relation(fields: [equipmentId], references: [id])
+  createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Material {
+  id         String @id @default(uuid())
+  jobOrderId String
+
+  materialName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+
+  createdAt DateTime @default(now())
+
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id])
+}
+
+model MaterialEdit {
+  id         String @id @default(uuid())
+  jobOrderId String?
+
+  materialName     String  @db.VarChar(100)
+  quantity Int
+  price    Decimal @db.Decimal(13, 2)
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt DateTime @default(now())
+
+  jobOrder JobOrder? @relation(fields: [jobOrderId], references: [id])
+}
+
+model JobOrder {
+  id String @id @default(uuid())
+
+  jobOrderCode String @unique
+  truckId      String
+  branchId     String
+  customerId String
+  contractorId String?
+
+  status      OrderStatus @default(pending)
+  description String
+  labor       Decimal?     @db.Decimal(13, 2)
+  contractorPercent Decimal? @db.Decimal(13, 2)
+  completedAt DateTime?
+
+  transactionZ TransactionZ[]
+  transactions Transaction[]
+  materials    Material[] 
+  materialEdit    MaterialEdit[] 
+
+  edits JobOrderEdit[]
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  truck      Truck      @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  branch     Branch     @relation(fields: [branchId], references: [id])
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+  customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
+  createdBy  User       @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model JobOrderEdit {
+  id           String @id @default(uuid())
+  jobOrderId   String?
+  jobOrderCode String?
+  branchId     String
+  truckId      String
+  customerId String
+  contractorId String?
+
+  status      OrderStatus @default(pending)
+  description String
+  labor       Decimal?     @db.Decimal(13, 2)
+  contractorPercent Decimal? @db.Decimal(13, 2)
+  completedAt DateTime?
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+
+  jobOrder  JobOrder? @relation(fields: [jobOrderId], references: [id])
+  truck      Truck      @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+
+
+  customer  Customer       @relation("Customer", fields: [customerId], references: [id], onDelete: NoAction)
+  createdBy User     @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User     @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model Overhead {
+  id String @id @default(uuid())
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  edits OverheadEdit[]
+
+  branch    Branch @relation(fields: [branchId], references: [id])
+  createdBy User  @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User  @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model OverheadEdit {
+  id         String @id @default(uuid())
+  overheadId String
+
+  description String
+  amount      Decimal @db.Decimal(13, 2)
+  branchId    String
+
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  createdByUser String
+  updatedAt   DateTime @updatedAt
+  updatedByUser String
+
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  overhead  Overhead @relation(fields: [overheadId], references: [id])
+  createdBy User    @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+  updatedBy User    @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model UserRoleEdit {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model UserBranch {
+  id     String @id @default(uuid())
+  userId String
+  branchId String
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId])
+}
+
+model UserBranchEdit {
+  id     String @id @default(uuid())
+  userId String
+  branchId String
+  requestType    RequestType
+  approvalStatus ApprovalStatus @default(pending)
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch           Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId])
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  roleName           String           @db.VarChar(100) @unique
+  baseRoleId     String?
+  baseRole       Role?             @relation("BaseRole", fields: [baseRoleId], references: [id], onDelete: Cascade)
+  baseRoles      Role[]           @relation("BaseRole")
+  isCustom       Boolean?
+  users          UserRole[]
+  userEdits          UserRoleEdit[]
+  permissions    RolePermission[]
+
+  createdByUser String?
+  createdBy   User?   @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  module      Module 
+  permissionName      String           @db.VarChar(100) @unique
+  method      Method
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  approval Boolean
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model ApprovalLog {
+  id              String @id @default(uuid())
+  module          Module
+  table           TableName
+  moduleId String
   requestComment  String
   responseComment String
 }
 
-model branch {
-  id                              String            @id
-  branchName                      String            @unique(map: "Branch_branchName_key") @db.VarChar(100)
-  description                     String?
-  address                         String
-  createdAt                       DateTime          @default(now())
-  createdByUser                   String
-  updatedAt                       DateTime
-  updatedByUser                   String
-  user_branch_createdByUserTouser user              @relation("branch_createdByUserTouser", fields: [createdByUser], references: [username], map: "Branch_createdByUser_fkey")
-  user_branch_updatedByUserTouser user              @relation("branch_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "Branch_updatedByUser_fkey")
-  branchedit                      branchedit[]
-  equipment                       equipment[]
-  equipmentedit                   equipmentedit[]
-  joborder                        joborder[]
-  joborderedit                    joborderedit[]
-  otherincome                     otherincome[]
-  otherincomeedit                 otherincomeedit[]
-  overhead                        overhead[]
-  overheadedit                    overheadedit[]
-  userbranch                      userbranch[]
-  userbranchedit                  userbranchedit[]
 
-  @@index([createdByUser], map: "Branch_createdByUser_fkey")
-  @@index([updatedByUser], map: "Branch_updatedByUser_fkey")
+// enum
+
+enum OrderStatus {
+  pending
+  ongoing
+  completed
+  forRelease
+  archive
 }
 
-model branchedit {
-  id                                  String                    @id
-  branchId                            String?
-  branchName                          String                    @db.VarChar(100)
-  description                         String?
-  address                             String
-  requestType                         branchedit_requestType
-  approvalStatus                      branchedit_approvalStatus @default(pending)
-  createdAt                           DateTime                  @default(now())
-  createdByUser                       String
-  updatedAt                           DateTime?
-  updatedByUser                       String
-  branch                              branch?                   @relation(fields: [branchId], references: [id], map: "BranchEdit_branchId_fkey")
-  user_branchedit_createdByUserTouser user                      @relation("branchedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "BranchEdit_createdByUser_fkey")
-  user_branchedit_updatedByUserTouser user                      @relation("branchedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "BranchEdit_updatedByUser_fkey")
-
-  @@index([branchId], map: "BranchEdit_branchId_fkey")
-  @@index([createdByUser], map: "BranchEdit_createdByUser_fkey")
-  @@index([updatedByUser], map: "BranchEdit_updatedByUser_fkey")
+enum AccountStatus {
+  active
+  inactive
 }
 
-model component {
-  id            String         @id
-  componentName String
-  paycomponent  paycomponent[]
-}
-
-model contractor {
-  id                String              @id
-  userId            String              @unique(map: "Contractor_userId_key")
-  commission        Decimal             @db.Decimal(13, 2)
-  user              user                @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Contractor_userId_fkey")
-  contractorpay     contractorpay[]
-  contractorpayedit contractorpayedit[]
-  joborder          joborder[]
-  joborderedit      joborderedit[]
-}
-
-model contractorpay {
-  id                                     String              @id
-  contractorId                           String
-  type                                   contractorpay_type
-  amount                                 Decimal             @db.Decimal(13, 2)
-  createdAt                              DateTime            @default(now())
-  createdByUser                          String
-  updatedAt                              DateTime
-  updatedByUser                          String
-  contractor                             contractor          @relation(fields: [contractorId], references: [id], map: "ContractorPay_contractorId_fkey")
-  user_contractorpay_createdByUserTouser user                @relation("contractorpay_createdByUserTouser", fields: [createdByUser], references: [username], map: "ContractorPay_createdByUser_fkey")
-  user_contractorpay_updatedByUserTouser user                @relation("contractorpay_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "ContractorPay_updatedByUser_fkey")
-  contractorpayedit                      contractorpayedit[]
-
-  @@index([contractorId], map: "ContractorPay_contractorId_fkey")
-  @@index([createdByUser], map: "ContractorPay_createdByUser_fkey")
-  @@index([updatedByUser], map: "ContractorPay_updatedByUser_fkey")
-}
-
-model contractorpayedit {
-  id                                         String                           @id
-  contractorPayId                            String?
-  contractorId                               String
-  type                                       contractorpayedit_type
-  amount                                     Decimal                          @db.Decimal(13, 2)
-  requestType                                contractorpayedit_requestType
-  approvalStatus                             contractorpayedit_approvalStatus @default(pending)
-  createdAt                                  DateTime                         @default(now())
-  createdByUser                              String
-  updatedAt                                  DateTime
-  updatedByUser                              String
-  contractor                                 contractor                       @relation(fields: [contractorId], references: [id], map: "ContractorPayEdit_contractorId_fkey")
-  contractorpay                              contractorpay?                   @relation(fields: [contractorPayId], references: [id], map: "ContractorPayEdit_contractorPayId_fkey")
-  user_contractorpayedit_createdByUserTouser user                             @relation("contractorpayedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "ContractorPayEdit_createdByUser_fkey")
-  user_contractorpayedit_updatedByUserTouser user                             @relation("contractorpayedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "ContractorPayEdit_updatedByUser_fkey")
-
-  @@index([contractorId], map: "ContractorPayEdit_contractorId_fkey")
-  @@index([contractorPayId], map: "ContractorPayEdit_contractorPayId_fkey")
-  @@index([createdByUser], map: "ContractorPayEdit_createdByUser_fkey")
-  @@index([updatedByUser], map: "ContractorPayEdit_updatedByUser_fkey")
-}
-
-model customer {
-  id                 String               @id
-  userId             String               @unique(map: "Customer_userId_key")
-  user               user                 @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Customer_userId_fkey")
-  joborder           joborder[]
-  joborderedit       joborderedit[]
-  truckownership     truckownership[]
-  truckownershipedit truckownershipedit[]
-}
-
-model employee {
-  id                 String               @id
-  userId             String               @unique(map: "Employee_userId_key")
-  user               user                 @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Employee_userId_fkey")
-  employeepay        employeepay[]
-  employeesalary     employeesalary[]
-  employeesalaryedit employeesalaryedit[]
-}
-
-model employeepay {
-  id                                   String           @id
-  employeeId                           String
-  createdAt                            DateTime         @default(now())
-  createdByUser                        String
-  updatedAt                            DateTime
-  updatedByUser                        String
-  type                                 employeepay_type @default(regular)
-  user_employeepay_createdByUserTouser user             @relation("employeepay_createdByUserTouser", fields: [createdByUser], references: [username], map: "EmployeePay_createdByUser_fkey")
-  employee                             employee         @relation(fields: [employeeId], references: [id], map: "EmployeePay_employeeId_fkey")
-  user_employeepay_updatedByUserTouser user             @relation("employeepay_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "EmployeePay_updatedByUser_fkey")
-  paycomponent                         paycomponent[]
-
-  @@index([createdByUser], map: "EmployeePay_createdByUser_fkey")
-  @@index([employeeId], map: "EmployeePay_employeeId_fkey")
-  @@index([updatedByUser], map: "EmployeePay_updatedByUser_fkey")
-}
-
-model employeesalary {
-  id                                      String                        @id
-  employeeId                              String
-  componentId                             String
-  type                                    employeesalary_type           @default(regular)
-  amount                                  Decimal                       @db.Decimal(13, 2)
-  approvalStatus                          employeesalary_approvalStatus @default(pending)
-  createdAt                               DateTime                      @default(now())
-  createdByUser                           String
-  updatedAt                               DateTime
-  updatedByUser                           String
-  user_employeesalary_createdByUserTouser user                          @relation("employeesalary_createdByUserTouser", fields: [createdByUser], references: [username], map: "EmployeeSalary_createdByUser_fkey")
-  employee                                employee                      @relation(fields: [employeeId], references: [id], map: "EmployeeSalary_employeeId_fkey")
-  user_employeesalary_updatedByUserTouser user                          @relation("employeesalary_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "EmployeeSalary_updatedByUser_fkey")
-  employeesalaryedit                      employeesalaryedit[]
-
-  @@index([createdByUser], map: "EmployeeSalary_createdByUser_fkey")
-  @@index([employeeId], map: "EmployeeSalary_employeeId_fkey")
-  @@index([updatedByUser], map: "EmployeeSalary_updatedByUser_fkey")
-}
-
-model employeesalaryedit {
-  id                                          String                            @id
-  employeeSalaryId                            String
-  componentId                                 String
-  type                                        employeesalaryedit_type           @default(regular)
-  amount                                      Decimal                           @db.Decimal(13, 2)
-  requestType                                 employeesalaryedit_requestType
-  approvalStatus                              employeesalaryedit_approvalStatus @default(pending)
-  createdAt                                   DateTime                          @default(now())
-  createdByUser                               String
-  updatedAt                                   DateTime
-  updatedByUser                               String
-  employeeId                                  String
-  user_employeesalaryedit_createdByUserTouser user                              @relation("employeesalaryedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "EmployeeSalaryEdit_createdByUser_fkey")
-  employee                                    employee                          @relation(fields: [employeeId], references: [id], map: "EmployeeSalaryEdit_employeeId_fkey")
-  employeesalary                              employeesalary                    @relation(fields: [employeeSalaryId], references: [id], map: "EmployeeSalaryEdit_employeeSalaryId_fkey")
-  user_employeesalaryedit_updatedByUserTouser user                              @relation("employeesalaryedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "EmployeeSalaryEdit_updatedByUser_fkey")
-
-  @@index([createdByUser], map: "EmployeeSalaryEdit_createdByUser_fkey")
-  @@index([employeeId], map: "EmployeeSalaryEdit_employeeId_fkey")
-  @@index([employeeSalaryId], map: "EmployeeSalaryEdit_employeeSalaryId_fkey")
-  @@index([updatedByUser], map: "EmployeeSalaryEdit_updatedByUser_fkey")
-}
-
-model equipment {
-  id                                 String          @id
-  equipmentName                      String          @db.VarChar(100)
-  quantity                           Int
-  price                              Decimal         @db.Decimal(13, 2)
-  branchId                           String
-  createdAt                          DateTime        @default(now())
-  createdByUser                      String
-  updatedAt                          DateTime
-  updatedByUser                      String
-  branch                             branch          @relation(fields: [branchId], references: [id], map: "Equipment_branchId_fkey")
-  user_equipment_createdByUserTouser user            @relation("equipment_createdByUserTouser", fields: [createdByUser], references: [username], map: "Equipment_createdByUser_fkey")
-  user_equipment_updatedByUserTouser user            @relation("equipment_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "Equipment_updatedByUser_fkey")
-  equipmentedit                      equipmentedit[]
-
-  @@index([branchId], map: "Equipment_branchId_fkey")
-  @@index([createdByUser], map: "Equipment_createdByUser_fkey")
-  @@index([updatedByUser], map: "Equipment_updatedByUser_fkey")
-}
-
-model equipmentedit {
-  id                                     String                       @id
-  equipmentId                            String?
-  equipmentName                          String                       @db.VarChar(100)
-  quantity                               Int
-  price                                  Decimal                      @db.Decimal(13, 2)
-  branchId                               String
-  requestType                            equipmentedit_requestType
-  approvalStatus                         equipmentedit_approvalStatus @default(pending)
-  createdAt                              DateTime                     @default(now())
-  createdByUser                          String
-  updatedAt                              DateTime
-  updatedByUser                          String
-  branch                                 branch                       @relation(fields: [branchId], references: [id], map: "EquipmentEdit_branchId_fkey")
-  user_equipmentedit_createdByUserTouser user                         @relation("equipmentedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "EquipmentEdit_createdByUser_fkey")
-  equipment                              equipment?                   @relation(fields: [equipmentId], references: [id], map: "EquipmentEdit_equipmentId_fkey")
-  user_equipmentedit_updatedByUserTouser user                         @relation("equipmentedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "EquipmentEdit_updatedByUser_fkey")
-
-  @@index([branchId], map: "EquipmentEdit_branchId_fkey")
-  @@index([createdByUser], map: "EquipmentEdit_createdByUser_fkey")
-  @@index([equipmentId], map: "EquipmentEdit_equipmentId_fkey")
-  @@index([updatedByUser], map: "EquipmentEdit_updatedByUser_fkey")
-}
-
-model joborder {
-  id                                String          @id
-  jobOrderCode                      String          @unique(map: "JobOrder_jobOrderCode_key")
-  truckId                           String
-  branchId                          String
-  customerId                        String
-  contractorId                      String?
-  status                            joborder_status @default(pending)
-  description                       String
-  labor                             Decimal?        @db.Decimal(13, 2)
-  contractorPercent                 Decimal?        @db.Decimal(13, 2)
-  completedAt                       DateTime?
-  createdAt                         DateTime        @default(now())
-  createdByUser                     String
-  updatedAt                         DateTime
-  updatedByUser                     String
-  branch                            branch          @relation(fields: [branchId], references: [id], map: "JobOrder_branchId_fkey")
-  contractor                        contractor?     @relation(fields: [contractorId], references: [id], map: "JobOrder_contractorId_fkey")
-  user_joborder_createdByUserTouser user            @relation("joborder_createdByUserTouser", fields: [createdByUser], references: [username], map: "JobOrder_createdByUser_fkey")
-  customer                          customer        @relation(fields: [customerId], references: [id], map: "JobOrder_customerId_fkey")
-  truck                             truck           @relation(fields: [truckId], references: [id], onDelete: Cascade, map: "JobOrder_truckId_fkey")
-  user_joborder_updatedByUserTouser user            @relation("joborder_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "JobOrder_updatedByUser_fkey")
-  joborderedit                      joborderedit[]
-  material                          material[]
-  materialedit                      materialedit[]
-  transaction                       transaction[]
-  transactionz                      transactionz[]
-
-  @@index([branchId], map: "JobOrder_branchId_fkey")
-  @@index([contractorId], map: "JobOrder_contractorId_fkey")
-  @@index([createdByUser], map: "JobOrder_createdByUser_fkey")
-  @@index([customerId], map: "JobOrder_customerId_fkey")
-  @@index([truckId], map: "JobOrder_truckId_fkey")
-  @@index([updatedByUser], map: "JobOrder_updatedByUser_fkey")
-}
-
-model joborderedit {
-  id                                    String                      @id
-  jobOrderId                            String?
-  jobOrderCode                          String?
-  branchId                              String
-  truckId                               String
-  customerId                            String
-  contractorId                          String?
-  status                                joborderedit_status         @default(pending)
-  description                           String
-  labor                                 Decimal?                    @db.Decimal(13, 2)
-  contractorPercent                     Decimal?                    @db.Decimal(13, 2)
-  completedAt                           DateTime?
-  requestType                           joborderedit_requestType
-  approvalStatus                        joborderedit_approvalStatus @default(pending)
-  createdAt                             DateTime                    @default(now())
-  createdByUser                         String
-  updatedAt                             DateTime
-  updatedByUser                         String
-  branch                                branch                      @relation(fields: [branchId], references: [id], map: "JobOrderEdit_branchId_fkey")
-  contractor                            contractor?                 @relation(fields: [contractorId], references: [id], map: "JobOrderEdit_contractorId_fkey")
-  user_joborderedit_createdByUserTouser user                        @relation("joborderedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "JobOrderEdit_createdByUser_fkey")
-  customer                              customer                    @relation(fields: [customerId], references: [id], map: "JobOrderEdit_customerId_fkey")
-  joborder                              joborder?                   @relation(fields: [jobOrderId], references: [id], map: "JobOrderEdit_jobOrderId_fkey")
-  truck                                 truck                       @relation(fields: [truckId], references: [id], onDelete: Cascade, map: "JobOrderEdit_truckId_fkey")
-  user_joborderedit_updatedByUserTouser user                        @relation("joborderedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "JobOrderEdit_updatedByUser_fkey")
-
-  @@index([branchId], map: "JobOrderEdit_branchId_fkey")
-  @@index([contractorId], map: "JobOrderEdit_contractorId_fkey")
-  @@index([createdByUser], map: "JobOrderEdit_createdByUser_fkey")
-  @@index([customerId], map: "JobOrderEdit_customerId_fkey")
-  @@index([jobOrderId], map: "JobOrderEdit_jobOrderId_fkey")
-  @@index([truckId], map: "JobOrderEdit_truckId_fkey")
-  @@index([updatedByUser], map: "JobOrderEdit_updatedByUser_fkey")
-}
-
-model material {
-  id           String   @id
-  jobOrderId   String
-  materialName String   @db.VarChar(100)
-  quantity     Int
-  price        Decimal  @db.Decimal(13, 2)
-  createdAt    DateTime @default(now())
-  joborder     joborder @relation(fields: [jobOrderId], references: [id], map: "Material_jobOrderId_fkey")
-
-  @@index([jobOrderId], map: "Material_jobOrderId_fkey")
-}
-
-model materialedit {
-  id             String                      @id
-  jobOrderId     String?
-  materialName   String                      @db.VarChar(100)
-  quantity       Int
-  price          Decimal                     @db.Decimal(13, 2)
-  requestType    materialedit_requestType
-  approvalStatus materialedit_approvalStatus @default(pending)
-  createdAt      DateTime                    @default(now())
-  joborder       joborder?                   @relation(fields: [jobOrderId], references: [id], map: "MaterialEdit_jobOrderId_fkey")
-
-  @@index([jobOrderId], map: "MaterialEdit_jobOrderId_fkey")
-}
-
-model otherincome {
-  id                                   String            @id
-  description                          String
-  amount                               Decimal           @db.Decimal(13, 2)
-  branchId                             String
-  createdAt                            DateTime          @default(now())
-  createdByUser                        String
-  updatedAt                            DateTime
-  updatedByUser                        String
-  branch                               branch            @relation(fields: [branchId], references: [id], map: "OtherIncome_branchId_fkey")
-  user_otherincome_createdByUserTouser user              @relation("otherincome_createdByUserTouser", fields: [createdByUser], references: [username], map: "OtherIncome_createdByUser_fkey")
-  user_otherincome_updatedByUserTouser user              @relation("otherincome_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "OtherIncome_updatedByUser_fkey")
-  otherincomeedit                      otherincomeedit[]
-
-  @@index([branchId], map: "OtherIncome_branchId_fkey")
-  @@index([createdByUser], map: "OtherIncome_createdByUser_fkey")
-  @@index([updatedByUser], map: "OtherIncome_updatedByUser_fkey")
-}
-
-model otherincomeedit {
-  id                                       String                         @id
-  otherIncomeId                            String?
-  description                              String
-  amount                                   Decimal                        @db.Decimal(13, 2)
-  branchId                                 String
-  requestType                              otherincomeedit_requestType
-  approvalStatus                           otherincomeedit_approvalStatus @default(pending)
-  createdAt                                DateTime                       @default(now())
-  createdByUser                            String
-  updatedAt                                DateTime
-  updatedByUser                            String
-  branch                                   branch                         @relation(fields: [branchId], references: [id], map: "OtherIncomeEdit_branchId_fkey")
-  user_otherincomeedit_createdByUserTouser user                           @relation("otherincomeedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "OtherIncomeEdit_createdByUser_fkey")
-  otherincome                              otherincome?                   @relation(fields: [otherIncomeId], references: [id], map: "OtherIncomeEdit_otherIncomeId_fkey")
-  user_otherincomeedit_updatedByUserTouser user                           @relation("otherincomeedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "OtherIncomeEdit_updatedByUser_fkey")
-
-  @@index([branchId], map: "OtherIncomeEdit_branchId_fkey")
-  @@index([createdByUser], map: "OtherIncomeEdit_createdByUser_fkey")
-  @@index([otherIncomeId], map: "OtherIncomeEdit_otherIncomeId_fkey")
-  @@index([updatedByUser], map: "OtherIncomeEdit_updatedByUser_fkey")
-}
-
-model overhead {
-  id                                String         @id
-  description                       String
-  amount                            Decimal        @db.Decimal(13, 2)
-  branchId                          String
-  createdAt                         DateTime       @default(now())
-  createdByUser                     String
-  updatedAt                         DateTime
-  updatedByUser                     String
-  branch                            branch         @relation(fields: [branchId], references: [id], map: "Overhead_branchId_fkey")
-  user_overhead_createdByUserTouser user           @relation("overhead_createdByUserTouser", fields: [createdByUser], references: [username], map: "Overhead_createdByUser_fkey")
-  user_overhead_updatedByUserTouser user           @relation("overhead_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "Overhead_updatedByUser_fkey")
-  overheadedit                      overheadedit[]
-
-  @@index([branchId], map: "Overhead_branchId_fkey")
-  @@index([createdByUser], map: "Overhead_createdByUser_fkey")
-  @@index([updatedByUser], map: "Overhead_updatedByUser_fkey")
-}
-
-model overheadedit {
-  id                                    String                      @id
-  overheadId                            String
-  description                           String
-  amount                                Decimal                     @db.Decimal(13, 2)
-  branchId                              String
-  requestType                           overheadedit_requestType
-  approvalStatus                        overheadedit_approvalStatus @default(pending)
-  createdAt                             DateTime                    @default(now())
-  createdByUser                         String
-  updatedAt                             DateTime
-  updatedByUser                         String
-  branch                                branch                      @relation(fields: [branchId], references: [id], map: "OverheadEdit_branchId_fkey")
-  user_overheadedit_createdByUserTouser user                        @relation("overheadedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "OverheadEdit_createdByUser_fkey")
-  overhead                              overhead                    @relation(fields: [overheadId], references: [id], map: "OverheadEdit_overheadId_fkey")
-  user_overheadedit_updatedByUserTouser user                        @relation("overheadedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "OverheadEdit_updatedByUser_fkey")
-
-  @@index([branchId], map: "OverheadEdit_branchId_fkey")
-  @@index([createdByUser], map: "OverheadEdit_createdByUser_fkey")
-  @@index([overheadId], map: "OverheadEdit_overheadId_fkey")
-  @@index([updatedByUser], map: "OverheadEdit_updatedByUser_fkey")
-}
-
-model paycomponent {
-  id                                    String      @id
-  amount                                Decimal     @db.Decimal(13, 2)
-  componentId                           String
-  createdAt                             DateTime    @default(now())
-  createdByUser                         String
-  employeePayId                         String
-  updatedAt                             DateTime
-  updatedByUser                         String
-  component                             component   @relation(fields: [componentId], references: [id], map: "PayComponent_componentId_fkey")
-  user_paycomponent_createdByUserTouser user        @relation("paycomponent_createdByUserTouser", fields: [createdByUser], references: [username], map: "PayComponent_createdByUser_fkey")
-  employeepay                           employeepay @relation(fields: [employeePayId], references: [id], map: "PayComponent_employeePayId_fkey")
-  user_paycomponent_updatedByUserTouser user        @relation("paycomponent_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "PayComponent_updatedByUser_fkey")
-
-  @@index([componentId], map: "PayComponent_componentId_fkey")
-  @@index([createdByUser], map: "PayComponent_createdByUser_fkey")
-  @@index([employeePayId], map: "PayComponent_employeePayId_fkey")
-  @@index([updatedByUser], map: "PayComponent_updatedByUser_fkey")
-}
-
-model permission {
-  id             String            @id
-  module         permission_module
-  permissionName String            @unique(map: "Permission_permissionName_key") @db.VarChar(100)
-  method         permission_method
-  description    String?
-  rolepermission rolepermission[]
-}
-
-model role {
-  id             String           @id
-  roleName       String           @unique(map: "Role_roleName_key") @db.VarChar(100)
-  baseRoleId     String?
-  isCustom       Boolean?
-  createdByUser  String?
-  role           role?            @relation("roleTorole", fields: [baseRoleId], references: [id], onDelete: Cascade, map: "Role_baseRoleId_fkey")
-  other_role     role[]           @relation("roleTorole")
-  user           user?            @relation(fields: [createdByUser], references: [username], onDelete: Restrict, map: "Role_createdByUser_fkey")
-  rolepermission rolepermission[]
-  userrole       userrole[]
-  userroleedit   userroleedit[]
-
-  @@index([baseRoleId], map: "Role_baseRoleId_fkey")
-  @@index([createdByUser], map: "Role_createdByUser_fkey")
-}
-
-model rolepermission {
-  id           String     @id
-  roleId       String
-  permissionId String
-  approval     Boolean
-  permission   permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, map: "RolePermission_permissionId_fkey")
-  role         role       @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "RolePermission_roleId_fkey")
-
-  @@unique([roleId, permissionId], map: "RolePermission_roleId_permissionId_key")
-  @@index([permissionId], map: "RolePermission_permissionId_fkey")
-}
-
-model transaction {
-  id                                   String             @id
-  mop                                  String?            @db.VarChar(20)
-  amount                               Decimal            @db.Decimal(13, 2)
-  createdAt                            DateTime           @default(now())
-  createdByUser                        String?
-  updatedAt                            DateTime
-  updatedByUser                        String?
-  email                                String?
-  jobOrderCode                         String
-  referenceNumber                      String?
-  senderName                           String             @db.VarChar(100)
-  sessionId                            String?            @unique(map: "Transaction_sessionId_key")
-  status                               transaction_status @default(pending)
-  user_transaction_createdByUserTouser user?              @relation("transaction_createdByUserTouser", fields: [createdByUser], references: [username], onDelete: Restrict, map: "Transaction_createdByUser_fkey")
-  joborder                             joborder           @relation(fields: [jobOrderCode], references: [jobOrderCode], map: "Transaction_jobOrderCode_fkey")
-  user_transaction_updatedByUserTouser user?              @relation("transaction_updatedByUserTouser", fields: [updatedByUser], references: [username], onDelete: Restrict, map: "Transaction_updatedByUser_fkey")
-
-  @@index([createdByUser], map: "Transaction_createdByUser_fkey")
-  @@index([jobOrderCode], map: "Transaction_jobOrderCode_fkey")
-  @@index([updatedByUser], map: "Transaction_updatedByUser_fkey")
-}
-
-model transactioneditz {
-  id                                        String                          @id
-  transactionId                             String
-  transactionName                           String                          @db.VarChar(100)
-  mop                                       String                          @db.VarChar(20)
-  amount                                    Decimal                         @db.Decimal(13, 2)
-  requestType                               transactioneditz_requestType
-  approvalStatus                            transactioneditz_approvalStatus @default(pending)
-  createdAt                                 DateTime                        @default(now())
-  createdByUser                             String
-  updatedAt                                 DateTime
-  updatedByUser                             String
-  user_transactioneditz_createdByUserTouser user                            @relation("transactioneditz_createdByUserTouser", fields: [createdByUser], references: [username], map: "TransactionEditZ_createdByUser_fkey")
-  transactionz                              transactionz                    @relation(fields: [transactionId], references: [id], map: "TransactionEditZ_transactionId_fkey")
-  user_transactioneditz_updatedByUserTouser user                            @relation("transactioneditz_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "TransactionEditZ_updatedByUser_fkey")
-
-  @@index([createdByUser], map: "TransactionEditZ_createdByUser_fkey")
-  @@index([transactionId], map: "TransactionEditZ_transactionId_fkey")
-  @@index([updatedByUser], map: "TransactionEditZ_updatedByUser_fkey")
-}
-
-model transactionz {
-  id                                    String                      @id
-  jobOrderId                            String
-  transactionName                       String                      @db.VarChar(100)
-  mop                                   String                      @db.VarChar(20)
-  amount                                Decimal                     @db.Decimal(13, 2)
-  approvalStatus                        transactionz_approvalStatus @default(pending)
-  createdAt                             DateTime                    @default(now())
-  createdByUser                         String
-  updatedAt                             DateTime
-  updatedByUser                         String
-  transactioneditz                      transactioneditz[]
-  user_transactionz_createdByUserTouser user                        @relation("transactionz_createdByUserTouser", fields: [createdByUser], references: [username], map: "TransactionZ_createdByUser_fkey")
-  joborder                              joborder                    @relation(fields: [jobOrderId], references: [id], map: "TransactionZ_jobOrderId_fkey")
-  user_transactionz_updatedByUserTouser user                        @relation("transactionz_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "TransactionZ_updatedByUser_fkey")
-
-  @@index([createdByUser], map: "TransactionZ_createdByUser_fkey")
-  @@index([jobOrderId], map: "TransactionZ_jobOrderId_fkey")
-  @@index([updatedByUser], map: "TransactionZ_updatedByUser_fkey")
-}
-
-model truck {
-  id                             String               @id
-  plate                          String               @unique(map: "Truck_plate_key") @db.VarChar(10)
-  make                           String               @db.VarChar(20)
-  model                          String               @db.VarChar(20)
-  createdAt                      DateTime             @default(now())
-  createdByUser                  String
-  updatedAt                      DateTime
-  updatedByUser                  String
-  joborder                       joborder[]
-  joborderedit                   joborderedit[]
-  user_truck_createdByUserTouser user                 @relation("truck_createdByUserTouser", fields: [createdByUser], references: [username], map: "Truck_createdByUser_fkey")
-  user_truck_updatedByUserTouser user                 @relation("truck_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "Truck_updatedByUser_fkey")
-  truckedit                      truckedit[]
-  truckownership                 truckownership[]
-  truckownershipedit             truckownershipedit[]
-
-  @@index([createdByUser], map: "Truck_createdByUser_fkey")
-  @@index([updatedByUser], map: "Truck_updatedByUser_fkey")
-}
-
-model truckedit {
-  id                                 String                   @id
-  truckId                            String?
-  plate                              String                   @db.VarChar(10)
-  make                               String                   @db.VarChar(20)
-  model                              String                   @db.VarChar(20)
-  approvalStatus                     truckedit_approvalStatus @default(pending)
-  requestType                        truckedit_requestType    @default(create)
-  createdAt                          DateTime                 @default(now())
-  createdByUser                      String
-  updatedAt                          DateTime
-  updatedByUser                      String
-  user_truckedit_createdByUserTouser user                     @relation("truckedit_createdByUserTouser", fields: [createdByUser], references: [username], map: "TruckEdit_createdByUser_fkey")
-  truck                              truck?                   @relation(fields: [truckId], references: [id], onDelete: Cascade, map: "TruckEdit_truckId_fkey")
-  user_truckedit_updatedByUserTouser user                     @relation("truckedit_updatedByUserTouser", fields: [updatedByUser], references: [username], map: "TruckEdit_updatedByUser_fkey")
-
-  @@index([createdByUser], map: "TruckEdit_createdByUser_fkey")
-  @@index([truckId], map: "TruckEdit_truckId_fkey")
-  @@index([updatedByUser], map: "TruckEdit_updatedByUser_fkey")
-}
-
-model truckownership {
-  id                String    @id
-  truckId           String
-  customerId        String
-  transferredByUser String
-  startDate         DateTime  @default(now())
-  endDate           DateTime?
-  customer          customer  @relation(fields: [customerId], references: [id], map: "TruckOwnership_customerId_fkey")
-  user              user      @relation(fields: [transferredByUser], references: [username], map: "TruckOwnership_transferredByUser_fkey")
-  truck             truck     @relation(fields: [truckId], references: [id], onDelete: Cascade, map: "TruckOwnership_truckId_fkey")
-
-  @@index([customerId], map: "TruckOwnership_customerId_fkey")
-  @@index([transferredByUser], map: "TruckOwnership_transferredByUser_fkey")
-  @@index([truckId], map: "TruckOwnership_truckId_fkey")
-}
-
-model truckownershipedit {
-  id                String                            @id
-  truckId           String
-  customerId        String
-  requestType       truckownershipedit_requestType
-  transferredByUser String
-  startDate         DateTime                          @default(now())
-  endDate           DateTime?
-  approvalStatus    truckownershipedit_approvalStatus @default(pending)
-  customer          customer                          @relation(fields: [customerId], references: [id], map: "TruckOwnershipEdit_customerId_fkey")
-  user              user                              @relation(fields: [transferredByUser], references: [username], map: "TruckOwnershipEdit_transferredByUser_fkey")
-  truck             truck                             @relation(fields: [truckId], references: [id], onDelete: Cascade, map: "TruckOwnershipEdit_truckId_fkey")
-
-  @@index([customerId], map: "TruckOwnershipEdit_customerId_fkey")
-  @@index([transferredByUser], map: "TruckOwnershipEdit_transferredByUser_fkey")
-  @@index([truckId], map: "TruckOwnershipEdit_truckId_fkey")
-}
-
-model user {
-  id                                                        String               @id
-  fullName                                                  String               @db.VarChar(100)
-  username                                                  String               @unique(map: "User_username_key") @db.VarChar(100)
-  phone                                                     String               @db.VarChar(13)
-  email                                                     String               @unique(map: "User_email_key") @db.VarChar(100)
-  hashPwd                                                   String               @db.VarChar(255)
-  description                                               String?
-  refreshToken                                              String?
-  createdAt                                                 DateTime             @default(now())
-  createdByUser                                             String?
-  updatedAt                                                 DateTime
-  updatedByUser                                             String?
-  status                                                    user_status?
-  activitylog                                               activitylog[]
-  admin                                                     admin?
-  branch_branch_createdByUserTouser                         branch[]             @relation("branch_createdByUserTouser")
-  branch_branch_updatedByUserTouser                         branch[]             @relation("branch_updatedByUserTouser")
-  branchedit_branchedit_createdByUserTouser                 branchedit[]         @relation("branchedit_createdByUserTouser")
-  branchedit_branchedit_updatedByUserTouser                 branchedit[]         @relation("branchedit_updatedByUserTouser")
-  contractor                                                contractor?
-  contractorpay_contractorpay_createdByUserTouser           contractorpay[]      @relation("contractorpay_createdByUserTouser")
-  contractorpay_contractorpay_updatedByUserTouser           contractorpay[]      @relation("contractorpay_updatedByUserTouser")
-  contractorpayedit_contractorpayedit_createdByUserTouser   contractorpayedit[]  @relation("contractorpayedit_createdByUserTouser")
-  contractorpayedit_contractorpayedit_updatedByUserTouser   contractorpayedit[]  @relation("contractorpayedit_updatedByUserTouser")
-  customer                                                  customer?
-  employee                                                  employee?
-  employeepay_employeepay_createdByUserTouser               employeepay[]        @relation("employeepay_createdByUserTouser")
-  employeepay_employeepay_updatedByUserTouser               employeepay[]        @relation("employeepay_updatedByUserTouser")
-  employeesalary_employeesalary_createdByUserTouser         employeesalary[]     @relation("employeesalary_createdByUserTouser")
-  employeesalary_employeesalary_updatedByUserTouser         employeesalary[]     @relation("employeesalary_updatedByUserTouser")
-  employeesalaryedit_employeesalaryedit_createdByUserTouser employeesalaryedit[] @relation("employeesalaryedit_createdByUserTouser")
-  employeesalaryedit_employeesalaryedit_updatedByUserTouser employeesalaryedit[] @relation("employeesalaryedit_updatedByUserTouser")
-  equipment_equipment_createdByUserTouser                   equipment[]          @relation("equipment_createdByUserTouser")
-  equipment_equipment_updatedByUserTouser                   equipment[]          @relation("equipment_updatedByUserTouser")
-  equipmentedit_equipmentedit_createdByUserTouser           equipmentedit[]      @relation("equipmentedit_createdByUserTouser")
-  equipmentedit_equipmentedit_updatedByUserTouser           equipmentedit[]      @relation("equipmentedit_updatedByUserTouser")
-  joborder_joborder_createdByUserTouser                     joborder[]           @relation("joborder_createdByUserTouser")
-  joborder_joborder_updatedByUserTouser                     joborder[]           @relation("joborder_updatedByUserTouser")
-  joborderedit_joborderedit_createdByUserTouser             joborderedit[]       @relation("joborderedit_createdByUserTouser")
-  joborderedit_joborderedit_updatedByUserTouser             joborderedit[]       @relation("joborderedit_updatedByUserTouser")
-  otherincome_otherincome_createdByUserTouser               otherincome[]        @relation("otherincome_createdByUserTouser")
-  otherincome_otherincome_updatedByUserTouser               otherincome[]        @relation("otherincome_updatedByUserTouser")
-  otherincomeedit_otherincomeedit_createdByUserTouser       otherincomeedit[]    @relation("otherincomeedit_createdByUserTouser")
-  otherincomeedit_otherincomeedit_updatedByUserTouser       otherincomeedit[]    @relation("otherincomeedit_updatedByUserTouser")
-  overhead_overhead_createdByUserTouser                     overhead[]           @relation("overhead_createdByUserTouser")
-  overhead_overhead_updatedByUserTouser                     overhead[]           @relation("overhead_updatedByUserTouser")
-  overheadedit_overheadedit_createdByUserTouser             overheadedit[]       @relation("overheadedit_createdByUserTouser")
-  overheadedit_overheadedit_updatedByUserTouser             overheadedit[]       @relation("overheadedit_updatedByUserTouser")
-  paycomponent_paycomponent_createdByUserTouser             paycomponent[]       @relation("paycomponent_createdByUserTouser")
-  paycomponent_paycomponent_updatedByUserTouser             paycomponent[]       @relation("paycomponent_updatedByUserTouser")
-  role                                                      role[]
-  transaction_transaction_createdByUserTouser               transaction[]        @relation("transaction_createdByUserTouser")
-  transaction_transaction_updatedByUserTouser               transaction[]        @relation("transaction_updatedByUserTouser")
-  transactioneditz_transactioneditz_createdByUserTouser     transactioneditz[]   @relation("transactioneditz_createdByUserTouser")
-  transactioneditz_transactioneditz_updatedByUserTouser     transactioneditz[]   @relation("transactioneditz_updatedByUserTouser")
-  transactionz_transactionz_createdByUserTouser             transactionz[]       @relation("transactionz_createdByUserTouser")
-  transactionz_transactionz_updatedByUserTouser             transactionz[]       @relation("transactionz_updatedByUserTouser")
-  truck_truck_createdByUserTouser                           truck[]              @relation("truck_createdByUserTouser")
-  truck_truck_updatedByUserTouser                           truck[]              @relation("truck_updatedByUserTouser")
-  truckedit_truckedit_createdByUserTouser                   truckedit[]          @relation("truckedit_createdByUserTouser")
-  truckedit_truckedit_updatedByUserTouser                   truckedit[]          @relation("truckedit_updatedByUserTouser")
-  truckownership                                            truckownership[]
-  truckownershipedit                                        truckownershipedit[]
-  user_user_createdByUserTouser                             user?                @relation("user_createdByUserTouser", fields: [createdByUser], references: [username], onDelete: Restrict, map: "User_createdByUser_fkey")
-  other_user_user_createdByUserTouser                       user[]               @relation("user_createdByUserTouser")
-  user_user_updatedByUserTouser                             user?                @relation("user_updatedByUserTouser", fields: [updatedByUser], references: [username], onDelete: Restrict, map: "User_updatedByUser_fkey")
-  other_user_user_updatedByUserTouser                       user[]               @relation("user_updatedByUserTouser")
-  userbranch                                                userbranch[]
-  userbranchedit                                            userbranchedit[]
-  useredit_useredit_createdByUserTouser                     useredit[]           @relation("useredit_createdByUserTouser")
-  useredit_useredit_updatedByUserTouser                     useredit[]           @relation("useredit_updatedByUserTouser")
-  useredit_useredit_userIdTouser                            useredit[]           @relation("useredit_userIdTouser")
-  userrole                                                  userrole[]
-  userroleedit                                              userroleedit[]
-
-  @@index([createdByUser], map: "User_createdByUser_fkey")
-  @@index([updatedByUser], map: "User_updatedByUser_fkey")
-}
-
-model userbranch {
-  id       String @id
-  userId   String
-  branchId String
-  branch   branch @relation(fields: [branchId], references: [id], onDelete: Cascade, map: "UserBranch_branchId_fkey")
-  user     user   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserBranch_userId_fkey")
-
-  @@unique([userId, branchId], map: "UserBranch_userId_branchId_key")
-  @@index([branchId], map: "UserBranch_branchId_fkey")
-}
-
-model userbranchedit {
-  id             String                        @id
-  userId         String
-  branchId       String
-  approvalStatus userbranchedit_approvalStatus @default(pending)
-  requestType    userbranchedit_requestType
-  branch         branch                        @relation(fields: [branchId], references: [id], onDelete: Cascade, map: "UserBranchEdit_branchId_fkey")
-  user           user                          @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserBranchEdit_userId_fkey")
-
-  @@unique([userId, branchId], map: "UserBranchEdit_userId_branchId_key")
-  @@index([branchId], map: "UserBranchEdit_branchId_fkey")
-}
-
-model useredit {
-  id                                String                  @id
-  userId                            String?
-  fullName                          String                  @db.VarChar(100)
-  username                          String                  @db.VarChar(100)
-  phone                             String                  @db.VarChar(13)
-  email                             String                  @db.VarChar(100)
-  hashPwd                           String                  @db.VarChar(255)
-  description                       String?
-  requestType                       useredit_requestType
-  approvalStatus                    useredit_approvalStatus @default(pending)
-  createdAt                         DateTime                @default(now())
-  createdByUser                     String?
-  updatedAt                         DateTime?
-  updatedByUser                     String?
-  user_useredit_createdByUserTouser user?                   @relation("useredit_createdByUserTouser", fields: [createdByUser], references: [username], onDelete: Restrict, map: "UserEdit_createdByUser_fkey")
-  user_useredit_updatedByUserTouser user?                   @relation("useredit_updatedByUserTouser", fields: [updatedByUser], references: [username], onDelete: Restrict, map: "UserEdit_updatedByUser_fkey")
-  user_useredit_userIdTouser        user?                   @relation("useredit_userIdTouser", fields: [userId], references: [id], onDelete: Cascade, map: "UserEdit_userId_fkey")
-
-  @@index([createdByUser], map: "UserEdit_createdByUser_fkey")
-  @@index([updatedByUser], map: "UserEdit_updatedByUser_fkey")
-  @@index([userId], map: "UserEdit_userId_fkey")
-}
-
-model userrole {
-  id     String @id
-  userId String
-  roleId String
-  role   role   @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "UserRole_roleId_fkey")
-  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserRole_userId_fkey")
-
-  @@unique([userId, roleId], map: "UserRole_userId_roleId_key")
-  @@index([roleId], map: "UserRole_roleId_fkey")
-}
-
-model userroleedit {
-  id             String                      @id
-  roleId         String
-  approvalStatus userroleedit_approvalStatus @default(pending)
-  userId         String
-  requestType    userroleedit_requestType
-  role           role                        @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "UserRoleEdit_roleId_fkey")
-  user           user                        @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserRoleEdit_userId_fkey")
-
-  @@unique([userId, roleId], map: "UserRoleEdit_userId_roleId_key")
-  @@index([roleId], map: "UserRoleEdit_roleId_fkey")
-}
-
-enum permission_module {
-  Dashboard
-  Job_Orders                         @map("Job Orders")
-  Other_Incomes                      @map("Other Incomes")
-  Transactions
-  Branches
-  Finances___Revenue_and_Profit      @map("Finances - Revenue and Profit")
-  Finances___Operational___Materials @map("Finances - Operational - Materials")
-  Finances___Operational___Equipment @map("Finances - Operational - Equipment")
-  Finances___Operational___Labor     @map("Finances - Operational - Labor")
-  Finances___Overhead                @map("Finances - Overhead")
-  Trucks
-  Activity_Logs                      @map("Activity Logs")
-  Users___All_Users                  @map("Users - All Users")
-  Users___Roles_and_Permissions      @map("Users - Roles and Permissions")
-  My_Dashboard                       @map("My Dashboard")
-  Assigned_Orders                    @map("Assigned Orders")
-  My_Payout                          @map("My Payout")
-  My_Orders                          @map("My Orders")
-  My_Transactions                    @map("My Transactions")
-  My_Trucks                          @map("My Trucks")
-  My_Salary                          @map("My Salary")
-  Profile
-}
-
-enum approvallog_module {
-  Dashboard
-  Job_Orders                         @map("Job Orders")
-  Other_Incomes                      @map("Other Incomes")
-  Transactions
-  Branches
-  Finances___Revenue_and_Profit      @map("Finances - Revenue and Profit")
-  Finances___Operational___Materials @map("Finances - Operational - Materials")
-  Finances___Operational___Equipment @map("Finances - Operational - Equipment")
-  Finances___Operational___Labor     @map("Finances - Operational - Labor")
-  Finances___Overhead                @map("Finances - Overhead")
-  Trucks
-  Activity_Logs                      @map("Activity Logs")
-  Users___All_Users                  @map("Users - All Users")
-  Users___Roles_and_Permissions      @map("Users - Roles and Permissions")
-  My_Dashboard                       @map("My Dashboard")
-  Assigned_Orders                    @map("Assigned Orders")
-  My_Payout                          @map("My Payout")
-  My_Orders                          @map("My Orders")
-  My_Transactions                    @map("My Transactions")
-  My_Trucks                          @map("My Trucks")
-  My_Salary                          @map("My Salary")
-  Profile
-}
-
-enum approvallog_table {
-  Dashboard
-  Job_Orders            @map("Job Orders")
-  Other_Incomes
-  Transactions
-  Revenue_and_Profit    @map("Revenue and Profit")
-  Material_Expenses     @map("Material Expenses")
-  Equipment_Expenses    @map("Equipment Expenses")
-  Labor_Expenses        @map("Labor Expenses")
-  Trucks
-  Activity_Logs         @map("Activity Logs")
-  All_Users             @map("All Users")
-  Roles_and_Permissions @map("Roles and Permissions")
-  My_Profile            @map("My Profile")
-  My_Dashboard          @map("My Dashboard")
-  Assigned_Orders       @map("Assigned Orders")
-  My_Payout             @map("My Payout")
-  My_Orders
-  My_Transactions
-  My_Trucks
-  My_Salary
-  Profile
-}
-
-enum userroleedit_approvalStatus {
+enum ApprovalStatus {
   pending
   published
   rejected
 }
 
-enum contractorpay_type {
+enum RequestType {
+  edit
+  delete
+  create
+}
+
+enum LaborType {
+  employee
+  contractor
+}
+
+enum PaymentType {
   regular
   advance
 }
 
-enum employeesalaryedit_type {
-  regular
-  advance
+enum TransactionStatus {
+  pending
+  successful
+  failed
 }
 
-enum permission_method {
+enum Method {
   view
   create
   edit
   delete
 }
 
-enum contractorpayedit_type {
-  regular
-  advance
-}
-
-enum userbranchedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum truckownershipedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum employeesalary_type {
-  regular
-  advance
-}
-
-enum userbranchedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum userroleedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum employeesalaryedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum materialedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum contractorpayedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum transactionz_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum otherincomeedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum branchedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum overheadedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum employeesalary_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum transactioneditz_requestType {
-  edit
-  delete
-  create
-}
-
-enum truckedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum employeesalaryedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum employeepay_type {
-  regular
-  advance
-}
-
-enum materialedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum joborder_status {
-  pending
-  ongoing
-  completed
-  forRelease
-  archive
-}
-
-enum contractorpayedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum equipmentedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum otherincomeedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum branchedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum overheadedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum transactioneditz_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum truckedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum equipmentedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum truckownershipedit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum joborderedit_status {
-  pending
-  ongoing
-  completed
-  forRelease
-  archive
-}
-
-enum useredit_requestType {
-  edit
-  delete
-  create
-}
-
-enum useredit_approvalStatus {
-  pending
-  published
-  rejected
-}
-
-enum user_status {
-  active
-  inactive
-}
-
-enum transaction_status {
-  pending
-  successful
-  failed
-}
-
-enum joborderedit_requestType {
-  edit
-  delete
-  create
-}
-
-enum joborderedit_approvalStatus {
-  pending
-  published
-  rejected
-rders @map("Assigned Orders")
+enum Module {
+  Dashboard
+  Job_Orders @map("Job Orders")
+  Other_Incomes @map("Other Incomes")
+  Transactions @map("Transactions")
+  Branches
+  Finances_Revenue_And_Profit @map("Finances - Revenue and Profit")
+  Finances_Operational_Materials @map("Finances - Operational - Materials")
+  Finances_Operational_Equipment @map("Finances - Operational - Equipment")
+  Finances_Operational_Labor @map("Finances - Operational - Labor")
+  Finances_Overhead @map("Finances - Overhead")
+  Trucks @map("Trucks")
+  Activity_Logs @map("Activity Logs")
+  Users_All_Users @map("Users - All Users")
+  Users_Roles_And_Permissions @map("Users - Roles and Permissions")
+  My_Dashboard @map("My Dashboard")
+  Assigned_Orders @map("Assigned Orders")
   My_Payout @map("My Payout")
   My_Orders @map("My Orders")
   My_Transactions @map("My Transactions")
@@ -1140,5 +904,4 @@ enum TableName {
   My_Trucks
   My_Salary
   Profile
-
 }

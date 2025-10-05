@@ -1923,3 +1923,7 @@
 20251005	12:44:18	8eef4083-a778-48a5-801e-adc1e31adacf	GET	undefined	/api/users
 20251005	12:44:45	b92939a1-22aa-425b-813a-f91f5c87e18a	POST	undefined	/api/components
 20251005	12:45:42	a01ef39c-066f-40e1-8ce1-dffe5e49641d	POST	undefined	/api/branches
+20251005	13:44:40	2c2cf00d-6848-4cea-b214-cb3ad73dc124	GET	undefined	/api/branches
+20251005	13:53:25	7d54c7b2-206f-45e5-9b12-d24bbd51cfbe	GET	undefined	/api/branches
+20251005	13:53:32	10078583-4d3c-4bcd-bf36-df73b3985588	GET	undefined	/refresh
+20251005	13:53:45	c6127565-e35a-4a0a-bde2-15b15bf50856	GET	undefined	/api/users
