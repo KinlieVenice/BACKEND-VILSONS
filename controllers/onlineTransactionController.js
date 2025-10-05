@@ -1,6 +1,6 @@
 const axios = require("axios");
 const crypto = require("crypto");
-const { PrismaClient } = require("../generated/prisma");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 // 1. Create Checkout Session

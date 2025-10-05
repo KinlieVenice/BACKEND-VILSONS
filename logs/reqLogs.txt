@@ -1911,3 +1911,9 @@
 20251004	23:27:06	1f1bb78b-d772-4bfd-ab90-d6b17f737c4b	GET	undefined	/api/customers/7f2fce05-56c4-4a0f-9299-fea455a1fbd6
 20251004	23:28:23	fc4f4e77-c275-460e-a499-facc0b7ca589	GET	undefined	/api/customers/7f2fce05-56c4-4a0f-9299-fea455a1fbd6?filter=active
 20251004	23:28:29	422cc181-f01e-436c-a824-3f4e27a2ffab	GET	undefined	/api/customers/7f2fce05-56c4-4a0f-9299-fea455a1fbd6?filter=archived
+20251005	08:47:30	b0b985d2-e71c-4903-9a09-8ff1d0739296	POST	undefined	/auth
+20251005	08:50:25	e0105997-4ab8-4d31-bf2e-f59638fda5b5	GET	undefined	/
+20251005	08:50:26	24d2fb38-a0e5-4698-8895-f4d9ef8b06bb	GET	undefined	/favicon.ico
+20251005	08:51:34	ae58318c-4ce1-4f41-9644-f77c80823bc3	GET	undefined	/
+20251005	08:51:35	7a5c35da-4a7d-4c5c-834a-99d9fb7fa2f5	GET	undefined	/favicon.ico
+20251005	08:58:29	7cd61a3f-b563-493a-9fa8-29621a26637c	GET	undefined	/

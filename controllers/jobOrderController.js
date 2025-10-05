@@ -1,4 +1,4 @@
-const { PrismaClient } = require("../generated/prisma");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const relationsChecker = require("../utils/relationsChecker");

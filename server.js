@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const { PrismaClient } = require('./generated/prisma');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const app = express();
 const path = require("path");
