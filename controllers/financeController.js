@@ -8,82 +8,61 @@ const getRevenueProfit = async (req, res) => {
     // default to current date if not provided
     const now = new Date();
     year = year ? parseInt(year, 10) : now.getFullYear();
+    month = month ? parseInt(month, 10) - 1 : now.getMonth(); // default to current month if not provided
 
+    // always use monthly range unless explicitly requesting yearly
     let startDate, endDate;
-
-    if (month) {
-      // monthly range
-      month = parseInt(month, 10) - 1; // JS months are 0-based
-      startDate = new Date(year, month, 1);
-      endDate = new Date(year, month + 1, 1);
-    } else {
-      // yearly range
+    if (req.query.year && !req.query.month) {
+      // if only year is passed -> yearly range
       startDate = new Date(year, 0, 1);
       endDate = new Date(year + 1, 0, 1);
+    } else {
+      // default: monthly range (either given or current month)
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 1);
     }
 
     const result = await prisma.$transaction(async (tx) => {
-
       const where = {
         createdAt: {
-            gte: startDate,
-            lt: endDate
-        }
-      }
+          gte: startDate,
+          lt: endDate,
+        },
+      };
 
-      const transactions = await tx.transaction.findMany({
-        where, 
-      });
-
-      const otherIncomes = await tx.otherIncome.findMany({
-        where,
-      });
+      const transactions = await tx.transaction.findMany({ where });
+      const otherIncomes = await tx.otherIncome.findMany({ where });
 
       const totalTransactions = transactions.reduce(
-        (sum, t) => sum + Number(t.amount), 
+        (sum, t) => sum + Number(t.amount),
         0
       );
-
       const totalOtherIncomes = otherIncomes.reduce(
-        (sum, t) => sum + Number(t.amount), 
+        (sum, t) => sum + Number(t.amount),
         0
       );
 
-      const materials = await tx.material.findMany({
-        where,
-      });
-
-      const overheads = await tx.overhead.findMany({
-        where,
-      });
-
-      const equipments = await tx.equipment.findMany({
-        where,
-      });
+      const materials = await tx.material.findMany({ where });
+      const overheads = await tx.overhead.findMany({ where });
+      const equipments = await tx.equipment.findMany({ where });
 
       const employeePays = await tx.employeePay.findMany({
         where,
-        include: {
-          payComponents: true, 
-        },
+        include: { payComponents: true },
       });
 
-      const contractorPays = await tx.contractorPay.findMany({
-        where,
-      });
+      const contractorPays = await tx.contractorPay.findMany({ where });
 
       const totalMaterials = materials.reduce(
-        (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
+        (sum, m) => sum + Number(m.price) * Number(m.quantity),
         0
       );
-
       const totalOverheads = overheads.reduce(
-        (sum, t) => sum + Number(t.amount), 
+        (sum, t) => sum + Number(t.amount),
         0
       );
-
       const totalEquipmments = equipments.reduce(
-        (sum, m) => sum + (Number(m.price) * Number(m.quantity)),
+        (sum, m) => sum + Number(m.price) * Number(m.quantity),
         0
       );
 
@@ -96,41 +75,41 @@ const getRevenueProfit = async (req, res) => {
       }, 0);
 
       const totalContractorPays = contractorPays.reduce(
-        (sum, t) => sum + Number(t.amount), 
+        (sum, t) => sum + Number(t.amount),
         0
       );
 
-      // const totalProfit = totalMaterials + totalOverheads + totalEquipmments + totalEmployeePays + totalContractorPays;
       const totalRevenue = totalTransactions + totalOtherIncomes;
       const totalLabor = totalEmployeePays + totalContractorPays;
       const totalOperationals = totalMaterials + totalEquipmments + totalLabor;
-      const grossProfit = totalRevenue - (totalOperationals - totalOverheads)
+      const grossProfit =
+        totalRevenue - (totalOperationals - totalOverheads);
 
-
-
-      return { grossProfit, totalRevenue, totalTransactions, totalOtherIncomes, totalMaterials, totalOverheads, totalEquipmments, totalLabor, totalOperationals}
-    })
+      return {
+        grossProfit,
+        totalRevenue,
+        totalTransactions,
+        totalOtherIncomes,
+        totalMaterials,
+        totalOverheads,
+        totalEquipmments,
+        totalLabor,
+        totalOperationals,
+      };
+    });
 
     return res.json({
-        data: {
-            type: month ? "monthly" : "yearly",
-            // year,
-            // month: month !== undefined ? month + 1 : undefined,
-            totalRevenue: result.totalRevenue,
-            totalTransactions: result.totalTransactions,
-            totalOtherIncomes: result.totalOtherIncomes,
-            grossProfit: result.grossProfit,
-            totalOperationals: result.totalOperationals,
-            totalMaterials: result.totalMaterials,
-            totalEquipmments: result.totalEquipmments,
-            totalLabor: result.totalLabor,
-            totalOverheads: result.totalOverheads,
-
-        }      
+      data: {
+        type: req.query.year && !req.query.month ? "yearly" : "monthly",
+        year,
+        month: req.query.year && !req.query.month ? undefined : month + 1,
+        ...result,
+      },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports = { getRevenueProfit }

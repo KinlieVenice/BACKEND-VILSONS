@@ -10,29 +10,20 @@ const cors = require("cors");
 
 const PORT = process.env.PORT || 3550;
 
+const corsMiddleware = require("./middleware/cors");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const verifyJWT = require('./middleware/verifyJWT');
 const sanitizeInput = require('./middleware/sanitizeInput');
+
+// CORS setup (temporary open version for development)
+app.use(corsMiddleware); // apply global CORS middleware
 
 // middleware for log handling
 app.use(logger);
 
 // urlencoded date
 app.use(express.urlencoded({ extended: false }));
-
-app.use(cors({
-  origin: [
-    "http://localhost:5173", // your local frontend
-    "https://peak-telephony-mix-female.trycloudflare.com" // your public tunnel
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
-
-app.options(/.*/, cors());
-
 
 // json middleware for auto parse
 app.use(express.json());
