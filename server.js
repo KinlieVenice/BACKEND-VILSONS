@@ -42,6 +42,7 @@ app.use(verifyJWT);
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/roles", require("./routes/api/roles"));
 app.use("/api/branches", require("./routes/api/branches"));
+app.use("/api/dashboard", require("./routes/api/dashboard"));
 app.use("/api/trucks", require("./routes/api/trucks"));
 app.use("/api/job-orders", require("./routes/api/jobOrders"));
 app.use("/api/contractor-pay", require("./routes/api/contractorPay"));

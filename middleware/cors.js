@@ -1,16 +1,30 @@
 // middleware/cors.js
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
 const corsMiddleware = (req, res, next) => {
-  // Allow all origins (open CORS)
-  res.header("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+  
+  // Check if the request origin is in our allowed list
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   
   // Allow common HTTP methods
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
   
   // Allow standard headers + Authorization for JWTs
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length");
   
-  // Optional: allow credentials (won’t work with '*' in browsers, but safe for dev)
+  // Allow credentials (only works with specific origins, not wildcard)
   res.header("Access-Control-Allow-Credentials", "true");
+
+  // Expose headers if needed
+  res.header("Access-Control-Expose-Headers", "Authorization");
 
   // Handle preflight OPTIONS requests
   if (req.method === "OPTIONS") {
