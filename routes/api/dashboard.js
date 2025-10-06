@@ -13,4 +13,6 @@ router.route("/profit")
 router.route("/expenses")
 .get(verifyPermission(PERMISSIONS_LIST.CREATE_BRANCH), dashboardController.getExpenses);
 
+router.route("/customer-balance")
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_BRANCH), dashboardController.getCustomerBalance);
 module.exports = router;

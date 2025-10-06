@@ -245,10 +245,54 @@ const getExpenses = async (req, res) => {
   }
 };
 
-
-
 const getCustomerBalance = async (req, res) => {
-    
-}
+  try {
+    const customers = await prisma.customer.findMany({
+      include: {
+        jobOrder: {
+          select: {
+            jobOrderCode: true,
+            labor: true,
+            materials: { select: { price: true, quantity: true } },
+          },
+        },
+      },
+    });
+
+    if (!customers.length) {
+      return res.status(404).json({ message: "No customers found" });
+    }
+
+    let totalBalanceAllCustomers = 0;
+
+    for (const customer of customers) {
+      const jobOrders = customer.jobOrder.map((jo) => {
+        const totalMaterials = jo.materials.reduce(
+          (sum, m) => sum + Number(m.price) * Number(m.quantity),
+          0
+        );
+        return Number(jo.labor) + totalMaterials;
+      });
+
+      const grandTotalBill = jobOrders.reduce((sum, bill) => sum + bill, 0);
+      const jobOrderCodes = customer.jobOrder.map((jo) => jo.jobOrderCode);
+
+      const totalTransactions = await prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: { jobOrderCode: { in: jobOrderCodes } },
+      });
+
+      const paidAmount = totalTransactions._sum.amount || 0;
+      const totalBalance = grandTotalBill - paidAmount;
+
+      totalBalanceAllCustomers += totalBalance;
+    }
+
+    return res.status(200).json({ totalBalanceAllCustomers });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 module.exports = { getRevenue, getProfit, getExpenses, getCustomerBalance }
