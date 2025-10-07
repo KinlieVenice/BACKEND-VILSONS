@@ -12,26 +12,31 @@ const handleLogin = async (req, res) => {
 
   const foundUser = await prisma.user.findUnique({
     where: { username },
-    include: { roles: { include: { role: true } } },
+    include: { 
+      roles: { include: { role: true } },
+      branches: { include: { branch: true} }  },
   });
   if (!foundUser) return res.status(404).json({ message: "User not found" });
 
   const match = await bcrypt.compare(password, foundUser.hashPwd);
   if (match) {
     const roles = foundUser.roles.map((r) => r.role.roleName);
+    const branchIds = foundUser.branches.map((b) => b.branch.id);
+    const branchNames = foundUser.branches.map((b) => b.branch.branchName);
+
     const accessToken = jwt.sign(
       {
         UserInfo: {
           id: foundUser.id,
           username: foundUser.username,
           roles,
+          branchIds,
+          branchNames
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "5h" }
     );
-
-    console.log(jwt.decode(accessToken));
 
 
     const refreshToken = jwt.sign(

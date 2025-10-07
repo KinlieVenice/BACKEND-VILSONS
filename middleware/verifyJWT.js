@@ -14,6 +14,10 @@ const verifyJWT = (req, res, next) => {
     req.id = decoded.UserInfo.id;
     req.username = decoded.UserInfo.username;
     req.roles = decoded.UserInfo.roles;
+    req.branchNames = decoded.UserInfo.branchNames,
+    req.branchIds = decoded.UserInfo.branchIds
+
+    console.log(req.branchIds, req.branchNames)
     next();
   });
 };

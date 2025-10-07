@@ -82,6 +82,7 @@ const getRevenueProfit = async (req, res) => {
       const totalRevenue = totalTransactions + totalOtherIncomes;
       const totalLabor = totalEmployeePays + totalContractorPays;
       const totalOperationals = totalMaterials + totalEquipmments + totalLabor;
+      const totalExpenses = totalOperationals + totalOverheads
       const grossProfit =
         totalRevenue - (totalOperationals - totalOverheads);
 
@@ -90,6 +91,7 @@ const getRevenueProfit = async (req, res) => {
         totalRevenue,
         totalTransactions,
         totalOtherIncomes,
+        totalExpenses,
         totalMaterials,
         totalOverheads,
         totalEquipmments,

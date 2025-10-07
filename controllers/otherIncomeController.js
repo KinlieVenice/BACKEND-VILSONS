@@ -161,7 +161,7 @@ const getAllOtherIncomes = async (req, res) => {
 
   if (branch) {
     where.branch = {
-      branchName: { contains: branch },
+      id: { contains: branch },
     };
   }
 
@@ -200,7 +200,7 @@ const getAllOtherIncomes = async (req, res) => {
       ...(limit ? { take: limit } : {}),
       include: {
         branch: {
-          select: { branchName: true, address: true },
+          select: { id: true, branchName: true, address: true },
         },
       },
     });
@@ -211,11 +211,11 @@ const getAllOtherIncomes = async (req, res) => {
       data: {
         otherIncome,
         totalAmount,
-        pagination: {
+      },
+      pagination: {
           totalItems,
           totalPages,
           currentPage: page || 1,
-        },
       },
     });
   } catch (err) {

@@ -708,13 +708,14 @@ const getAllUsers = async (req, res) => {
     const search = req?.query?.search;
     const page = req?.query?.page && parseInt(req.query.page, 10);
     const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-    const startDate = req?.query?.startDate; // e.g. "2025-01-01"
-    const endDate = req?.query?.endDate; // e.g. "2025-01-31"
+    const startDate = req?.query?.startDate;
+    const endDate = req?.query?.endDate;
     let totalItems = 0;
     let totalPages = 1;
 
     let where = { status: "active" };
 
+    //  Filter by role
     if (role) {
       where.roles = {
         some: {
@@ -725,6 +726,8 @@ const getAllUsers = async (req, res) => {
       };
     }
 
+    //  Branch filter logic
+    // If ?branch query is provided, use it. Otherwise, use branches from JWT (req.branchIds)
     if (branch) {
       where.branches = {
         some: {
@@ -733,15 +736,25 @@ const getAllUsers = async (req, res) => {
           },
         },
       };
+    } else if (req.branchIds?.length) {
+      where.branches = {
+        some: {
+          branchId: { in: req.branchIds },
+        },
+      };
     }
 
+    //  Search filter
     if (search) {
+      let searchValue = req.query.search.trim().replace(/^["']|["']$/g, "");
+
       where.OR = [
-        { fullName: { contains: search } },
-        { username: { contains: search } },
+        { fullName: { contains: searchValue } },
+        { username: { contains: searchValue } },
       ];
     }
 
+    //  Date range filter
     if (startDate && endDate) {
       where.createdAt = {
         gte: new Date(startDate),
@@ -749,55 +762,44 @@ const getAllUsers = async (req, res) => {
       };
     }
 
+    //  Query and pagination
     const result = await prisma.$transaction(async (tx) => {
       const users = await tx.user.findMany({
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
         ...(limit ? { take: limit } : {}),
         include: {
-          roles: {
-            include: {
-              role: true,
-            },
-          },
-          branches: {
-            include: {
-              branch: true,
-            },
-          },
+          roles: { include: { role: true } },
+          branches: { include: { branch: true } },
           contractor: true,
           customer: true,
           employee: true,
-          admin: true
+          admin: true,
         },
       });
+      console.log("Search query received:", req.query.search);
 
       totalItems = await tx.user.count({ where });
+      if (limit) totalPages = Math.ceil(totalItems / limit);
 
-      if (limit) {
-        totalPages = Math.ceil(totalItems / limit);
-      } 
-
+      // Exclude sensitive fields
       const formattedUsers = users.map((user) => {
         const { hashPwd, refreshToken, ...safeUser } = user;
-
-        return {
-          ...safeUser,
-          // roles: roles.map((r) => r.role.roleName),
-          // branches: branches.map((b) => b.branch.branchName),
-        };
+        return safeUser;
       });
 
       return { users: formattedUsers };
     });
 
-    res
-      .status(201)
-      .json({ data: { ...result, pagination: { totalItems, totalPages } } });
+    res.status(200).json({
+      data: { ...result, pagination: { totalItems, totalPages } },
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const getUser = async (req, res) => {
   if (!req?.params?.id)
