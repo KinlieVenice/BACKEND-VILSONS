@@ -1,6 +1,7 @@
 const truckIdFinder = require("../utils/truckIdFinder");
 const customerIdFinder = require("../utils/customerIdFinder");
 const jobOwnerFinder = require("../utils/jobOwnerFinder");
+const { getDateRangeFilter } = require("../utils/dateRangeFilter");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -276,26 +277,17 @@ const getAllTrucks = async (req, res) => {
 
     let where = {};
 
+    const createdAtFilter = getDateRangeFilter(startDate, endDate);
+    if (createdAtFilter) {
+      where.createdAt = createdAtFilter;
+    }
+
     if (search) {
       where.OR = [
         { plate: { contains: search } },
         { make: { contains: search } },
         { model: { contains: search } },
       ];
-    }
-
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        where.createdAt.gte = start;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // include full day
-        where.createdAt.lte = end;
-      }
     }
 
     const result = await prisma.$transaction(async (tx) => {

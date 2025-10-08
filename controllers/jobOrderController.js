@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const relationsChecker = require("../utils/relationsChecker");
+const { getDateRangeFilter } = require("../utils/dateRangeFilter");
 
 
 const createJobOrder = async (req, res) => {
@@ -503,6 +504,11 @@ const getAllJobOrders = async (req, res) => {
 
   let where = {};
 
+  const createdAtFilter = getDateRangeFilter(startDate, endDate);
+  if (createdAtFilter) {
+    where.createdAt = createdAtFilter;
+  }
+
   if (branch) {
     let branchValue = branch.trim().replace(/^["']|["']$/g, "");
     where.branchId = branchValue;
@@ -551,9 +557,6 @@ const getAllJobOrders = async (req, res) => {
       },
     ];
   }
-
-  if (startDate && endDate)
-    where.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
 
   try {
     const totalItems = await prisma.jobOrder.count({ where });
