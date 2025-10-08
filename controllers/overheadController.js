@@ -154,41 +154,52 @@ const getAllOverheads = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  const year = req?.query?.year; // e.g. "2025"
-  const month = req?.query?.month; // e.g. "09" for September
+  let year = req?.query?.year;
+  let month = req?.query?.month;
 
   let where = {};
 
+  // Branch filter
   if (branch) {
-    where.branch = {
-      branchName: { contains: branch },
-    };
+    let branchValue = branch.trim().replace(/^["']|["']$/g, "");
+    where.branchId = branchValue;
+  } else if (req.branchIds?.length) {
+    where.branchId = { in: req.branchIds };
   }
 
+  // Search filter
   if (search) {
-    where.OR = [
-      { description: { contains: search } },
-    ];
+    let searchValue = search.trim().replace(/^["']|["']$/g, "");
+    where.OR = [{ description: { contains: searchValue } }];
   }
 
+  // Date filtering (optional, can be used later)
+  const now = new Date();
+  year = year ? parseInt(year, 10) : now.getFullYear();
+  month = month ? parseInt(month, 10) - 1 : now.getMonth();
+
+  let startDate, endDate;
   if (year && !month) {
-    const y = parseInt(year, 10);
-    where.createdAt = {
-      gte: new Date(y, 0, 1),
-      lt: new Date(y + 1, 0, 1),
-    };
-  }
+    // Yearly range
+    startDate = new Date(year, 0, 1);
+    startDate.setHours(0, 0, 0, 0);
 
-  if (year && month) {
-    const y = parseInt(year, 10);
-    const m = parseInt(month, 10);
-    const startOfMonth = new Date(y, m - 1, 1); 
-    const endOfMonth = new Date(y, m, 1); 
-    where.createdAt = {
-      gte: startOfMonth,
-      lt: endOfMonth,
-    };
+    endDate = new Date(year + 1, 0, 1);
+    endDate.setHours(0, 0, 0, 0);
+  } else {
+    // Monthly range
+    startDate = new Date(year, month, 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    endDate = new Date(year, month + 1, 1);
+    endDate.setHours(0, 0, 0, 0);
   }
+  
+  // Filter by createdAt range if you have that field
+  where.createdAt = {
+    gte: startDate,
+    lt: endDate,
+  };
 
   try {
     const overheads = await prisma.overhead.findMany({
@@ -196,24 +207,21 @@ const getAllOverheads = async (req, res) => {
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
       include: {
-        branch: {
-          select: { branchName: true, address: true },
-        },
+        branch: { select: { id: true, branchName: true, address: true } },
       },
     });
 
     const totalAmount = overheads.reduce(
-        (sum, pc) => sum + Number(pc.amount),
-        0
-      )
-
-
+      (sum, o) => sum + Number(o.amount),
+      0
+    );
 
     return res.status(200).json({ data: { overheads, totalAmount } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 const getOverhead = async (req, res) => {
     if (!req.params.id) return res.status(404).json({ message: "Id is required" });

@@ -284,11 +284,18 @@ const getAllTrucks = async (req, res) => {
       ];
     }
 
-    if (startDate && endDate) {
-      where.createdAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.createdAt.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // include full day
+        where.createdAt.lte = end;
+      }
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -298,7 +305,7 @@ const getAllTrucks = async (req, res) => {
         ...(limit ? { take: limit } : {}),
         include: {
           owners: {
-            where: { endDate: null }, // ✅ only active owners
+            where: { endDate: null }, // only active owners
             include: {
               customer: {
                 include: {
@@ -317,7 +324,7 @@ const getAllTrucks = async (req, res) => {
         model: truck.model,
         customerId: truck.owners[0]?.customer?.id || null,
         customerUserId: truck.owners[0]?.customer?.user?.id || null,
-        customerFullName: truck.owners[0]?.customer?.user?.fullName || null, // ✅ first active owner only
+        customerFullName: truck.owners[0]?.customer?.user?.fullName || null, // irst active owner only
         createdAt: truck.createdAt,
       }));
 

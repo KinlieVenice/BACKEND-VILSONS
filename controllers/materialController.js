@@ -3,39 +3,56 @@ const prisma = new PrismaClient();
 
 const getAllMaterials = async (req, res) => {
   const search = req?.query?.search;
+  const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  const year = req?.query?.year; // e.g. "2025"
-  const month = req?.query?.month; // e.g. "09" for September
+  let year = req?.query?.year; // e.g. "2025"
+  let month = req?.query?.month; // e.g. "09" for September
 
   let where = {};
 
   if (search) {
-    where.OR = [
-      { materialName: { contains: search } },
-      { price: { contains: search } },
-      { quantity: { contains: search } },
-    ];
+    let searchValue = search.trim().replace(/^["']|["']$/g, "");
+    where.OR = [{ materalName: { contains: searchValue } }];
   }
 
+  if (branch) {
+    const branchValue = req.query.branch.trim().replace(/^["']|["']$/g, "");
+    where.jobOrder = {
+      branch: { id: branchValue },
+    };
+  } else if (req.branchIds?.length) {
+    where.jobOrder = {
+      branchId: { in: req.branchIds },
+    };
+  }
+
+  // Date filters — default to current month if none provided
+  const now = new Date();
+  year = year ? parseInt(year, 10) : now.getFullYear();
+  month = month ? parseInt(month, 10) - 1 : now.getMonth();
+
+  let startDate, endDate;
   if (year && !month) {
-    const y = parseInt(year, 10);
-    where.createdAt = {
-      gte: new Date(y, 0, 1),
-      lt: new Date(y + 1, 0, 1),
-    };
+    // Yearly range
+    startDate = new Date(year, 0, 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    endDate = new Date(year + 1, 0, 1);
+    endDate.setHours(0, 0, 0, 0);
+  } else {
+    // Monthly range
+    startDate = new Date(year, month, 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    endDate = new Date(year, month + 1, 1);
+    endDate.setHours(0, 0, 0, 0);
   }
 
-  if (year && month) {
-    const y = parseInt(year, 10);
-    const m = parseInt(month, 10);
-    const startOfMonth = new Date(y, m - 1, 1);
-    const endOfMonth = new Date(y, m, 1);
-    where.createdAt = {
-      gte: startOfMonth,
-      lt: endOfMonth,
-    };
-  }
+   where.createdAt = {
+    gte: startDate,
+    lt: endDate,
+  };
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -46,7 +63,7 @@ const getAllMaterials = async (req, res) => {
         include: {
           jobOrder: {
           select: {
-            id: true, 
+            jobOrderCode: true, 
             truck: {
               select: {
                 plate: true, 

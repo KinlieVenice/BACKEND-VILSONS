@@ -701,6 +701,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
+//only view own branches
 const getAllUsers = async (req, res) => {
   try {
     const role = req?.query?.role;
@@ -729,10 +730,11 @@ const getAllUsers = async (req, res) => {
     //  Branch filter logic
     // If ?branch query is provided, use it. Otherwise, use branches from JWT (req.branchIds)
     if (branch) {
+      let branchValue = req.query.branch.trim().replace(/^["']|["']$/g, "");
       where.branches = {
         some: {
           branch: {
-            branchName: branch,
+            branchId: branchValue,
           },
         },
       };
@@ -742,7 +744,7 @@ const getAllUsers = async (req, res) => {
           branchId: { in: req.branchIds },
         },
       };
-    }
+    };
 
     //  Search filter
     if (search) {
@@ -755,11 +757,18 @@ const getAllUsers = async (req, res) => {
     }
 
     //  Date range filter
-    if (startDate && endDate) {
-      where.createdAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.createdAt.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // include full day
+        where.createdAt.lte = end;
+      }
     }
 
     //  Query and pagination
@@ -771,21 +780,27 @@ const getAllUsers = async (req, res) => {
         include: {
           roles: { include: { role: true } },
           branches: { include: { branch: true } },
-          contractor: true,
-          customer: true,
-          employee: true,
-          admin: true,
         },
       });
-      console.log("Search query received:", req.query.search);
 
       totalItems = await tx.user.count({ where });
       if (limit) totalPages = Math.ceil(totalItems / limit);
 
       // Exclude sensitive fields
       const formattedUsers = users.map((user) => {
-        const { hashPwd, refreshToken, ...safeUser } = user;
-        return safeUser;
+        const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
+
+        return {
+          ...safeUser,
+          roles: roles.map((r) => ({
+            id: r.role.id,
+            roleName: r.role.roleName,
+          })),
+          branches: branches.map((b) => ({
+            id: b.branch.id,
+            branchName: b.branch.branchName,
+          })),
+        };
       });
 
       return { users: formattedUsers };
@@ -799,7 +814,6 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 const getUser = async (req, res) => {
   if (!req?.params?.id)
@@ -816,13 +830,19 @@ const getUser = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const { hashPwd, refreshToken, ...safeUser } = user;
+    const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
 
-    res.status(200).json({
+    return res.status(200).json({
       data: {
         ...safeUser,
-        // roles: roles.map((r) => r.role.roleName),
-        // branches: branches.map((b) => b.branch.branchName),
+        roles: roles.map((r) => ({
+          id: r.role.id,
+          roleName: r.role.roleName,
+        })),
+        branches: branches.map((b) => ({
+          id: b.branch.id,
+          branchName: b.branch.branchName,
+        })),
       },
     });
   } catch (err) {

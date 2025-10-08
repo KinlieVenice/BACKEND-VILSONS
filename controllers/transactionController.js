@@ -75,79 +75,92 @@ const deleteTransaction = async (req, res) => {
     }
 }
 
+//only view own branches
 const getAllTransactions = async (req, res) => {
-    const search = req?.query?.search;
-    const branch = req?.query?.branch;
-    const page = req?.query?.page && parseInt(req.query.page, 10);
-    const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-    const year = req?.query?.year; // e.g. "2025"
-    const month = req?.query?.month; // e.g. "09" for September
+  const search = req?.query?.search;
+  const branch = req?.query?.branch;
+  const page = req?.query?.page && parseInt(req.query.page, 10);
+  const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+  let year = req?.query?.year;
+  let month = req?.query?.month;
+  let where = {};
 
-    let where = {};
+  // Branch filter (via JobOrder)
+  if (branch) {
+    const branchValue = branch.trim().replace(/^["']|["']$/g, "");
+    where.jobOrder = { branch: { id: branchValue } };
+  } else if (req.branchIds?.length) {
+    where.jobOrder = { branchId: { in: req.branchIds } };
+  }
 
-    if (branch) {
-        where.jobOrder.branch = {
-        branchName: { contains: branch },
-        };
-    }
+  // Search filter
+  if (search) {
+    const searchValue = search.trim().replace(/^["']|["']$/g, "");
+    where.OR = [
+      { jobOrderCode: { contains: searchValue } },
+      { senderName: { contains: searchValue } },
+    ];
+  }
 
-    if (search) {
-        where.OR = [
-            { jobOrderCode: { contains: search } }, // directly in Transaction
-            { senderName: { contains: search } },   // also in Transaction
-        ];
-    }
+  // Date filters — default to current month if none provided
+  const now = new Date();
+  year = year ? parseInt(year, 10) : now.getFullYear();
+  month = month ? parseInt(month, 10) - 1 : now.getMonth();
 
-    if (year && !month) {
-        const y = parseInt(year, 10);
-        where.createdAt = {
-        gte: new Date(y, 0, 1),
-        lt: new Date(y + 1, 0, 1),
-        };
-    }
+  let startDate, endDate;
+  if (year && !month) {
+    startDate = new Date(year, 0, 1);
+    startDate.setHours(0, 0, 0, 0);
 
-    if (year && month) {
-        const y = parseInt(year, 10);
-        const m = parseInt(month, 10);
-        const startOfMonth = new Date(y, m - 1, 1); 
-        const endOfMonth = new Date(y, m, 1); 
-        where.createdAt = {
-        gte: startOfMonth,
-        lt: endOfMonth,
-        };
-    }
+    endDate = new Date(year + 1, 0, 1);
+    endDate.setHours(0, 0, 0, 0);
+  } else {
+    startDate = new Date(year, month, 1);
+    startDate.setHours(0, 0, 0, 0);
 
-    try {
-        const totalItems = await prisma.transaction.count({ where });
-        const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
+    endDate = new Date(year, month + 1, 1);
+    endDate.setHours(0, 0, 0, 0);
+  }
+  
 
-        const transactions = await prisma.transaction.findMany({
-            include: {
-            jobOrder: {
-            select: {
-                id: true, 
-                branch: {
-                select: {
-                    branchName: true, 
-                },
-                },
-            },
-            },
+  where.createdAt = { gte: startDate, lt: endDate };
+
+  try {
+    const totalItems = await prisma.transaction.count({ where });
+    const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
+
+    const transactions = await prisma.transaction.findMany({
+      where,
+      include: {
+        jobOrder: {
+          select: {
+            id: true,
+            jobOrderCode: true,
+            branch: { select: { id: true, branchName: true } },
+          },
         },
-        orderBy: { createdAt: "desc" },
-        });
-       
-        return res.status(201).json({ data: { transactions, pagination: {
-                totalItems,
-                totalPages,
-                currentPage: page || 1,
-                }, 
-            } 
-        })
-    } catch (err) {
-        return res.status(500).json({ message: err.message })
-    }
-}
+      },
+      orderBy: { createdAt: "desc" },
+      ...(page && limit ? { skip: (page - 1) * limit } : {}),
+      ...(limit ? { take: limit } : {}),
+    });
+
+    return res.status(200).json({
+      data: {
+        transactions,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page || 1,
+        },
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
 
 const getTransaction = async (req, res) => {
     if (!req?.params?.id) return res.status(404).json({ message: "ID required"});

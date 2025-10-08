@@ -154,41 +154,50 @@ const getAllOtherIncomes = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  const year = req?.query?.year; // e.g. "2025"
-  const month = req?.query?.month; // e.g. "09" for September
+  let year = req?.query?.year; // e.g. "2025"
+  let month = req?.query?.month; // e.g. "09" for September
 
   let where = {};
 
   if (branch) {
-    where.branch = {
-      id: { contains: branch },
-    };
+    let branchValue = branch.trim().replace(/^["']|["']$/g, "");
+    where.branchId = branchValue;
+  } else if (req.branchIds?.length) {
+    where.branchId = { in: req.branchIds };
   }
 
+  // Search filter
   if (search) {
-    where.OR = [
-      { description: { contains: search } },
-    ];
+    let searchValue = search.trim().replace(/^["']|["']$/g, "");
+    where.OR = [{ description: { contains: searchValue } }];
   }
 
+  // Date filters — default to current month if none provided
+  const now = new Date();
+  year = year ? parseInt(year, 10) : now.getFullYear();
+  month = month ? parseInt(month, 10) - 1 : now.getMonth();
+
+  let startDate, endDate;
   if (year && !month) {
-    const y = parseInt(year, 10);
-    where.createdAt = {
-      gte: new Date(y, 0, 1),
-      lt: new Date(y + 1, 0, 1),
-    };
+    // Yearly range
+    startDate = new Date(year, 0, 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    endDate = new Date(year + 1, 0, 1);
+    endDate.setHours(0, 0, 0, 0);
+  } else {
+    // Monthly range
+    startDate = new Date(year, month, 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    endDate = new Date(year, month + 1, 1);
+    endDate.setHours(0, 0, 0, 0);
   }
 
-  if (year && month) {
-    const y = parseInt(year, 10);
-    const m = parseInt(month, 10);
-    const startOfMonth = new Date(y, m - 1, 1); 
-    const endOfMonth = new Date(y, m, 1); 
-    where.createdAt = {
-      gte: startOfMonth,
-      lt: endOfMonth,
-    };
-  }
+   where.createdAt = {
+    gte: startDate,
+    lt: endDate,
+  };
 
   try {
     const totalItems = await prisma.otherIncome.count({ where });
