@@ -14,8 +14,9 @@ const verifyJWT = (req, res, next) => {
     req.id = decoded.UserInfo.id;
     req.username = decoded.UserInfo.username;
     req.roles = decoded.UserInfo.roles;
-    req.branchIds = decoded.UserInfo.branches.map(b => b.branchId);
-    req.branchNames = decoded.UserInfo.branches.map(b => b.branchName);
+    const branches_cookie = decoded.UserInfo.branches || [];
+    req.branchIds = branches_cookie.map(b => b.branchId);
+    req.branchNames = branches_cookie.map(b => b.branchName);
 
 
     console.log(req.branchIds, req.branchNames)

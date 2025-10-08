@@ -655,3 +655,292 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20251009	02:06:11	025d3097-df9a-418f-a23a-241ddbf9a5f8	TypeError: Cannot read properties of undefined (reading 'map')
 20251009	02:06:11	f336f8a9-da45-4646-90f9-fd344f741e30	TypeError: Cannot read properties of undefined (reading 'map')
 20251009	02:06:40	1464d55b-e3fa-4b8f-b47a-7909ff8a4b93	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:09:40	ea284e49-ef56-438e-a050-a4d7ab7095f4	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:09:40	e24bd7ab-08f0-415e-a818-a8ec694fe257	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:09:40	42d388ac-dc17-4951-bf34-0112be79c508	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:02	66b1aa28-45c6-4f9a-82f3-bb7a3718c825	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:02	46e14de6-33ef-4d40-9fd1-30cf5f6a799a	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:02	95e622b1-3ca9-452e-9df6-8fe1f20bcc01	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:06	faa0e8f3-9e51-447c-8904-4a52beaace45	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:06	2fb60163-9259-4bbf-8c71-d03f0f9f5c5b	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:06	7fbc2f7d-b6a2-4c7d-b016-6fd438e7e948	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:20	3778ead8-c471-48cc-a92a-0cfa0f1cf660	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:20	1487da40-990d-4e2e-971a-d3ca1d336c89	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:20	91c40f56-34a4-4876-9827-97cd469e621f	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:30	786de8f3-a241-4cb3-8bc8-bb084dceebe1	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:30	757553d7-b6d0-42b9-a31a-1fbfed1b20f5	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:30	02984163-6de4-41dc-aa50-19105b362660	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:33	b4a4bf9e-b3a1-4245-90e7-e8151e692a99	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:33	b8a82572-aa2a-421c-9a29-a2ff223c381f	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:33	273430fb-2db3-4f3f-aca9-cefdc28d56ec	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:37	c371736a-5334-470f-823d-e548c3bb0b61	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:37	590ed7a5-a437-4f95-aed7-c7f7f45fd08f	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:38	ca3a71bf-76fa-4dd9-833e-3bf1da211015	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:39	2a02a54c-2d0b-43b6-87b9-c4a8b75babc9	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:39	d6f5e1a9-963c-46b8-92cd-8a0aef7fc2a9	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:42	003d6b80-08c0-4eed-a35c-7aacb3c50014	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:42	dad774e2-0c7d-465f-a176-6464e77e8b70	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:43	bce95b15-0cf0-4aea-b0a1-b874f26b5ffe	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:44	9bd646fe-f632-40d9-b414-61e468a4090b	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:44	f30f50f7-73c6-4e61-b50f-47d2a250bdf9	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:10:59	fbe4e85b-fb5a-4963-84d8-e1a9d5bfea68	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:11:00	dfba519e-faac-4541-901d-2ca30ea6fdd5	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:11:00	be5ef44e-b637-4128-9ba0-452db7b66e47	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:12:55	b3e99c42-cbec-4f88-b021-6577007a121e	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:12:55	9d059f0f-e9d3-488a-bd4a-913127a32cec	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:12:55	5fc906ed-08af-4ee0-bb5d-ae74b0600440	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:12:59	ca920d7e-be94-416d-b644-12a68c01c1fc	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:13:00	0f74f803-58d0-4f7a-b96b-9b3d051ce6fc	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:13:00	5edd2bcc-e5e4-483b-8800-7527a22659ca	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:13:03	32f352dc-9780-4528-a2d9-e248d0ce2b08	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:13:03	c9abff11-671b-4d49-a6c5-6e8168cbdd14	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:16:37	5b63230a-370a-450b-b5a3-bb3777749ee1	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:16:37	a2ce5dca-7228-4110-9edf-1a143e626f8c	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:16:37	b62c41cd-5f0e-4abb-a7e0-45f9dc5fb9bc	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:20:45	093fd05d-b510-4725-b693-4b042b2a8825	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:20:51	aeea65d2-a7cc-44e1-a296-7051eb16b46c	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:20:51	ce425427-0abb-45c3-92e5-86328941c0c2	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:23:44	86aac67b-d9e5-4522-94ce-10afff3fbb5b	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:23:44	bf347a4b-ada2-4b32-90d7-836340683777	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:25:54	c8ede834-0f0f-4688-bf2b-e38a90248be3	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:25:55	9b20eed1-0a3d-486e-8116-30b1ab223315	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:27:35	916feacb-5d26-42d6-9cc2-cb61cd61f295	ReferenceError: username is not defined
+20251009	02:27:36	d3ae0cdd-3652-4804-af53-67b03c894847	ReferenceError: username is not defined
+20251009	02:27:44	d7e10b7b-e82d-4bff-9b46-3d99ea422b67	ReferenceError: username is not defined
+20251009	02:28:28	c0e8b47b-3994-4edf-adac-afe1dc579c2e	ReferenceError: username is not defined
+20251009	02:28:29	99ee2e3c-fd47-4111-902e-28b6f86419e3	ReferenceError: username is not defined
+20251009	02:29:18	54447295-c165-434d-9074-54c80852238e	ReferenceError: username is not defined
+20251009	02:29:18	592b051f-094b-468d-abfe-4f7faf9810fb	ReferenceError: username is not defined
+20251009	02:29:44	2b1493dd-f1d3-423e-9aae-7135e03074c6	PrismaClientValidationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\refreshController.js:11:40
+
+   8 if (!refreshToken)
+   9   return res.status(401).json({ message: "No cookies found" });
+  10 
+→ 11  const foundUser = await prisma.user.findUnique({
+        where: {
+          refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NTk5NDgxODIsImV4cCI6MTc2MDAzNDU4Mn0.f3lu3sUDmNsxNMn_HIy6GbwJ56NYbLaETCkKxWlWBD8",
+      ?   id?: String,
+      ?   username?: String,
+      ?   email?: String,
+      ?   AND?: UserWhereInput | UserWhereInput[],
+      ?   OR?: UserWhereInput[],
+      ?   NOT?: UserWhereInput | UserWhereInput[],
+      ?   fullName?: StringFilter | String,
+      ?   phone?: StringFilter | String,
+      ?   hashPwd?: StringFilter | String,
+      ?   description?: StringNullableFilter | String | Null,
+      ?   status?: EnumAccountStatusNullableFilter | AccountStatus | Null,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   createdByUser?: StringNullableFilter | String | Null,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   updatedByUser?: StringNullableFilter | String | Null,
+      ?   admin?: AdminNullableScalarRelationFilter | AdminWhereInput | Null,
+      ?   customer?: CustomerNullableScalarRelationFilter | CustomerWhereInput | Null,
+      ?   contractor?: ContractorNullableScalarRelationFilter | ContractorWhereInput | Null,
+      ?   employee?: EmployeeNullableScalarRelationFilter | EmployeeWhereInput | Null,
+      ?   activityLog?: ActivityLogListRelationFilter,
+      ?   roles?: UserRoleListRelationFilter,
+      ?   rolesEdit?: UserRoleEditListRelationFilter,
+      ?   branches?: UserBranchListRelationFilter,
+      ?   branchesEdit?: UserBranchEditListRelationFilter,
+      ?   edits?: UserEditListRelationFilter,
+      ?   createdUsers?: UserListRelationFilter,
+      ?   updatedUsers?: UserListRelationFilter,
+      ?   createdUserEdit?: UserEditListRelationFilter,
+      ?   createdRole?: RoleListRelationFilter,
+      ?   createdBranches?: BranchListRelationFilter,
+      ?   createdBranchEdit?: BranchEditListRelationFilter,
+      ?   createdTrucks?: TruckListRelationFilter,
+      ?   createdTruckEdit?: TruckEditListRelationFilter,
+      ?   createdTransactionZ?: TransactionZListRelationFilter,
+      ?   createdTransaction?: TransactionListRelationFilter,
+      ?   createdTransactionEditZ?: TransactionEditZListRelationFilter,
+      ?   createdJobOrder?: JobOrderListRelationFilter,
+      ?   createdJobOrderEdit?: JobOrderEditListRelationFilter,
+      ?   createdContractorPay?: ContractorPayListRelationFilter,
+      ?   createdContractorPayEdit?: ContractorPayEditListRelationFilter,
+      ?   createdEmployeeSalary?: EmployeeSalaryListRelationFilter,
+      ?   createdEmployeeSalaryEdit?: EmployeeSalaryEditListRelationFilter,
+      ?   createdEmployeePay?: EmployeePayListRelationFilter,
+      ?   createdPayComponent?: PayComponentListRelationFilter,
+      ?   createdEquipment?: EquipmentListRelationFilter,
+      ?   createdEquipmentEdit?: EquipmentEditListRelationFilter,
+      ?   createdOtherIncome?: OtherIncomeListRelationFilter,
+      ?   createdOtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+      ?   createdOverhead?: OverheadListRelationFilter,
+      ?   createdOverheadEdit?: OverheadEditListRelationFilter,
+      ?   transferredTruckOwnership?: TruckOwnershipListRelationFilter,
+      ?   transferredTruckOwnershipEdit?: TruckOwnershipEditListRelationFilter,
+      ?   updatedUserEdits?: UserEditListRelationFilter,
+      ?   updatedBranches?: BranchListRelationFilter,
+      ?   updatedBranchEdits?: BranchEditListRelationFilter,
+      ?   updatedTruck?: TruckListRelationFilter,
+      ?   updatedTruckEdit?: TruckEditListRelationFilter,
+      ?   updatedTransactionZ?: TransactionZListRelationFilter,
+      ?   updatedTransaction?: TransactionListRelationFilter,
+      ?   updatedTransactionEditZ?: TransactionEditZListRelationFilter,
+      ?   updatedJobOrder?: JobOrderListRelationFilter,
+      ?   updatedJobOrderEdit?: JobOrderEditListRelationFilter,
+      ?   updatedContractorPay?: ContractorPayListRelationFilter,
+      ?   updatedContractorPayEdit?: ContractorPayEditListRelationFilter,
+      ?   updatedEmployeeSalary?: EmployeeSalaryListRelationFilter,
+      ?   updatedEmployeeSalaryEdit?: EmployeeSalaryEditListRelationFilter,
+      ?   updatedEmployeePay?: EmployeePayListRelationFilter,
+      ?   updatedPayComponent?: PayComponentListRelationFilter,
+      ?   updatedEquipment?: EquipmentListRelationFilter,
+      ?   updatedEquipmentEdit?: EquipmentEditListRelationFilter,
+      ?   updatedOtherIncome?: OtherIncomeListRelationFilter,
+      ?   updatedOtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+      ?   updatedOverhead?: OverheadListRelationFilter,
+      ?   updatedOverheadEdit?: OverheadEditListRelationFilter,
+      ?   createdBy?: UserNullableScalarRelationFilter | UserWhereInput | Null,
+      ?   updatedBy?: UserNullableScalarRelationFilter | UserWhereInput | Null
+        },
+        include: {
+          roles: {
+            include: {
+              role: true
+            }
+          },
+          branches: {
+            include: {
+              branch: true
+            }
+          }
+        }
+      })
+
+Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
+20251009	02:29:45	55ff54c6-8a7b-4873-87e6-fed8e125869e	PrismaClientValidationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\refreshController.js:11:40
+
+   8 if (!refreshToken)
+   9   return res.status(401).json({ message: "No cookies found" });
+  10 
+→ 11  const foundUser = await prisma.user.findUnique({
+        where: {
+          refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NTk5NDgxODIsImV4cCI6MTc2MDAzNDU4Mn0.f3lu3sUDmNsxNMn_HIy6GbwJ56NYbLaETCkKxWlWBD8",
+      ?   id?: String,
+      ?   username?: String,
+      ?   email?: String,
+      ?   AND?: UserWhereInput | UserWhereInput[],
+      ?   OR?: UserWhereInput[],
+      ?   NOT?: UserWhereInput | UserWhereInput[],
+      ?   fullName?: StringFilter | String,
+      ?   phone?: StringFilter | String,
+      ?   hashPwd?: StringFilter | String,
+      ?   description?: StringNullableFilter | String | Null,
+      ?   status?: EnumAccountStatusNullableFilter | AccountStatus | Null,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   createdByUser?: StringNullableFilter | String | Null,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   updatedByUser?: StringNullableFilter | String | Null,
+      ?   admin?: AdminNullableScalarRelationFilter | AdminWhereInput | Null,
+      ?   customer?: CustomerNullableScalarRelationFilter | CustomerWhereInput | Null,
+      ?   contractor?: ContractorNullableScalarRelationFilter | ContractorWhereInput | Null,
+      ?   employee?: EmployeeNullableScalarRelationFilter | EmployeeWhereInput | Null,
+      ?   activityLog?: ActivityLogListRelationFilter,
+      ?   roles?: UserRoleListRelationFilter,
+      ?   rolesEdit?: UserRoleEditListRelationFilter,
+      ?   branches?: UserBranchListRelationFilter,
+      ?   branchesEdit?: UserBranchEditListRelationFilter,
+      ?   edits?: UserEditListRelationFilter,
+      ?   createdUsers?: UserListRelationFilter,
+      ?   updatedUsers?: UserListRelationFilter,
+      ?   createdUserEdit?: UserEditListRelationFilter,
+      ?   createdRole?: RoleListRelationFilter,
+      ?   createdBranches?: BranchListRelationFilter,
+      ?   createdBranchEdit?: BranchEditListRelationFilter,
+      ?   createdTrucks?: TruckListRelationFilter,
+      ?   createdTruckEdit?: TruckEditListRelationFilter,
+      ?   createdTransactionZ?: TransactionZListRelationFilter,
+      ?   createdTransaction?: TransactionListRelationFilter,
+      ?   createdTransactionEditZ?: TransactionEditZListRelationFilter,
+      ?   createdJobOrder?: JobOrderListRelationFilter,
+      ?   createdJobOrderEdit?: JobOrderEditListRelationFilter,
+      ?   createdContractorPay?: ContractorPayListRelationFilter,
+      ?   createdContractorPayEdit?: ContractorPayEditListRelationFilter,
+      ?   createdEmployeeSalary?: EmployeeSalaryListRelationFilter,
+      ?   createdEmployeeSalaryEdit?: EmployeeSalaryEditListRelationFilter,
+      ?   createdEmployeePay?: EmployeePayListRelationFilter,
+      ?   createdPayComponent?: PayComponentListRelationFilter,
+      ?   createdEquipment?: EquipmentListRelationFilter,
+      ?   createdEquipmentEdit?: EquipmentEditListRelationFilter,
+      ?   createdOtherIncome?: OtherIncomeListRelationFilter,
+      ?   createdOtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+      ?   createdOverhead?: OverheadListRelationFilter,
+      ?   createdOverheadEdit?: OverheadEditListRelationFilter,
+      ?   transferredTruckOwnership?: TruckOwnershipListRelationFilter,
+      ?   transferredTruckOwnershipEdit?: TruckOwnershipEditListRelationFilter,
+      ?   updatedUserEdits?: UserEditListRelationFilter,
+      ?   updatedBranches?: BranchListRelationFilter,
+      ?   updatedBranchEdits?: BranchEditListRelationFilter,
+      ?   updatedTruck?: TruckListRelationFilter,
+      ?   updatedTruckEdit?: TruckEditListRelationFilter,
+      ?   updatedTransactionZ?: TransactionZListRelationFilter,
+      ?   updatedTransaction?: TransactionListRelationFilter,
+      ?   updatedTransactionEditZ?: TransactionEditZListRelationFilter,
+      ?   updatedJobOrder?: JobOrderListRelationFilter,
+      ?   updatedJobOrderEdit?: JobOrderEditListRelationFilter,
+      ?   updatedContractorPay?: ContractorPayListRelationFilter,
+      ?   updatedContractorPayEdit?: ContractorPayEditListRelationFilter,
+      ?   updatedEmployeeSalary?: EmployeeSalaryListRelationFilter,
+      ?   updatedEmployeeSalaryEdit?: EmployeeSalaryEditListRelationFilter,
+      ?   updatedEmployeePay?: EmployeePayListRelationFilter,
+      ?   updatedPayComponent?: PayComponentListRelationFilter,
+      ?   updatedEquipment?: EquipmentListRelationFilter,
+      ?   updatedEquipmentEdit?: EquipmentEditListRelationFilter,
+      ?   updatedOtherIncome?: OtherIncomeListRelationFilter,
+      ?   updatedOtherIncomeEdit?: OtherIncomeEditListRelationFilter,
+      ?   updatedOverhead?: OverheadListRelationFilter,
+      ?   updatedOverheadEdit?: OverheadEditListRelationFilter,
+      ?   createdBy?: UserNullableScalarRelationFilter | UserWhereInput | Null,
+      ?   updatedBy?: UserNullableScalarRelationFilter | UserWhereInput | Null
+        },
+        include: {
+          roles: {
+            include: {
+              role: true
+            }
+          },
+          branches: {
+            include: {
+              branch: true
+            }
+          }
+        }
+      })
+
+Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `username` or `email` arguments. Available options are marked with ?.
+20251009	02:30:48	cab031bf-bf42-4a29-a31f-1ba7333d9120	TypeError: branches22.map is not a function
+20251009	02:30:49	c9de33fd-f8ba-4b67-827a-a4c4c39fb40b	TypeError: branches22.map is not a function
+20251009	02:30:49	88073d59-c5df-42f4-9498-594df1112a06	TypeError: branches22.map is not a function
+20251009	02:30:49	d65f1eb2-b96f-41a7-8a19-1f2018afa72c	TypeError: branches22.map is not a function
+20251009	02:30:53	09b8ec5b-4d3f-479a-a7d8-705950837eb2	TypeError: branches22.map is not a function
+20251009	02:30:53	a46c5785-4bbf-452b-97f5-3d4d8ef2f72e	TypeError: branches22.map is not a function
+20251009	02:30:54	a094f423-449e-4a11-bca2-f624e7f80396	TypeError: branches22.map is not a function
+20251009	02:30:54	ffd275bd-f1ae-4802-ae82-23666129ec01	TypeError: branches22.map is not a function
+20251009	02:30:54	727a7c17-4791-4c47-94e1-20f759c0ca3b	TypeError: branches22.map is not a function
+20251009	02:30:55	e97dd725-129f-46ef-9d8a-5f723093cffd	TypeError: branches22.map is not a function
+20251009	02:30:55	e8541e5b-14c3-48b9-99d6-8ac5efea7c6f	TypeError: branches22.map is not a function
+20251009	02:33:01	237fc2e0-5c08-41c3-958f-ecac48ffcdc9	TypeError: branches22.map is not a function
+20251009	02:33:01	0558285b-f8fd-4259-84d9-b4cdbcc4b136	TypeError: branches22.map is not a function
+20251009	02:33:03	863698fc-f208-4107-8b42-223b38ddb3d6	TypeError: branches22.map is not a function
+20251009	02:33:04	c692644e-1ace-4d31-8da6-94d0cec85add	TypeError: branches22.map is not a function
+20251009	02:33:04	238b711c-d55e-4dec-97ab-97ded5ead2ac	TypeError: branches22.map is not a function
+20251009	02:33:04	e42b68c2-99a2-4ac7-9d13-eb96aebb13a5	TypeError: branches22.map is not a function
+20251009	02:34:41	51a6b92f-6c98-4d94-a4c9-ec8e3e51969c	TypeError: branches22.map is not a function
+20251009	02:34:42	7ff7064f-3b2f-4d05-bedb-2a51fc501484	TypeError: branches22.map is not a function
+20251009	02:35:32	9e7d29de-56d0-4e5c-8648-6b19d1773179	ReferenceError: branches is not defined
+20251009	02:35:32	b90beb0d-ccab-4f98-a8b9-f1395d4caa30	ReferenceError: branches is not defined
+20251009	02:35:40	8b2387fe-8f1f-4187-8b24-c65e85146da0	ReferenceError: branches is not defined
+20251009	02:35:41	43a4bf87-600e-4e4b-ba97-82a7a013b85d	ReferenceError: branches is not defined
+20251009	02:35:49	c1eeb1f4-9c7a-4699-913f-6cd584cce4fb	ReferenceError: branches is not defined
+20251009	02:35:49	2f2bbbc9-06e2-4271-b9a4-b17f8c82887f	ReferenceError: branches is not defined
+20251009	02:38:23	809b754f-4614-4d85-a7d5-916c8eaf3911	ReferenceError: branches is not defined
+20251009	02:38:23	60921602-8ab7-4504-a25c-4d047175521f	ReferenceError: branches is not defined
+20251009	02:38:23	d25e1d41-d769-4237-8347-0e90f4f5f3c1	ReferenceError: branches is not defined
+20251009	02:38:23	13dd5381-75a1-4107-9afb-db662cf039fc	ReferenceError: branches is not defined
