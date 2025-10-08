@@ -1,9 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
-const roleIdFinder = require("../utils/roleIdFinder");
-const branchIdFinder = require("../utils/branchIdFinder");
 const relationsChecker = require("../utils/relationsChecker");
+const { getDateRangeFilter } = require("../utils/dateRangeFilter");
 
 const createUser = async (req, res) => {
   const {
@@ -716,6 +715,11 @@ const getAllUsers = async (req, res) => {
 
     let where = { status: "active" };
 
+    const createdAtFilter = getDateRangeFilter(startDate, endDate);
+    if (createdAtFilter) {
+      where.createdAt = createdAtFilter;
+    }
+
     //  Filter by role
     if (role) {
       where.roles = {
@@ -724,7 +728,7 @@ const getAllUsers = async (req, res) => {
         },
       };
     }
-    
+
     if (branch) {
       let branchValue = req.query.branch.trim().replace(/^["']|["']$/g, "");
       where.branches = {
@@ -750,21 +754,6 @@ const getAllUsers = async (req, res) => {
         { fullName: { contains: searchValue } },
         { username: { contains: searchValue } },
       ];
-    }
-
-    //  Date range filter
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        where.createdAt.gte = start;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // include full day
-        where.createdAt.lte = end;
-      }
     }
 
     //  Query and pagination
