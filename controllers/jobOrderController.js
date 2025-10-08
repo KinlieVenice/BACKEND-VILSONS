@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 const generateJobOrderCode = require("../utils/generateJobOrderCode");
 const relationsChecker = require("../utils/relationsChecker");
 const { getDateRangeFilter } = require("../utils/dateRangeFilter");
+const { branchFilter } = require("../utils/branchFilter"); 
+
 
 
 const createJobOrder = async (req, res) => {
@@ -494,6 +496,7 @@ const deleteJobOrder = async (req, res) => {
 };
 
 const getAllJobOrders = async (req, res) => {
+  const statusGroup = req?.params.statusGroup; // 'active' or 'archive'
   const search = req?.query?.search;
   const status = req?.query?.status;
   const branch = req?.query?.branch;
@@ -501,23 +504,30 @@ const getAllJobOrders = async (req, res) => {
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const startDate = req?.query?.startDate;
   const endDate = req?.query?.endDate;
+  
+  let where;
 
-  let where = {};
+  // Add status filter based on statusGroup
+  if (statusGroup === 'active') {
+    where = { ...where, status: { in: ['pending', 'ongoing', 'completed', 'forRelease'] } };
+  } else if (statusGroup === 'archived') {
+    where = { ...where, status: 'archive' };
+  } else if (statusGroup) {
+    return res.status(200).json({ data: { jobOrders: [], }, pagination: { totalItems: 0, totalPages: 0, currentPage: 1 } });
+  }
 
+  where = {...where, ...branchFilter("jobOrder", branch, req.branchIds)};
+  
   const createdAtFilter = getDateRangeFilter(startDate, endDate);
   if (createdAtFilter) {
     where.createdAt = createdAtFilter;
   }
-
-  if (branch) {
-    let branchValue = branch.trim().replace(/^["']|["']$/g, "");
-    where.branchId = branchValue;
-  } else if (req.branchIds?.length) {
-    where.branchId = { in: req.branchIds };
+  
+  // If specific status is provided in query, it overrides the statusGroup
+  if (status) {
+    where.status = status;
   }
-
-  if (status) where.status = status;
-
+  
   if (search) {
     let searchValue = search.trim().replace(/^["']|["']$/g, "");
     where.OR = [
@@ -561,18 +571,27 @@ const getAllJobOrders = async (req, res) => {
   try {
     const totalItems = await prisma.jobOrder.count({ where });
     const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
-
+    
     const jobOrders = await prisma.jobOrder.findMany({
       where,
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
       include: {
-        truck: { select: { id: true, plate: true } },
+        truck: {
+          select: {
+            id: true,
+            plate: true
+          }
+        },
         customer: {
           select: {
             id: true,
             userId: true,
-            user: { select: { fullName: true } },
+            user: {
+              select: {
+                fullName: true
+              }
+            },
           },
         },
         contractor: {
@@ -580,15 +599,29 @@ const getAllJobOrders = async (req, res) => {
             id: true,
             userId: true,
             commission: true,
-            user: { select: { fullName: true } },
+            user: {
+              select: {
+                fullName: true
+              }
+            },
           },
         },
-        branch: { select: { id: true, branchName: true } },
+        branch: {
+          select: {
+            id: true,
+            branchName: true
+          }
+        },
         materials: {
-          select: { price: true, quantity: true },
+          select: {
+            price: true,
+            quantity: true
+          },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: "desc"
+      },
     });
 
     // compute commissions & flatten output
@@ -609,8 +642,7 @@ const getAllJobOrders = async (req, res) => {
         );
       }
 
-      const totalBill =
-        Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
+      const totalBill = Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
 
       return {
         jobOrderId: job.id,
@@ -618,24 +650,19 @@ const getAllJobOrders = async (req, res) => {
         status: job.status,
         plateNumber: job.truck?.plate,
         truckId: job.truck?.id,
-
         contractorId: job.contractor?.id || null,
         contractorUserId: job.contractor?.userId || null,
         contractorName: job.contractor?.user?.fullName || null,
-
         customerId: job.customer?.id,
         customerUserId: job.customer?.userId,
         customerName: job.customer?.user?.fullName,
-
         branchId: job.branch?.id || null,
         branchName: job.branch?.branchName || null,
-
         totalMaterialCost,
         contractorCommission,
         shopCommission,
         totalBill,
         balance: totalBill, // adjust if you track payments separately
-
         // new audit fields
         createdAt: job.createdAt,
         updatedAt: job.updatedAt,
@@ -647,12 +674,12 @@ const getAllJobOrders = async (req, res) => {
     return res.status(200).json({
       data: {
         jobOrders: result,
-        pagination: {
+      },
+      pagination: {
           totalItems,
           totalPages,
           currentPage: page || 1,
         },
-      },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

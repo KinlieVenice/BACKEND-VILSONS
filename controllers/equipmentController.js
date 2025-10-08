@@ -1,11 +1,14 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { branchFilter } = require("../utils/branchFilter");
+const { getMonthYear } = require("../utils/monthYearFilter");
 
 /*
   equipmentName     String  @db.VarChar(100)
   quantity Int
   price    Decimal @db.Decimal(13, 2)
   branchId String
+
 */
 
 const createEquipment = async (req, res) => {
@@ -161,50 +164,20 @@ const getAllEquipments = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  let year = req?.query?.year; // e.g. "2025"
-  let month = req?.query?.month; // e.g. "09" for September
+  const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
 
-  let where = {};
+  let where;
 
-  if (branch) {
-    let branchValue = branch.trim().replace(/^["']|["']$/g, "");
-    where.branchId = branchValue;
-  } else if (req.branchIds?.length) {
-    where.branchId = { in: req.branchIds };
-  }
+  where = {
+    createdAt: { gte: startDate, lt: endDate }, ...where, ...branchFilter("equipment", branch, req.branchIds)
+  };
+
 
   // Search filter
   if (search) {
     let searchValue = search.trim().replace(/^["']|["']$/g, "");
     where.OR = [{ equipmentName: { contains: searchValue } }];
   }
-
-  // Date filters — default to current month if none provided
-  const now = new Date();
-  year = year ? parseInt(year, 10) : now.getFullYear();
-  month = month ? parseInt(month, 10) - 1 : now.getMonth();
-
-  let startDate, endDate;
-  if (year && !month) {
-    // Yearly range
-    startDate = new Date(year, 0, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year + 1, 0, 1);
-    endDate.setHours(0, 0, 0, 0);
-  } else {
-    // Monthly range
-    startDate = new Date(year, month, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year, month + 1, 1);
-    endDate.setHours(0, 0, 0, 0);
-  }
-
-   where.createdAt = {
-    gte: startDate,
-    lt: endDate,
-  };
 
   try {
     const result = await prisma.$transaction(async (tx) => {

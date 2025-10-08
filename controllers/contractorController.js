@@ -39,7 +39,7 @@ const getContractor = async (req, res) => {
 
     // filter
     const filter = req?.query?.filter;
-    const activeStatuses = ["pending", "ongoing", "completed", "for release"];
+    const activeStatuses = ['pending', 'ongoing', 'completed', 'forRelease'];
 
     let filteredJobOrders = contractor.JobOrder;
     if (filter === "active") {

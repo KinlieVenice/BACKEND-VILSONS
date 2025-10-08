@@ -21,22 +21,24 @@ const handleLogin = async (req, res) => {
   const match = await bcrypt.compare(password, foundUser.hashPwd);
   if (match) {
     const roles = foundUser.roles.map((r) => r.role.roleName);
-    const branchIds = foundUser.branches.map((b) => b.branch.id);
-    const branchNames = foundUser.branches.map((b) => b.branch.branchName);
+    const branches = foundUser.branches.map((b) => ({
+    branchId: b.branch.id,
+    branchName: b.branch.branchName,
+  }));
 
-    const accessToken = jwt.sign(
-      {
-        UserInfo: {
-          id: foundUser.id,
-          username: foundUser.username,
-          roles,
-          branchIds,
-          branchNames
-        },
+  const accessToken = jwt.sign(
+    {
+      UserInfo: {
+        id: foundUser.id,
+        username: foundUser.username,
+        roles,
+        branches, // clean array of branch objects
       },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "5h" }
-    );
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "5h" }
+  );
+
 
 
     const refreshToken = jwt.sign(

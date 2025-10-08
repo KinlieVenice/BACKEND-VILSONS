@@ -1,5 +1,5 @@
 // Helper to generate branch filter per model
-function getBranchFilter(model, branch, branchIds) {
+function branchFilter(model, branch, branchIds) {
   if (branch) {
     const branchValue = branch.trim().replace(/^["']|["']$/g, "");
     switch (model) {
@@ -9,6 +9,7 @@ function getBranchFilter(model, branch, branchIds) {
       case "otherIncome":
       case "overhead":
       case "equipment":
+      case "jobOrder":
         return { branchId: branchValue };
       case "employeePay":
         return { employee: { user: { branches: { some: { branchId: branchValue } } } } };
@@ -25,6 +26,7 @@ function getBranchFilter(model, branch, branchIds) {
       case "otherIncome":
       case "overhead":
       case "equipment":
+      case "jobOrder":
         return { branchId: { in: branchIds } };
       case "employeePay":
         return { employee: { user: { branches: { some: { branchId: { in: branchIds } } } } } };
@@ -38,4 +40,4 @@ function getBranchFilter(model, branch, branchIds) {
   return {};
 }
 
-module.exports = { getBranchFilter }
+module.exports = { branchFilter }

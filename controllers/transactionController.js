@@ -104,6 +104,7 @@ const getAllTransactions = async (req, res) => {
     where.OR = [
       { jobOrderCode: { contains: searchValue } },
       { senderName: { contains: searchValue } },
+      { referenceNumber: { contains: searchValue } },
     ];
   }
 
@@ -127,14 +128,18 @@ const getAllTransactions = async (req, res) => {
       ...(limit ? { take: limit } : {}),
     });
 
+    const totalTransactions = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+
     return res.status(200).json({
       data: {
         transactions,
-        pagination: {
-          totalItems,
-          totalPages,
-          currentPage: page || 1,
-        },
+        totalTransactions
+       
+      },
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page || 1,
       },
     });
   } catch (err) {

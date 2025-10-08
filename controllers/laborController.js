@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getMonthYear } = require("../utils/monthYearFilter");
+const { branchFilter } = require("../utils/branchFilter"); 
 
 const getAllLaborPays = async (req, res) => {
   const search = req?.query?.search;
@@ -9,39 +11,19 @@ const getAllLaborPays = async (req, res) => {
   let year = req?.query?.year;
   let month = req?.query?.month;
 
-  const now = new Date();
-  year = year ? parseInt(year, 10) : now.getFullYear();
-  month = month ? parseInt(month, 10) - 1 : now.getMonth();
+  // Date range using utility
+  const { startDate, endDate } = getMonthYear(year, month);
 
-  const startDate = new Date(year, month, 1);
-  startDate.setHours(0, 0, 0, 0);
-  const endDate = new Date(year, month + 1, 1);
-  endDate.setHours(0, 0, 0, 0);
-
-  let whereEmployee = { createdAt: { gte: startDate, lt: endDate } };
-  let whereContractor = { createdAt: { gte: startDate, lt: endDate } };
-
-  if (branch) {
-    const branchValue = branch.trim().replace(/^["']|["']$/g, "");
-    whereEmployee.employee = {
-      user: { branches: { some: { branchId: branchValue } } },
-    };
-    whereContractor.contractor = {
-      user: { branches: { some: { branchId: branchValue } } },
-    };
-  } else if (req.branchIds?.length) {
-    whereEmployee.employee = {
-      user: { branches: { some: { branchId: { in: req.branchIds } } } },
-    };
-    whereContractor.contractor = {
-      user: { branches: { some: { branchId: { in: req.branchIds } } } },
-    };
-  }
+  // Base where for date range
+  const where = { createdAt: { gte: startDate, lt: endDate } };
 
   try {
     // --- Employee Pays ---
     const employeePays = await prisma.employeePay.findMany({
-      where: whereEmployee,
+      where: {
+        ...where,
+        ...branchFilter("employeePay", branch, req.branchIds),
+      },
       include: {
         employee: {
           select: {
@@ -55,7 +37,7 @@ const getAllLaborPays = async (req, res) => {
                     branch: {
                       select: {
                         id: true,
-                        branchName: true, 
+                        branchName: true,
                       },
                     },
                   },
@@ -86,12 +68,14 @@ const getAllLaborPays = async (req, res) => {
       createdByUser: pay.createdByUser,
       updatedByUser: pay.updatedByUser,
       amount: pay.payComponents.reduce((sum, pc) => sum + Number(pc.amount), 0),
-      // payComponents: pay.payComponents,
     }));
 
     // --- Contractor Pays ---
     const contractorPays = await prisma.contractorPay.findMany({
-      where: whereContractor,
+      where: {
+        ...where,
+        ...branchFilter("contractorPay", branch, req.branchIds),
+      },
       include: {
         contractor: {
           select: {
@@ -106,7 +90,7 @@ const getAllLaborPays = async (req, res) => {
                     branch: {
                       select: {
                         id: true,
-                        branchName: true, 
+                        branchName: true,
                       },
                     },
                   },
@@ -146,5 +130,4 @@ const getAllLaborPays = async (req, res) => {
   }
 };
 
-
-module.exports = { getAllLaborPays }
+module.exports = { getAllLaborPays };

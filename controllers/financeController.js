@@ -2,7 +2,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getMonthYear } = require("../utils/monthYearFilter");
-const { getBranchFilter } = require("../utils/getBranchFilter");
+const { branchFilter } = require("../utils/branchFilter");
 
 const getRevenueProfit = async (req, res) => {
   try {
@@ -14,32 +14,32 @@ const getRevenueProfit = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       // Revenue sources
       const transactions = await tx.transaction.findMany({
-        where: { ...where, ...getBranchFilter("transaction", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("transaction", branch, req.branchIds) },
       });
 
       const otherIncomes = await tx.otherIncome.findMany({
-        where: { ...where, ...getBranchFilter("otherIncome", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("otherIncome", branch, req.branchIds) },
       });
 
       const materials = await tx.material.findMany({
-        where: { ...where, ...getBranchFilter("material", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("material", branch, req.branchIds) },
       });
 
       const overheads = await tx.overhead.findMany({
-        where: { ...where, ...getBranchFilter("overhead", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("overhead", branch, req.branchIds) },
       });
 
       const equipments = await tx.equipment.findMany({
-        where: { ...where, ...getBranchFilter("equipment", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("equipment", branch, req.branchIds) },
       });
 
       const employeePays = await tx.employeePay.findMany({
-        where: { ...where, ...getBranchFilter("employeePay", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("employeePay", branch, req.branchIds) },
         include: { payComponents: true },
       });
 
       const contractorPays = await tx.contractorPay.findMany({
-        where: { ...where, ...getBranchFilter("contractorPay", branch, req.branchIds) },
+        where: { ...where, ...branchFilter("contractorPay", branch, req.branchIds) },
       });
 
       // Totals

@@ -649,3 +649,9 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20251008	18:32:44	60c80b09-90b1-482c-9437-d5843f765721	ReferenceError: getMonthYear is not defined
 20251008	18:32:44	b5f48098-9306-44d6-8c29-7622f32ffc63	ReferenceError: getMonthYear is not defined
 20251008	18:32:44	7a3417b4-e70c-464e-a87a-e8863175f747	ReferenceError: getMonthYear is not defined
+20251008	23:35:35	d34f4b73-04e5-48cb-b1d0-89f2e4d3ad3d	ReferenceError: Cannot access 'where' before initialization
+20251009	02:05:32	60a1a0dd-c05f-43fd-832f-29ced3ad3a7d	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:06:11	c9cd0471-1bda-4e1c-8489-178eabcb8ad9	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:06:11	025d3097-df9a-418f-a23a-241ddbf9a5f8	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:06:11	f336f8a9-da45-4646-90f9-fd344f741e30	TypeError: Cannot read properties of undefined (reading 'map')
+20251009	02:06:40	1464d55b-e3fa-4b8f-b47a-7909ff8a4b93	TypeError: Cannot read properties of undefined (reading 'map')
