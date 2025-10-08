@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getMonthYear } = require("../utils/monthYearFilter");
+
 
 const createTransaction = async (req, res) => {
     const { jobOrderCode, senderName, amount, mop, status } = req.body;
@@ -81,9 +83,12 @@ const getAllTransactions = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  let year = req?.query?.year;
-  let month = req?.query?.month;
-  let where = {};
+
+  const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
+
+  let where = {
+    createdAt: { gte: startDate, lt: endDate },
+  };
 
   // Branch filter (via JobOrder)
   if (branch) {
@@ -101,29 +106,6 @@ const getAllTransactions = async (req, res) => {
       { senderName: { contains: searchValue } },
     ];
   }
-
-  // Date filters — default to current month if none provided
-  const now = new Date();
-  year = year ? parseInt(year, 10) : now.getFullYear();
-  month = month ? parseInt(month, 10) - 1 : now.getMonth();
-
-  let startDate, endDate;
-  if (year && !month) {
-    startDate = new Date(year, 0, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year + 1, 0, 1);
-    endDate.setHours(0, 0, 0, 0);
-  } else {
-    startDate = new Date(year, month, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year, month + 1, 1);
-    endDate.setHours(0, 0, 0, 0);
-  }
-  
-
-  where.createdAt = { gte: startDate, lt: endDate };
 
   try {
     const totalItems = await prisma.transaction.count({ where });

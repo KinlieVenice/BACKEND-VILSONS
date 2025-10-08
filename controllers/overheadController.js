@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getMonthYear } = require("../utils/monthYearFilter");
 
 /*
   description String
@@ -154,10 +155,11 @@ const getAllOverheads = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  let year = req?.query?.year;
-  let month = req?.query?.month;
+  const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
 
-  let where = {};
+  let where = {
+    createdAt: { gte: startDate, lt: endDate },
+  };
 
   // Branch filter
   if (branch) {
@@ -172,34 +174,6 @@ const getAllOverheads = async (req, res) => {
     let searchValue = search.trim().replace(/^["']|["']$/g, "");
     where.OR = [{ description: { contains: searchValue } }];
   }
-
-  // Date filtering (optional, can be used later)
-  const now = new Date();
-  year = year ? parseInt(year, 10) : now.getFullYear();
-  month = month ? parseInt(month, 10) - 1 : now.getMonth();
-
-  let startDate, endDate;
-  if (year && !month) {
-    // Yearly range
-    startDate = new Date(year, 0, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year + 1, 0, 1);
-    endDate.setHours(0, 0, 0, 0);
-  } else {
-    // Monthly range
-    startDate = new Date(year, month, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year, month + 1, 1);
-    endDate.setHours(0, 0, 0, 0);
-  }
-  
-  // Filter by createdAt range if you have that field
-  where.createdAt = {
-    gte: startDate,
-    lt: endDate,
-  };
 
   try {
     const overheads = await prisma.overhead.findMany({

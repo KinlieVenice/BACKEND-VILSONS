@@ -86,6 +86,7 @@ const getAllLaborPays = async (req, res) => {
       createdByUser: pay.createdByUser,
       updatedByUser: pay.updatedByUser,
       amount: pay.payComponents.reduce((sum, pc) => sum + Number(pc.amount), 0),
+      // payComponents: pay.payComponents,
     }));
 
     // --- Contractor Pays ---
@@ -105,7 +106,7 @@ const getAllLaborPays = async (req, res) => {
                     branch: {
                       select: {
                         id: true,
-                        branchName: true, //FIXED FIELD NAME
+                        branchName: true, 
                       },
                     },
                   },

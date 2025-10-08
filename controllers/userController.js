@@ -720,15 +720,11 @@ const getAllUsers = async (req, res) => {
     if (role) {
       where.roles = {
         some: {
-          role: {
-            roleName: role,
-          },
+          roleId: role, // since UserRole has roleId
         },
       };
     }
-
-    //  Branch filter logic
-    // If ?branch query is provided, use it. Otherwise, use branches from JWT (req.branchIds)
+    
     if (branch) {
       let branchValue = req.query.branch.trim().replace(/^["']|["']$/g, "");
       where.branches = {

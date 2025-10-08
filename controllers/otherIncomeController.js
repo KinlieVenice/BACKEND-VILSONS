@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getMonthYear } = require("../utils/monthYearFilter");
+
 
 /*
   description String
@@ -154,10 +156,11 @@ const getAllOtherIncomes = async (req, res) => {
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
-  let year = req?.query?.year; // e.g. "2025"
-  let month = req?.query?.month; // e.g. "09" for September
+  const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
 
-  let where = {};
+  let where = {
+    createdAt: { gte: startDate, lt: endDate },
+  };
 
   if (branch) {
     let branchValue = branch.trim().replace(/^["']|["']$/g, "");
@@ -171,33 +174,6 @@ const getAllOtherIncomes = async (req, res) => {
     let searchValue = search.trim().replace(/^["']|["']$/g, "");
     where.OR = [{ description: { contains: searchValue } }];
   }
-
-  // Date filters — default to current month if none provided
-  const now = new Date();
-  year = year ? parseInt(year, 10) : now.getFullYear();
-  month = month ? parseInt(month, 10) - 1 : now.getMonth();
-
-  let startDate, endDate;
-  if (year && !month) {
-    // Yearly range
-    startDate = new Date(year, 0, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year + 1, 0, 1);
-    endDate.setHours(0, 0, 0, 0);
-  } else {
-    // Monthly range
-    startDate = new Date(year, month, 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    endDate = new Date(year, month + 1, 1);
-    endDate.setHours(0, 0, 0, 0);
-  }
-
-   where.createdAt = {
-    gte: startDate,
-    lt: endDate,
-  };
 
   try {
     const totalItems = await prisma.otherIncome.count({ where });
