@@ -78,70 +78,81 @@ const editRolePermission = async (req, res) => {
   const { roleId } = req.params;
   const { add = [], remove = [], update = [] } = req.body;
 
+  if (!roleId) {
+    return res.status(400).json({ error: "Missing roleId parameter" });
+  }
+
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      const updates = [];
+    const summary = { added: 0, removed: 0, updated: 0 };
 
-      // ✅ Add new permissions
-      if (add.length > 0) {
-        const dataToAdd = add.map((p) => ({
-          roleId,
-          permissionId: p.permissionId,
-          approval: p.approval ?? false,
-        }));
+    await prisma.$transaction(async (tx) => {
+      // ADD — bulk insert with createMany
+      // if (add.length > 0) {
+      //   const addedPermissions = add.map((perm) => ({
+      //     roleId,
+      //     permissionId: perm.permissionId,
+      //     approval: perm.approval ?? false,
+      //   }));
 
-        await tx.rolePermission.createMany({
-          data: dataToAdd,
-          skipDuplicates: true, // prevents unique constraint error
-        });
+      //   const added = await tx.rolePermission.createMany({
+      //     data: addedPermissions,
+      //     skipDuplicates: true,
+      //   });
 
-        updates.push(`Added ${dataToAdd.length} permission(s)`);
-      }
+      //   summary.added += added.count;
+      // }
 
-      // ✅ Remove permissions
+      const role = await tx.role.findFirst({
+        where: { id: roleId }
+      })
+      if (!role) return res.status(400).json({ message: "Role doesn't exist"})
+
+      // REMOVE — bulk delete with deleteMany
       if (remove.length > 0) {
-        await tx.rolePermission.deleteMany({
+        const permissionIdsToRemove = remove.map((p) => p.permissionId);
+        const deleted = await tx.rolePermission.deleteMany({
           where: {
             roleId,
-            permissionId: { in: remove },
+            permissionId: { in: permissionIdsToRemove },
           },
         });
-
-        updates.push(`Removed ${remove.length} permission(s)`);
+        summary.removed += deleted.count;
       }
 
-      // ✅ Update permissions (e.g. approval value)
+      // 3️⃣ UPDATE — map-based parallel updates (bulk style)
       if (update.length > 0) {
-        for (const p of update) {
-          await tx.rolePermission.updateMany({
-            where: { roleId, permissionId: p.permissionId },
-            data: { approval: p.approval },
-          });
-        }
+        const results = await Promise.all(
+          update.map((perm) =>
+            tx.rolePermission.updateMany({
+              where: {
+                roleId,
+                permissionId: perm.permissionId,
+              },
+              data: {
+                approval: perm.approval ?? false,
+              },
+            })
+          )
+        );
 
-        updates.push(`Updated ${update.length} permission(s)`);
+        summary.updated += results.reduce((acc, curr) => acc + curr.count, 0);
       }
-
-      // ✅ Return updated permission list
-      const updatedPermissions = await tx.rolePermission.findMany({
-        where: { roleId },
-        include: { permission: true },
-      });
-
-      return {
-        message: "Role permissions updated successfully",
-        summary: updates,
-        updatedPermissions,
-      };
     });
 
-    return res.status(200).json(result);
+    return res.json({
+      message: "Role permissions updated successfully",
+      summary,
+    });
   } catch (error) {
-    console.error("Error editing role permissions:", error);
+    console.error(error);
+    if (error.code === "P2002") {
+      return res
+        .status(400)
+        .json({ error: "Duplicate permission assignment detected" });
+    }
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 module.exports = { createRole, editRolePermission };
 

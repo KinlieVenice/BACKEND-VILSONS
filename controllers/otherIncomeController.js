@@ -105,7 +105,6 @@ const editOtherIncome = async (req, res) => {
 
 const deleteOtherIncome = async (req, res) => {
   if (!req.params.id) return res.status(404).json({ message: "Id is required" });
-
   try {
     const otherIncome = await prisma.otherIncome.findFirst({
       where: { id: req.params.id },
@@ -118,9 +117,9 @@ const deleteOtherIncome = async (req, res) => {
     const needsApproval = req.approval;
     let message;
     const otherIncomeData = {
-      description: description ?? otherIncome.description,
-      amount: amount ?? otherIncome.amount,
-      branchId: branchId ?? otherIncome.branchId,
+      description: otherIncome.description,
+      amount: otherIncome.amount,
+      branchId: otherIncome.branchId,
       updatedByUser: req.username,
     };
 

@@ -363,8 +363,6 @@ model ContractorPayEdit {
 
 }
 
-
-
 model EmployeeSalary {
   id         String @id @default(uuid())
   employeeId String
