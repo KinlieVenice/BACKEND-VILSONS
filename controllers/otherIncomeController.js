@@ -157,12 +157,13 @@ const getAllOtherIncomes = async (req, res) => {
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
-  let where;
-  where = {
-    createdAt: { gte: startDate, lt: endDate }, ...where, ...branchFilter("otherIncome", branch, req.branchIds)
+
+  let where = {
+    createdAt: { gte: startDate, lt: endDate },
+    ...branchFilter("otherIncome", branch, req.branchIds)
   };
 
-  // Search filter
+    // Search filter
   if (search) {
     let searchValue = search.trim().replace(/^["']|["']$/g, "");
     where.OR = [{ description: { contains: searchValue } }];

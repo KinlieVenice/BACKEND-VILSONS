@@ -944,3 +944,9 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20251009	02:38:23	60921602-8ab7-4504-a25c-4d047175521f	ReferenceError: branches is not defined
 20251009	02:38:23	d25e1d41-d769-4237-8347-0e90f4f5f3c1	ReferenceError: branches is not defined
 20251009	02:38:23	13dd5381-75a1-4107-9afb-db662cf039fc	ReferenceError: branches is not defined
+20251009	15:09:35	0ea8e17c-0e8a-49db-80cb-62f168b1ad0e	SyntaxError: Bad control character in string literal in JSON at position 261 (line 8 column 52)
+20251009	15:21:55	9e6799d7-d862-49f5-b630-b7dc997ae4a7	TypeError: getMonthYear is not a function
+20251009	15:41:42	a80b1c18-4453-40a4-8c73-7853dc6d8d91	TypeError: Cannot read properties of undefined (reading 'setHours')
+20251009	16:37:46	a39d5ce2-13ac-4aa0-a111-503e10db0b9d	SyntaxError: Expected double-quoted property name in JSON at position 30 (line 4 column 1)
+20251009	16:40:38	6cfd79a8-556c-4b2f-b9f6-5cc2ad06f9c7	Error: Cannot set headers after they are sent to the client
+20251009	16:43:32	accb25c4-6d36-435a-87f3-002a7eab3edd	Error: Cannot set headers after they are sent to the client
