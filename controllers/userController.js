@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const relationsChecker = require("../utils/relationsChecker");
 const { getDateRangeFilter } = require("../utils/dateRangeFilter");
 
-const createUser = async (req, res) => {
+const createUserOLD = async (req, res) => {
   const {
     name,
     username,
@@ -163,6 +163,128 @@ const createUser = async (req, res) => {
         ...safeUser,
         // ...(({ hashPwd, refreshToken, ...safeUser }) => safeUser)(result.editedUser),
       },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const createUser = async (req, res) => {
+  const {
+    name,
+    username,
+    phone,
+    email,
+    password,
+    description,
+    roles,
+    branches,
+  } = req.body;
+
+  if (!name || !username || !phone || !email || !roles || !branches) {
+    return res.status(400).json({
+      message: "Name, username, email, phone, branches, and roles are required",
+    });
+  }
+
+  const existingUser = await prisma.user.findFirst({
+    where: { OR: [{ username }, { email }] },
+  });
+
+  const pendingUser = await prisma.userEdit.findFirst({
+    where: { OR: [{ username }, { email }] },
+  });
+
+  if (existingUser || pendingUser) {
+    let message = [];
+    if ((existingUser && existingUser.username === username) ||
+        (pendingUser && pendingUser.username === username)) message.push("Username");
+    if ((existingUser && existingUser.email === email) ||
+        (pendingUser && pendingUser.email === email)) message.push("Email");
+    return res.status(400).json({ error: `${message.join(" and ")} already exist` });
+  }
+
+  try {
+    const needsApproval = req.approval;
+    const message = needsApproval
+      ? "User created is awaiting approval"
+      : "User is successfully created";
+
+    const hashPwd = await bcrypt.hash(password || process.env.DEFAULT_PASSWORD, 10);
+    const userData = {
+      fullName: name,
+      username,
+      phone,
+      email,
+      hashPwd,
+      ...(description ? { description } : {}),
+      createdByUser: req.username || null,
+      updatedByUser: req.username || null,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user = needsApproval
+        ? await tx.userEdit.create({ data: { ...userData, requestType: "create" } })
+        : await tx.user.create({ data: { ...userData, status: "active" } });
+
+      if (!needsApproval) {
+        const roleTableMap = {
+          admin: () => tx.admin.create({ data: { userId: user.id } }),
+          customer: () => tx.customer.create({ data: { userId: user.id } }),
+          employee: () => tx.employee.create({ data: { userId: user.id } }),
+          contractor: () => tx.contractor.create({ data: { userId: user.id, commission: req.body.commission } }),
+        };
+
+        // Helper: recursively find main/base role
+        const getMainRoleName = async (roleId) => {
+          const role = await tx.role.findUnique({
+            where: { id: roleId },
+            select: { roleName: true, baseRoleId: true },
+          });
+
+          if (!role) return null;
+
+          if (roleTableMap[role.roleName]) return role.roleName; // is main role
+          if (role.baseRoleId) return await getMainRoleName(role.baseRoleId); // go up
+          return null; // no main role found
+        };
+
+        // Fetch role IDs for this user
+        const roleNamesToCreateTables = await Promise.all(
+          roles.map((rId) => getMainRoleName(rId))
+        );
+
+        // Remove duplicates and nulls
+        const uniqueRoleNames = [...new Set(roleNamesToCreateTables.filter(Boolean))];
+
+        // Create tables for main roles
+        await Promise.all(uniqueRoleNames.map((roleName) => roleTableMap[roleName]()));
+      }
+
+      // userRole table
+      const userRoleData = roles.map((role) => ({ roleId: role, userId: user.id }));
+      if (!needsApproval) await tx.userRole.createMany({ data: userRoleData });
+
+      // userBranch table
+      const userBranchData = branches.map((branch) => ({ branchId: branch, userId: user.id }));
+      if (!needsApproval) await tx.userBranch.createMany({ data: userBranchData });
+
+      const userDetails = await tx.user.findFirst({
+        where: { id: user.id },
+        include: {
+          roles: { include: { role: true } },
+          branches: { include: { branch: true } },
+        },
+      });
+
+      return { userDetails };
+    });
+
+    const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
+
+    return res.status(201).json({
+      message,
+      data: safeUser,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
