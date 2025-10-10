@@ -59,7 +59,7 @@ const editOtherIncome = async (req, res) => {
     return res.status(400).json({ message: "ID is required" });
 
   try {
-    const otherIncome = await prisma.otherIncome({
+    const otherIncome = await prisma.otherIncome.findFirst({
       where: { id: req.params.id },
     });
     if (!otherIncome)

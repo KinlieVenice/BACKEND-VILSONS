@@ -291,6 +291,8 @@ const createUser = async (req, res) => {
   }
 };
 
+// apply in edit too if role is changed
+
 const editUser = async (req, res) => {
   const { name, phone, email, description, roles, branches } = req.body;
 

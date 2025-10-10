@@ -6,8 +6,8 @@ const createRole = async (req, res) => {
   try {
     const { name, baseRoleId } = req.body;
 
-    if (!name || name.trim() === "") {
-      return res.status(400).json({ error: "name is required" });
+    if (!name || name.trim() === "" ||  !baseRoleId) {
+      return res.status(400).json({ error: "name and baseRoleId is required" });
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -21,7 +21,7 @@ const createRole = async (req, res) => {
         data: {
           roleName: name.trim(),
           isCustom: Boolean(baseRoleId), // true if based on another role
-          baseRoleId: baseRoleId || null,
+          baseRoleId: baseRoleId,
           createdByUser: req.username
         },
       });
