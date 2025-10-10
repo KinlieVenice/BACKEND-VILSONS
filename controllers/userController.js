@@ -293,7 +293,7 @@ const createUser = async (req, res) => {
 
 // apply in edit too if role is changed
 
-const editUser = async (req, res) => {
+const editUserOld = async (req, res) => {
   const { name, phone, email, description, roles, branches } = req.body;
 
   if (!req?.params?.id)
@@ -450,6 +450,152 @@ const editUser = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+const editUser = async (req, res) => {
+  const { name, phone, email, description, roles, branches } = req.body;
+
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  const user = await prisma.user.findFirst({ where: { id: req.params.id } });
+  if (!user)
+    return res
+      .status(400)
+      .json({ message: `User with ${req.params.id} doesn't exist` });
+
+  // Utility to find the main role recursively
+  const getMainRoleName = async (roleId) => {
+    let role = await prisma.role.findUnique({ where: { id: roleId } });
+    if (!role) return null;
+    if (["admin", "customer", "employee", "contractor"].includes(role.roleName))
+      return role.roleName;
+    if (role.baseRoleId) return getMainRoleName(role.baseRoleId);
+    return null;
+  };
+
+  try {
+    let needsApproval = req.approval;
+    let message = needsApproval
+        ? "User edit awaiting approval"
+        : "User edited successfully";
+
+    let existingUser;
+    let pendingUser;
+
+    if (email && email !== user.email) {
+      existingUser = await prisma.user.findFirst({ where: { email } });
+      pendingUser = await prisma.userEdit.findFirst({
+        where: { email, approvalStatus: "pending" },
+      });
+    }
+
+    if (existingUser || pendingUser) {
+      return res
+        .status(400)
+        .json({ message: "Email already in use or pending approval" });
+    }
+
+    const updatedData = {
+      fullName: name ?? user.fullName,
+      username: user.username,
+      phone: phone ?? user.phone,
+      email: email ?? user.email,
+      hashPwd: user.hashPwd,
+      description: description ?? user.description,
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const editedUser = needsApproval
+        ? await tx.userEdit.create({
+            data: {
+              userId: user.id,
+              ...updatedData,
+              createdByUser: req.username,
+              requestType: "edit",
+            },
+          })
+        : await tx.user.update({
+            where: { id: user.id },
+            data: updatedData,
+          });
+
+      const arraysEqual = (a, b) =>
+        Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        [...a].sort().join(",") === [...b].sort().join(",");
+
+      if (!needsApproval && roles && !arraysEqual(user.roles, roles)) {
+        // STEP 1: Reset junction table roles
+        await tx.userRole.deleteMany({ where: { userId: user.id } });
+
+        await tx.userRole.createMany({
+          data: roles.map((role) => ({ userId: user.id, roleId: role })),
+        });
+
+        // STEP 2: Clear old role-specific tables
+        await Promise.all([
+          tx.admin.deleteMany({ where: { userId: user.id } }),
+          tx.customer.deleteMany({ where: { userId: user.id } }),
+          tx.employee.deleteMany({ where: { userId: user.id } }),
+          tx.contractor.deleteMany({ where: { userId: user.id } }),
+        ]);
+
+        // STEP 3: Recreate tables based on main roles (recursive)
+        const roleTableMap = {
+          admin: () => tx.admin.create({ data: { userId: user.id } }),
+          customer: () => tx.customer.create({ data: { userId: user.id } }),
+          employee: () => tx.employee.create({ data: { userId: user.id } }),
+          contractor: () =>
+            tx.contractor.create({ data: { userId: user.id, commission: req.body.commission } }),
+        };
+
+        // Determine main roles from roleIds recursively
+        const roleNamesToCreateTables = await Promise.all(
+          roles.map((roleId) => getMainRoleName(roleId))
+        );
+
+        const uniqueRoleNames = [...new Set(roleNamesToCreateTables)].filter(Boolean);
+
+        // Run mapped role table functions for main roles
+        await Promise.all(
+          uniqueRoleNames
+            .filter((roleName) => roleTableMap[roleName])
+            .map((roleName) => roleTableMap[roleName]())
+        );
+      }
+
+      // STEP 4: Update branches if changed
+      if (!needsApproval && branches && !arraysEqual(user.branches, branches)) {
+        await tx.userBranch.deleteMany({ where: { userId: user.id } });
+        await tx.userBranch.createMany({
+          data: branches.map((branch) => ({ userId: user.id, branchId: branch })),
+        });
+      }
+
+      const userDetails = await tx.user.findFirst({
+        where: { id: editedUser.id },
+        include: {
+          roles: { include: { role: true } },
+          branches: { include: { branch: true } },
+        },
+      });
+
+      return { userDetails };
+    });
+
+    const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
+
+    return res.status(201).json({
+      message,
+      data: { ...safeUser },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 
 const editProfile = async (req, res) => {
   const { name, phone, email, description } = req.body;

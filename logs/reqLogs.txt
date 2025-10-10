@@ -9329,3 +9329,6 @@
 20251009	23:34:03	abcbf75a-a416-4c22-bc84-c563ce4d1240	GET	http://localhost:5173	/api/other-incomes?year=2025&month=10&search=
 20251009	23:34:23	27dfa860-3b15-45c2-b545-19df8dd8463a	GET	undefined	/api/other-incomes?year=2025&month=10&search=
 20251009	23:34:23	71d10e3c-620a-42f9-9cb1-f7b7c104c16c	GET	undefined	/favicon.ico
+20251010	23:32:26	2bd7919c-2fd4-4e6a-9f78-cfc55c2026d5	POST	undefined	/auth
+20251010	23:32:48	d26b1d77-544b-4db8-99a7-3f395a31968e	GET	undefined	/api/users
+20251010	23:34:14	762f0d59-df23-46ff-8e0d-a04c8834614c	PUT	undefined	/api/users/1b4a7798-2fa7-48b1-bff7-56ddb7a50aab
