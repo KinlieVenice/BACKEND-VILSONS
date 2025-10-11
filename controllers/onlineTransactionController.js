@@ -58,6 +58,54 @@ const createCheckoutSession = async (req, res) => {
   }
 };
 
+// 2. Webhook Handler with Signature Verification (updated)
+const webhookHandler55 = async (req, res) => {
+  try {
+    const signature = req.headers["paymongo-signature"];
+    const secret = process.env.PAYMONGO_WEBHOOK_SECRET;
+    const rawBody = req.body.toString("utf8");
+
+    if (!verifySignature(rawBody, signature, secret)) {
+      console.log("❌ Invalid PayMongo signature");
+      return res.status(400).json({ error: "Invalid signature" });
+    }
+
+    const event = JSON.parse(rawBody);
+    console.log("🧾 Full Webhook Body:", JSON.stringify(event, null, 2));
+
+    const type = event.data?.attributes?.type;
+    const payload = event.data?.attributes?.data;
+
+    console.log("🔔 Webhook event:", type);
+
+    if (type === "checkout_session.payment.paid") {
+      const session = payload.attributes;
+      const payment = session.payments?.[0];
+      if (!payment) return res.status(200).json({ message: "No payment data" });
+
+      const transactionData = {
+        referenceNumber: payment.attributes.source.reference_number,
+        mop: payment.attributes.source.type,
+        amount: payment.attributes.amount / 100,
+        status: "successful",
+      };
+
+      const updated = await prisma.transaction.updateMany({
+        where: { sessionId: payload.id },
+        data: transactionData,
+      });
+
+      console.log("✅ Updated transactions:", updated.count);
+      return res.json({ success: true });
+    }
+
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    console.error("❌ Webhook Error:", err);
+    res.status(500).json({ error: "Webhook processing failed" });
+  }
+};
+
 // 2. Webhook Handler with Signature Verification
 const webhookHandler = async (req, res) => {
   try {
@@ -138,3 +186,5 @@ function verifySignature(rawBody, signatureHeader, secret) {
 }
 
 module.exports = { createCheckoutSession, webhookHandler };
+
+

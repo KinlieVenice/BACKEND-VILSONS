@@ -100,6 +100,9 @@ model User {
   updatedOverhead     Overhead[]     @relation("UpdatedBy")
   updatedOverheadEdit OverheadEdit[] @relation("UpdatedBy")
 
+  requestedLogs ApprovalLog[] @relation("RequestedBy")
+  approvedLogs ApprovalLog[] @relation("ApprovedBy")
+
   createdBy User? @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User? @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 
@@ -888,15 +891,25 @@ model RolePermission {
 }
 
 model ApprovalLog {
-  id              String @id @default(uuid())
-  module          Module
-  table           TableName
-  moduleId String
-  requestComment  String
-  responseComment String
-  @@map("approvallog")
+  id            String   @id @default(uuid())
+  tableName     String
+  recordId      String?  // null for new CREATE requests
+  actionType    RequestType
+  payload       Json
+  requestedByUser   String
+  status        ApprovalStatus @default(pending)
+  approvedByUser    String?
+  versionNumber Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  responseComment String?
 
+  requestedBy User    @relation("RequestedBy", fields: [requestedByUser], references: [username], onDelete: NoAction)
+  approvedBy User?    @relation("ApprovedBy", fields: [approvedByUser], references: [username], onDelete: NoAction)
+
+  @@map("approvallog")
 }
+
 
 
 // enum

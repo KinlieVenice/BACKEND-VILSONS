@@ -15,6 +15,7 @@ const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const verifyJWT = require('./middleware/verifyJWT');
 const sanitizeInput = require('./middleware/sanitizeInput');
+const { webhookHandler } = require("./controllers/onlineTransactionController")
 
 // CORS setup (temporary open version for development)
 app.use(corsMiddleware); // apply global CORS middleware
@@ -24,6 +25,8 @@ app.use(logger);
 
 // urlencoded date
 app.use(express.urlencoded({ extended: false }));
+
+// app.post("/api/online-transactions/webhook", bodyParser.raw({ type: "application/json" }), webhookHandler);
 
 // json middleware for auto parse
 app.use(express.json());
@@ -56,7 +59,6 @@ app.use("/api/materials", require("./routes/api/materials"));
 app.use("/api/other-incomes", require("./routes/api/otherincomes"));
 app.use("/api/overheads", require("./routes/api/overheads"));
 app.use("/api/pay-mongo", require("./routes/api/payMongo"));
-app.use("/api/pay-mongo/webhook", bodyParser.raw({ type: "application/json" }));
 app.use("/api/online-transactions", require("./routes/api/onlineTransactions"));
 app.use("/api/transactions", require("./routes/api/transactions"));
 app.use("/api/finances", require("./routes/api/finances"));

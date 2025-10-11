@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { createCheckoutSession, webhookHandler,} = require("../../controllers/onlineTransactionController");
+const onlineTransactionController = require("../../controllers/onlineTransactionController");
 
-// Routes
-router.post("/checkout-session", createCheckoutSession);
-router.post("/webhook", webhookHandler);
+router.route("/")
+.post(onlineTransactionController.createCheckoutSession);
 
 module.exports = router;
