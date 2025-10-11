@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const relationsChecker = require("../utils/relationsChecker");
 const { getDateRangeFilter } = require("../utils/dateRangeFilter");
+const getMainBaseRole = require("../utils/getMainBaseRole.js");
+
 
 const createUserOLD = async (req, res) => {
   const {
@@ -235,24 +237,11 @@ const createUser = async (req, res) => {
           contractor: () => tx.contractor.create({ data: { userId: user.id, commission: req.body.commission } }),
         };
 
-        // Helper: recursively find main/base role
-        const getMainRoleName = async (roleId) => {
-          const role = await tx.role.findUnique({
-            where: { id: roleId },
-            select: { roleName: true, baseRoleId: true },
-          });
-
-          if (!role) return null;
-
-          if (roleTableMap[role.roleName]) return role.roleName; // is main role
-          if (role.baseRoleId) return await getMainRoleName(role.baseRoleId); // go up
-          return null; // no main role found
-        };
-
         // Fetch role IDs for this user
         const roleNamesToCreateTables = await Promise.all(
-          roles.map((rId) => getMainRoleName(rId))
+          roles.map((rId) => getMainBaseRole(tx, rId))
         );
+
 
         // Remove duplicates and nulls
         const uniqueRoleNames = [...new Set(roleNamesToCreateTables.filter(Boolean))];
@@ -463,16 +452,6 @@ const editUser = async (req, res) => {
       .status(400)
       .json({ message: `User with ${req.params.id} doesn't exist` });
 
-  // Utility to find the main role recursively
-  const getMainRoleName = async (roleId) => {
-    let role = await prisma.role.findUnique({ where: { id: roleId } });
-    if (!role) return null;
-    if (["admin", "customer", "employee", "contractor"].includes(role.roleName))
-      return role.roleName;
-    if (role.baseRoleId) return getMainRoleName(role.baseRoleId);
-    return null;
-  };
-
   try {
     let needsApproval = req.approval;
     let message = needsApproval
@@ -553,7 +532,7 @@ const editUser = async (req, res) => {
 
         // Determine main roles from roleIds recursively
         const roleNamesToCreateTables = await Promise.all(
-          roles.map((roleId) => getMainRoleName(roleId))
+          roles.map((roleId) => getMainBaseRole(prisma, roleId))
         );
 
         const uniqueRoleNames = [...new Set(roleNamesToCreateTables)].filter(Boolean);
