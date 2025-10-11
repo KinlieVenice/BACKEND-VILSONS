@@ -154,5 +154,22 @@ const editRolePermission = async (req, res) => {
   }
 };
 
-module.exports = { createRole, editRolePermission };
+const getRolePermission = async (req, res) => {
+  if (!req?.params?.roleId) return res.status(404).json({ message: "Id needed"});
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+        const role = await tx.role.findFirst({
+          where: { id: req.params.roleId },
+          include: { permissions: {  include: { permission: true } }}
+        })
+        return role
+    })
+    return res.status(200).json({ data: result })
+  } catch (err) {
+    return res.status(500).json({ message: err.message })
+  }
+}
+
+module.exports = { createRole, editRolePermission, getRolePermission };
 

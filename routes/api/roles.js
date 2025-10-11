@@ -7,5 +7,6 @@ router.route("/")
 
 router.route("/:roleId")
 .put(roleController.editRolePermission)
+.get(roleController.getRolePermission)
 
 module.exports = router;
