@@ -150,7 +150,7 @@ const deleteBranch = async (req, res) => {
       .json({ message: `Branch with ${req.params.id} not found` });
 
   try {
-    const needsApproval = req.approval;
+    const needsApproval = true;
     let message;
     const deletedData = {
       branchName: branch.branchName,
@@ -162,13 +162,10 @@ const deleteBranch = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedBranch = needsApproval
-        ? await tx.branchEdit.create({
-            data: {
-              branchId: branch.id,
+        ? await requestApproval('branch', req.params.id, 'delete', {
               ...deletedData,
-              createdByUser: req.username,
-            },
-          })
+              createdByUser: req.username }, req.username)
+       
         : await tx.branch.delete({
             where: { id: branch.id },
           });

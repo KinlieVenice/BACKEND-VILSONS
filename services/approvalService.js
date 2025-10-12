@@ -32,7 +32,7 @@ const approveRequest = async (requestId, updateUser) => {
       break;
 
     case 'delete':
-      await prisma[tableName].delete({ where: { id: recordId } });
+      await prisma[tableName].delete({ where: { id: request.recordId } });
       break;
   }
 
