@@ -13,20 +13,21 @@ const requestApproval = async (tableName, recordId, actionType, payload, reqUser
     })
 };
 
-const approveRequest = async (requestId) => {
+const approveRequest = async (requestId, updateUser) => {
     const request = await prisma.approvalLog.findUnique({ where: { id: requestId }});
     if (!request) throw new Error('Approval request not found');
+    const tableName = request.tableName
 
-    switch (actionType) {
+    switch (request.actionType) {
     case 'create':
-      await prisma[tableName].create({ data: {...payload, createdByUser: request.payload.requestedByUser, updatedByUser: req.username }  });
+      await prisma[tableName].create({ data: {...request.payload, createdByUser: request.requestedByUser, updatedByUser: updateUser }  });
       break;
 
     case 'update':
       // Mark old record as versioned
       await prisma[tableName].update({
         where: { id: recordId },
-        data: {...payload, updatedByUser: req.username}
+        data: {...request.payload, updatedByUser: updateUser}
       });
       break;
 
@@ -37,12 +38,12 @@ const approveRequest = async (requestId) => {
 
   return prisma.approvalLog.update({
     where: { id: requestId },
-    data: { status: 'approved', approvedByUser: req.username, responseComment: 'Request approved successfully.', updatedAt: new Date()},
+    data: { status: 'published', approvedByUser: updateUser, responseComment: 'Request approved successfully.', updatedAt: new Date()},
   });
 
 };
 
-const rejectRequest = async (requestId, comment = null) => {
+const rejectRequest = async (requestId, approveUser, reason = null) => {
   const request = await prisma.approvalLog.findUnique({ where: { id: requestId } })
   if (!request) throw new Error('Approval request not found');
 
@@ -50,8 +51,8 @@ const rejectRequest = async (requestId, comment = null) => {
     where: { id: requestId },
     data: {
       status: 'rejected',
-      approvedByUser: req.username,     // matches your schema
-      responseComment: comment || 'No comment provided',
+      approvedByUser: approveUser,  
+      responseComment: reason || 'No comment provided',
       updatedAt: new Date(),
     },
   });

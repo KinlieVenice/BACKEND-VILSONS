@@ -958,3 +958,68 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20251012	20:19:55	96b654d4-8251-40d7-86ab-be4ecca47a8c	SyntaxError: Unexpected non-whitespace character after JSON at position 302 (line 14 column 1)
 20251012	20:20:02	a4178aad-d233-44f5-ba69-04ca10ead0a5	SyntaxError: Unexpected non-whitespace character after JSON at position 298 (line 12 column 2)
 20251012	20:20:15	5a499b89-caf9-4e57-bbcd-7585d13a03cc	SyntaxError: Expected double-quoted property name in JSON at position 92 (line 12 column 1)
+20251012	22:13:37	1d7a4a60-31b4-472a-9830-5e7fd76633c8	ReferenceError: approveRequest is not defined
+20251012	22:14:10	d0897e1a-534f-4459-9ca4-0dce97c020d0	ReferenceError: actionType is not defined
+20251012	22:15:43	2da5aaba-621d-4d40-b571-3bf340bf2e0e	ReferenceError: tableName is not defined
+20251012	22:16:36	2e85a85b-3283-460d-854f-c311ecd74899	ReferenceError: payload is not defined
+20251012	22:17:18	c894bc3d-b9e0-4a0e-a97d-09c13851a027	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:23:31
+
+  20 
+  21 switch (request.actionType) {
+  22 case 'create':
+→ 23   await prisma[tableName].create({
+         data: {
+           address: "Naic",
+           branchName: "New-Branch",
+           createdByUser: undefined,
+           updatedByUser: "adminreal",
+       +   createdBy: {
+       +     create: UserCreateWithoutCreatedBranchesInput | UserUncheckedCreateWithoutCreatedBranchesInput,
+       +     connectOrCreate: UserCreateOrConnectWithoutCreatedBranchesInput,
+       +     connect: UserWhereUniqueInput
+       +   }
+         }
+       })
+
+Argument `createdBy` is missing.
+20251012	22:24:21	e99aa6e1-4d40-453a-acac-a64690e8bd78	PrismaClientKnownRequestError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:23:31
+
+  20 
+  21 switch (request.actionType) {
+  22 case 'create':
+→ 23   await prisma[tableName].create(
+Unique constraint failed on the constraint: `branch_branchName_key`
+20251012	22:26:25	f40266c0-164a-44d2-adbf-d287f5cf30e7	PrismaClientValidationError: 
+Invalid `prisma.approvalLog.update()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:39:29
+
+  36     break;
+  37 }
+  38 
+→ 39 return prisma.approvalLog.update({
+       where: {
+         id: "f7f3a2d1-429e-46e6-a6a9-fc92c870da4d"
+       },
+       data: {
+         status: "approved",
+                 ~~~~~~~~~~
+         approvedByUser: "adminreal",
+         responseComment: "Request approved successfully.",
+         updatedAt: new Date("2025-10-12T14:26:25.040Z")
+       }
+     })
+
+Invalid value for argument `status`. Expected ApprovalStatus.
+20251012	22:27:26	1267c9a1-7043-455f-bd5f-4293578c1606	PrismaClientKnownRequestError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:23:31
+
+  20 
+  21 switch (request.actionType) {
+  22 case 'create':
+→ 23   await prisma[tableName].create(
+Unique constraint failed on the constraint: `branch_branchName_key`

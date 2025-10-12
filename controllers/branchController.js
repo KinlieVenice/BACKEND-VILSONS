@@ -36,7 +36,8 @@ const createBranch = async (req, res) => {
   }
 
   try {
-    const needsApproval = req.approval;
+    const needsApproval = true;
+    const reqUser = req.username;
     let message;
     let branchData = {
       branchName: name,
@@ -48,7 +49,7 @@ const createBranch = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const branch = needsApproval
-        ? await requestApproval('branch', null, 'create', branchData, req.username)
+        ? await requestApproval('branch', null, 'create', branchData, reqUser)
         : await tx.branch.create({
             data: branchData,
           });

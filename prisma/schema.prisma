@@ -211,7 +211,6 @@ model Branch {
   updatedBy User @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 
   @@map("branch")
-
 }
 
 model BranchEdit {
