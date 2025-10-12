@@ -4,7 +4,7 @@ const { getMonthYear } = require("../utils/monthYearFilter");
 
 
 const createTransaction = async (req, res) => {
-    const { jobOrderCode, senderName, amount, mop, status } = req.body;
+    const { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
 
     if (!jobOrderCode || !senderName || !amount || !mop || !status) return res.status(404).json({ message: "All jobOrderCode, senderName, amount, mop, status required"});
 
@@ -15,7 +15,8 @@ const createTransaction = async (req, res) => {
         const result = await prisma.$transaction(async (tx) => {
             const phpAmount = amount;
             const transactionData = {
-                jobOrderCode, senderName, amount: phpAmount, mop, status,
+                jobOrderCode, senderName, amount: phpAmount, mop, status, 
+                referenceNumber: referenceNumber ?? null,
                 createdByUser: req.username,
                 updatedByUser: req.username
             }
@@ -31,7 +32,7 @@ const createTransaction = async (req, res) => {
 }
 
 const editTransaction = async (req, res) => {
-    let { jobOrderCode, senderName, amount, mop, status } = req.body;
+    let { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
     if (!req?.params?.id) return res.status(404).json({ message: "ID required"});
 
     try {
@@ -41,6 +42,7 @@ const editTransaction = async (req, res) => {
             const transactionData = {
                 jobOrderCode: jobOrderCode ?? transaction.jobOrderCode,
                 senderName: senderName ?? transaction.senderName, 
+                referenceNumber: referenceNumber ?? transaction.referenceNumber,
                 amount: amount ?? transaction.amount, 
                 mop: mop ?? transaction.mop, 
                 status: status ?? transaction.status,
@@ -146,8 +148,6 @@ const getAllTransactions = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
-
 
 const getTransaction = async (req, res) => {
     if (!req?.params?.id) return res.status(404).json({ message: "ID required"});

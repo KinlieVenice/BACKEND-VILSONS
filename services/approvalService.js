@@ -1,19 +1,19 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const requestApproval = async (tableName, recordId, actionType, payload, userId) => {
+const requestApproval = async (tableName, recordId, actionType, payload, reqUser) => {
     return prisma.approvalLog.create({
         data: {
             tableName,
             recordId,
             actionType,
             payload,
-            requestedByUser: req.username,
+            requestedByUser: reqUser,
         },
     })
 };
 
-const approveRequest = async (requestId, adminId) => {
+const approveRequest = async (requestId) => {
     const request = await prisma.approvalLog.findUnique({ where: { id: requestId }});
     if (!request) throw new Error('Approval request not found');
 
@@ -40,7 +40,7 @@ const approveRequest = async (requestId, adminId) => {
     data: { status: 'approved', approvedByUser: req.username, responseComment: 'Request approved successfully.', updatedAt: new Date()},
   });
 
-}
+};
 
 const rejectRequest = async (requestId, comment = null) => {
   const request = await prisma.approvalLog.findUnique({ where: { id: requestId } })
@@ -55,4 +55,6 @@ const rejectRequest = async (requestId, comment = null) => {
       updatedAt: new Date(),
     },
   });
-}
+};
+
+module.exports = { requestApproval, approveRequest, rejectRequest }

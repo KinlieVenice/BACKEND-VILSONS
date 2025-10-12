@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-
+const { requestApproval } = require("../services/approvalService")
 /*
 branchName           String         @db.VarChar(100)
   description    String
@@ -48,9 +48,7 @@ const createBranch = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const branch = needsApproval
-        ? await tx.branchEdit.create({
-            data: { ...branchData, requestType: "create" },
-          })
+        ? await requestApproval('branch', null, 'create', branchData, req.username)
         : await tx.branch.create({
             data: branchData,
           });

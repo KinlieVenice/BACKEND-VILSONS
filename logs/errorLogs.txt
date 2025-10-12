@@ -955,3 +955,6 @@ Argument `where` of type UserWhereUniqueInput needs at least one of `id`, `usern
 20251009	22:50:08	b2fa5274-0307-4c13-ac38-838ac087623a	SyntaxError: Expected ',' or '}' after property value in JSON at position 218 (line 8 column 5)
 20251011	21:02:00	3c923e0f-4936-40a9-8cfb-869fde819347	SyntaxError: Expected ':' after property name in JSON at position 60 (line 16 column 19)
 20251011	21:02:38	a6033432-846b-4ef2-b9c9-ea0108f1d5be	SyntaxError: Expected ':' after property name in JSON at position 60 (line 16 column 19)
+20251012	20:19:55	96b654d4-8251-40d7-86ab-be4ecca47a8c	SyntaxError: Unexpected non-whitespace character after JSON at position 302 (line 14 column 1)
+20251012	20:20:02	a4178aad-d233-44f5-ba69-04ca10ead0a5	SyntaxError: Unexpected non-whitespace character after JSON at position 298 (line 12 column 2)
+20251012	20:20:15	5a499b89-caf9-4e57-bbcd-7585d13a03cc	SyntaxError: Expected double-quoted property name in JSON at position 92 (line 12 column 1)
