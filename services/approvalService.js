@@ -23,10 +23,10 @@ const approveRequest = async (requestId, updateUser) => {
       await prisma[tableName].create({ data: {...request.payload, createdByUser: request.requestedByUser, updatedByUser: updateUser }  });
       break;
 
-    case 'update':
+    case 'edit':
       // Mark old record as versioned
       await prisma[tableName].update({
-        where: { id: recordId },
+        where: { id: request.recordId },
         data: {...request.payload, updatedByUser: updateUser}
       });
       break;

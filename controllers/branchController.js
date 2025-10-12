@@ -36,8 +36,7 @@ const createBranch = async (req, res) => {
   }
 
   try {
-    const needsApproval = true;
-    const reqUser = req.username;
+    const needsApproval = req.approval;
     let message;
     let branchData = {
       branchName: name,
@@ -49,7 +48,7 @@ const createBranch = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const branch = needsApproval
-        ? await requestApproval('branch', null, 'create', branchData, reqUser)
+        ? await requestApproval('branch', null, 'create', branchData, req.username)
         : await tx.branch.create({
             data: branchData,
           });
@@ -103,7 +102,7 @@ const editBranch = async (req, res) => {
       .json({ message: "Branch name already in exists or pending approval" });
 
   try {
-    const needsApproval = req.approval;
+    const needsApproval = true;
     let message;
     const updatedData = {
       branchName: name ?? branch.branchName,
@@ -114,13 +113,9 @@ const editBranch = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedBranch = needsApproval
-        ? await tx.branchEdit.create({
-            data: {
+        ? await requestApproval('branch', req.params.id, 'edit', {
               ...updatedData,
-              createdByUser: req.username,
-              requestType: "edit",
-            },
-          })
+              createdByUser: req.username }, req.username)
         : await tx.branch.update({
             where: { id: req.params.id },
             data: updatedData,
