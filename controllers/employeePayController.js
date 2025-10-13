@@ -165,7 +165,7 @@ const getAllEmployeePays = async (req, res) => {
             },
           },
         },
-        branches: { include: { branch : { select: { id: true, branchName: true } } } }, 
+        branch : { select: { id: true, address: true, branchName: true } }, 
         payComponents: {
           select: {
             componentId: true,
@@ -196,7 +196,8 @@ const getEmployeePay = async (req, res) => {
 
   try {
     const employeePay  = await prisma.employeePay.findFirst({
-      where: { id: req.params.id },
+      where: { employeeId: req.params.id },
+      orderBy: { createdAt: 'desc' },
       include: { payComponents: { include: { component: true } } }
     });
 

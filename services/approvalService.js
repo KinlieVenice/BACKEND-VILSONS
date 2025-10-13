@@ -204,23 +204,30 @@ const approveRequest = async (requestId, updateUser) => {
     if (!request) throw new Error('Approval request not found');
     const tableName = request.tableName
 
-    switch (request.actionType) {
-    case 'create':
-      await prisma[tableName].create({ data: {...request.payload, createdByUser: request.requestedByUser, updatedByUser: updateUser }  });
-      break;
+    switch (tableName) {
+        case "user":
+            await handleUserApproval(request, updateUser, tx);
+            break;
 
-    case 'edit':
-      // Mark old record as versioned
-      await prisma[tableName].update({
-        where: { id: request.recordId },
-        data: {...request.payload, updatedByUser: updateUser}
-      });
-      break;
+        default:
+            switch (request.actionType) {
+                case 'create':
+                await prisma[tableName].create({ data: {...request.payload, createdByUser: request.requestedByUser, updatedByUser: updateUser }  });
+                break;
 
-    case 'delete':
-      await prisma[tableName].delete({ where: { id: request.recordId } });
-      break;
-  }
+            case 'edit':
+            // Mark old record as versioned
+                await prisma[tableName].update({
+                    where: { id: request.recordId },
+                    data: {...request.payload, updatedByUser: updateUser}
+                });
+                break;
+
+            case 'delete':
+                await prisma[tableName].delete({ where: { id: request.recordId } });
+                break;
+        }
+}
 
   return prisma.approvalLog.update({
     where: { id: requestId },
