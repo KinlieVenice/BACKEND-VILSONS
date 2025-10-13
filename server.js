@@ -54,6 +54,7 @@ app.use("/api/employee-pays", require("./routes/api/employeePays"));
 app.use("/api/labors", require("./routes/api/labors"));
 app.use("/api/me", require("./routes/api/me"));
 app.use("/api/contractors", require("./routes/api/contractors"));
+app.use("/api/employees", require("./routes/api/employees"));
 app.use("/api/customers", require("./routes/api/customers"));
 app.use("/api/equipments", require("./routes/api/equipments"));
 app.use("/api/materials", require("./routes/api/materials"));

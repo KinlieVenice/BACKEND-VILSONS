@@ -128,6 +128,27 @@ const getContractor = async (req, res) => {
 };
 
 const getAllContractors = async (req, res) => {
+  const search = req?.query?.search;
+   const branchIds = req.branchIds || [];
+   
+    const where = {
+      user: {
+        branches: {
+          some: { branchId: { in: branchIds } },
+        },
+      },
+    };
+
+    // If there's a search query, add search conditions
+    if (search) {
+      where.user.OR = [
+        { username: { contains: search } },
+        { fullName: { contains: search } },
+        { phone: { contains: search } },
+        { email: { contains: search } },
+      ];
+    }
+
   try {
     const branchIds = req.branchIds || [];
 

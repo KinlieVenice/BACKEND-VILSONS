@@ -1026,3 +1026,7 @@ Unique constraint failed on the constraint: `branch_branchName_key`
 20251012	22:47:20	0de9b412-3ec9-47c9-92a2-7ac34696c69e	Error: Approval request not found
 20251012	22:49:54	4509e5ea-69c3-4083-9aba-675638950baa	ReferenceError: recordId is not defined
 20251013	22:39:35	de45eabb-a99c-4822-9983-c77fe0ce8e23	TypeError: Cannot destructure property 'description' of 'req.body' as it is undefined.
+20251014	00:44:35	616eab72-eeec-4188-b6af-68185a937ed1	ReferenceError: branchIds is not defined
+20251014	00:44:36	a7ac760e-0c38-4e2f-acc6-6167153b6abf	ReferenceError: branchIds is not defined
+20251014	00:44:37	1889c95e-2de0-4e61-a0f0-9eb077b6472e	ReferenceError: branchIds is not defined
+20251014	00:44:37	2ddb6665-b599-4650-ac94-2ae3fad64994	ReferenceError: branchIds is not defined
