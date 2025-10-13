@@ -1025,3 +1025,4 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:23:
 Unique constraint failed on the constraint: `branch_branchName_key`
 20251012	22:47:20	0de9b412-3ec9-47c9-92a2-7ac34696c69e	Error: Approval request not found
 20251012	22:49:54	4509e5ea-69c3-4083-9aba-675638950baa	ReferenceError: recordId is not defined
+20251013	22:39:35	de45eabb-a99c-4822-9983-c77fe0ce8e23	TypeError: Cannot destructure property 'description' of 'req.body' as it is undefined.

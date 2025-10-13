@@ -2,13 +2,13 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const createEmployeePay = async (req, res) => {
-  const { employeeId, payComponents } = req.body;
+  const { userId, payComponents, branchId } = req.body;
 
   try {
     let totalComponentCost = 0;
 
     const employee = await prisma.employee.findFirst({
-      where: { id: employeeId }
+      where: { userId }
     });
     if (!employee) {
       return res.status(400).json({ message: "User is not an employee" });
@@ -17,7 +17,8 @@ const createEmployeePay = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       const employeePay = await tx.employeePay.create({
         data: {
-          employeeId,
+          employeeId: employee.id,
+          branchId,
           createdByUser: req.username,
           updatedByUser: req.username
         }
@@ -67,7 +68,7 @@ const createEmployeePay = async (req, res) => {
 };
 
 const editEmployeePay = async (req, res) => {
-  const { employeeId, payComponents } = req.body;
+  const { userId, payComponents, branchId } = req.body;
 
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
@@ -79,9 +80,9 @@ const editEmployeePay = async (req, res) => {
     });
     if (!employeePay) return res.status(404).json({ message: `Job order with ID: ${req.params.id} not found` });
 
-    if (employeeId) {
-      const employee = await prisma.employee.findFirst({ where: { id: employeeId } })
-      if (!employee) return res.status(404).json({ message: `Employee with ID: ${employeeId} not found` });
+    if (userId) {
+      const employee = await prisma.employee.findFirst({ where: { id: userId } })
+      if (!employee) return res.status(404).json({ message: `Employee with ID: ${userId} not found` });
     }
 
     let totalComponentCost = 0;
@@ -116,7 +117,9 @@ const editEmployeePay = async (req, res) => {
       await tx.employeePay.update({
         where: { id: employeePay.id },
         data: {
-          employeeId
+          userId,
+          branchId,
+          updatedByUser: req.username
         }
       })
 
@@ -162,6 +165,7 @@ const getAllEmployeePays = async (req, res) => {
             },
           },
         },
+        branches: { include: { branch : { select: { id: true, branchName: true } } } }, 
         payComponents: {
           select: {
             componentId: true,

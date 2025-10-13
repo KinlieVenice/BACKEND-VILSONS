@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 */
 
 const createContractorPay = async (req, res)  => {
-    const { userId, type, amount } = req.body;
+    const { userId, type, amount, branchId } = req.body;
     if (!userId || !type || !amount) return res.status(400).json({ message: "ContractorId, type, and amount required"});
 
     const contractor = await prisma.contractor.findFirst({ where: { userId }})
@@ -20,6 +20,7 @@ const createContractorPay = async (req, res)  => {
 
         let contractorPayData = {
             contractorId: contractor.id, 
+            branchId,
             type, amount,
             createdByUser: req.username,
             updatedByUser: req.username
@@ -42,7 +43,7 @@ const createContractorPay = async (req, res)  => {
 };
 
 const editContractorPay = async (req, res) => {
-     const { userId, type, amount } = req.body;
+     const { userId, type, amount, branchId } = req.body;
 
     if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
 
@@ -67,6 +68,7 @@ const editContractorPay = async (req, res) => {
 
         const contractorPayData = {
             contractorId,
+            branchId: branchId ?? contractorPay.branchId,
             type: type ?? contractorPay.type,
             amount: amount ?? contractorPay.amount,
             updatedByUser: req.username
@@ -105,6 +107,7 @@ const deleteContractorPay = async (req, res) => {
         const contractorPayData = {
             contractorId:  contractorPay.contractorId,
             type: contractorPay.type,
+            branchId: contractorPay.branchId,
             amount: contractorPay.amount,
             updatedByUser: req.username,
             createdByUser: req.username
@@ -134,7 +137,10 @@ const getContractorPay = async (req, res) => {
     try {
         const contractorPay = await prisma.contractorPay.findFirst({
             where: { id: req.params.id },
-            include: { contractor: { include: { user: { select: { username: true, fullName: true } } } } },
+            include: { 
+                contractor: { include: { user: { select: { username: true, fullName: true } } } },
+                branches: { include: { branch : { select: { id: true, branchName: true } } } } 
+            },
         });
         if (!contractorPay) return res.status((400).json({ message: "Contractor pay not found"}));
 

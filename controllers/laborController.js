@@ -46,6 +46,7 @@ const getAllLaborPays = async (req, res) => {
             },
           },
         },
+        branch : { select: { id: true, branchName: true } }, 
         payComponents: {
           select: {
             componentId: true,
@@ -68,6 +69,10 @@ const getAllLaborPays = async (req, res) => {
       createdByUser: pay.createdByUser,
       updatedByUser: pay.updatedByUser,
       amount: pay.payComponents.reduce((sum, pc) => sum + Number(pc.amount), 0),
+      branches: {
+        id: pay.branchId,
+        branchName: pay.branch?.branchName || 'N/A'
+      }
     }));
 
     // --- Contractor Pays ---
@@ -99,6 +104,7 @@ const getAllLaborPays = async (req, res) => {
             },
           },
         },
+        branch : { select: { id: true, branchName: true } }, 
       },
     });
 
@@ -114,6 +120,10 @@ const getAllLaborPays = async (req, res) => {
       createdByUser: pay.createdByUser,
       updatedByUser: pay.updatedByUser,
       amount: Number(pay.amount),
+      branches: {
+        id: pay.branchId,
+        branchName: pay.branch?.branchName || 'N/A'
+      }
     }));
 
     const allLaborPays = [...formattedEmployees, ...formattedContractors];

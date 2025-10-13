@@ -58,7 +58,7 @@ const editOverhead = async (req, res) => {
     return res.status(400).json({ message: "ID is required" });
 
   try {
-    const overhead = await prisma.overhead({
+    const overhead = await prisma.overhead.findFirst({
       where: { id: req.params.id },
     });
     if (!overhead)
@@ -117,9 +117,9 @@ const deleteOverhead = async (req, res) => {
     const needsApproval = req.approval;
     let message;
     const overheadData = {
-      description: description ?? overhead.description,
-      amount: amount ?? overhead.amount,
-      branchId: branchId ?? overhead.branchId,
+      description: overhead.description,
+      amount: overhead.amount,
+      branchId: overhead.branchId,
       updatedByUser: req.username,
     };
 

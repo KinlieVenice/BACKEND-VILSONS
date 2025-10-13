@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const relationsChecker = require("../utils/relationsChecker");
 const { getDateRangeFilter } = require("../utils/dateRangeFilter");
 const getMainBaseRole = require("../utils/getMainBaseRole.js");
+const { requestApproval } = require("../services/approvalService")
 
 
 const createUserOLD = async (req, res) => {
@@ -226,7 +227,7 @@ const createUser = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const user = needsApproval
-        ? await tx.userEdit.create({ data: { ...userData, requestType: "create" } })
+        ? await requestApproval('user', null, 'create', userData, req.username)
         : await tx.user.create({ data: { ...userData, status: "active" } });
 
       if (!needsApproval) {
@@ -486,14 +487,9 @@ const editUser = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedUser = needsApproval
-        ? await tx.userEdit.create({
-            data: {
-              userId: user.id,
+        ? await requestApproval('user', req.params.id, 'edit', {
               ...updatedData,
-              createdByUser: req.username,
-              requestType: "edit",
-            },
-          })
+              createdByUser: req.username }, req.username)
         : await tx.user.update({
             where: { id: user.id },
             data: updatedData,
@@ -574,7 +570,6 @@ const editUser = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 const editProfile = async (req, res) => {
   const { name, phone, email, description } = req.body;
@@ -744,13 +739,9 @@ const editUserPassword = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedUserPassword = needsApproval
-        ? await tx.userEdit.create({
-            data: {
-              userId: user.id,
+        ? await requestApproval('user', req.params.id, 'edit', {
               ...updatedData,
-              requestType: "edit",
-            },
-          })
+              createdByUser: req.username }, req.username)
         : await tx.user.update({
             where: { id: user.id },
             data: updatedData,

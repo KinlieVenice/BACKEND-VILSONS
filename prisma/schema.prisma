@@ -196,6 +196,8 @@ model Branch {
   OtherIncomes OtherIncome[]
   Equipments   Equipment[]
   Overheads    Overhead[]
+  EmployeePays    EmployeePay[]
+  ContractorPays    ContractorPay[]
 
   usersBranch       UserBranch[]
   usersBranchEdit       UserBranchEdit[]
@@ -323,6 +325,7 @@ model TruckOwnershipEdit {
 model ContractorPay {
   id           String @id @default(uuid())
   contractorId String
+  branchId String?
 
   type   PaymentType
   amount Decimal     @db.Decimal(13, 2)
@@ -335,10 +338,10 @@ model ContractorPay {
   edits ContractorPayEdit[]
 
   contractor Contractor @relation(fields: [contractorId], references: [id])
+  branch Branch? @relation(fields: [branchId], references: [id])
   createdBy  User      @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy  User      @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   @@map("contractorpay")
-
 }
 
 model ContractorPayEdit {
@@ -422,6 +425,7 @@ model EmployeeSalaryEdit {
 model EmployeePay {
   id        String   @id @default(uuid())
   employeeId String
+  branchId String?
   payComponents    PayComponent[] 
   type PaymentType @default(regular)
   
@@ -431,6 +435,7 @@ model EmployeePay {
   updatedByUser String
 
   employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: NoAction)
+  branch      Branch?     @relation(fields: [branchId], references: [id], onDelete: NoAction)
   createdBy User              @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User              @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   @@map("employeepay")

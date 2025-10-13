@@ -102,7 +102,7 @@ const editBranch = async (req, res) => {
       .json({ message: "Branch name already in exists or pending approval" });
 
   try {
-    const needsApproval = true;
+    const needsApproval = req.approval;
     let message;
     const updatedData = {
       branchName: name ?? branch.branchName,
@@ -135,7 +135,6 @@ const editBranch = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 // add check for relation even if its for approval
 const deleteBranch = async (req, res) => {
   if (!req.params.id)
@@ -150,7 +149,7 @@ const deleteBranch = async (req, res) => {
       .json({ message: `Branch with ${req.params.id} not found` });
 
   try {
-    const needsApproval = true;
+    const needsApproval = req.approval;
     let message;
     const deletedData = {
       branchName: branch.branchName,
@@ -165,7 +164,6 @@ const deleteBranch = async (req, res) => {
         ? await requestApproval('branch', req.params.id, 'delete', {
               ...deletedData,
               createdByUser: req.username }, req.username)
-       
         : await tx.branch.delete({
             where: { id: branch.id },
           });
