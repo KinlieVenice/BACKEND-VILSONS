@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 const createContractorPay = async (req, res)  => {
     const { userId, type, amount, branchId } = req.body;
-    if (!userId || !type || !amount) return res.status(400).json({ message: "ContractorId, type, and amount required"});
+    if (!userId || !type || !amount) return res.status(400).json({ message: "userId, type, branchId, and amount required"});
 
     const contractor = await prisma.contractor.findFirst({ where: { userId }})
     if (!contractor) return res.status(400).json({ message: "User is not a contractor"})

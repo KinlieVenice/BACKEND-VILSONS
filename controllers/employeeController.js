@@ -10,20 +10,18 @@ const getAllEmployees = async (req, res) => {
     const where = {
       user: {
         branches: {
-          some: {
-            branchId: { in: branchIds },
-          },
+          some: { branchId: { in: branchIds } },
         },
+        ...(search
+          ? {
+              OR: [
+                { fullName: { contains: search } },
+                { username: { contains: search } },
+              ],
+            }
+          : {}),
       },
     };
-
-    // Add search if provided
-    if (search) {
-      where.user.OR = [
-        { fullName: { contains: search } },
-        { username: { contains: search } },
-      ];
-    }
 
     // Fetch employees
     const employees = await prisma.employee.findMany({
@@ -134,7 +132,7 @@ const getEmployee = async (req, res) => {
           include: {
             payComponents: {
               include: {
-                component: true, // Include nested components
+                component: true, // ✅ Include nested components
               },
             },
           },

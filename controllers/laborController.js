@@ -4,7 +4,7 @@ const { getMonthYear } = require("../utils/monthYearFilter");
 const { branchFilter } = require("../utils/branchFilter"); 
 
 const getAllLaborPays = async (req, res) => {
-  const search = req?.query?.search;
+  const search = req?.query?.search?.trim()?.replace(/^["']|["']$/g, "");
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
@@ -15,15 +15,26 @@ const getAllLaborPays = async (req, res) => {
   const { startDate, endDate } = getMonthYear(year, month);
 
   // Base where for date range
-  const where = { createdAt: { gte: startDate, lt: endDate } };
+  const baseWhere = { createdAt: { gte: startDate, lt: endDate } };
 
   try {
     // --- Employee Pays ---
+    const employeeWhere = {
+      ...baseWhere,
+      ...branchFilter("employeePay", branch, req.branchIds),
+      ...(search
+        ? {
+            employee: {
+              user: {
+                fullName: { contains: search },
+              },
+            },
+          }
+        : {}),
+    };
+
     const employeePays = await prisma.employeePay.findMany({
-      where: {
-        ...where,
-        ...branchFilter("employeePay", branch, req.branchIds),
-      },
+      where: employeeWhere,
       include: {
         employee: {
           select: {
@@ -31,6 +42,7 @@ const getAllLaborPays = async (req, res) => {
             userId: true,
             user: {
               select: {
+                username: true,
                 fullName: true,
                 branches: {
                   select: {
@@ -46,7 +58,9 @@ const getAllLaborPays = async (req, res) => {
             },
           },
         },
-        branch : { select: { id: true, address: true, branchName: true } }, 
+        branch: {
+          select: { id: true, address: true, branchName: true },
+        },
         payComponents: {
           select: {
             componentId: true,
@@ -63,6 +77,7 @@ const getAllLaborPays = async (req, res) => {
       employeeId: pay.employee.id,
       userId: pay.employee.userId,
       fullName: pay.employee.user.fullName,
+      username: pay.employee.user.username,
       salaryType: pay.type,
       createdAt: pay.createdAt,
       updatedAt: pay.updatedAt,
@@ -70,18 +85,29 @@ const getAllLaborPays = async (req, res) => {
       updatedByUser: pay.updatedByUser,
       amount: pay.payComponents.reduce((sum, pc) => sum + Number(pc.amount), 0),
       branch: {
-        address: pay.branch?.address || 'N/A',
-        branchName: pay.branch?.branchName || 'N/A'
+        address: pay.branch?.address || "N/A",
+        branchName: pay.branch?.branchName || "N/A",
       },
-      branchId: pay.branchId
+      branchId: pay.branchId,
     }));
 
     // --- Contractor Pays ---
+    const contractorWhere = {
+      ...baseWhere,
+      ...branchFilter("contractorPay", branch, req.branchIds),
+      ...(search
+        ? {
+            contractor: {
+              user: {
+                fullName: { contains: search },
+              },
+            },
+          }
+        : {}),
+    };
+
     const contractorPays = await prisma.contractorPay.findMany({
-      where: {
-        ...where,
-        ...branchFilter("contractorPay", branch, req.branchIds),
-      },
+      where: contractorWhere,
       include: {
         contractor: {
           select: {
@@ -105,7 +131,9 @@ const getAllLaborPays = async (req, res) => {
             },
           },
         },
-        branch : { select: { id: true, address: true, branchName: true } }, 
+        branch: {
+          select: { id: true, address: true, branchName: true },
+        },
       },
     });
 
@@ -115,6 +143,7 @@ const getAllLaborPays = async (req, res) => {
       contractorId: pay.contractor.id,
       userId: pay.contractor.userId,
       fullName: pay.contractor.user.fullName,
+      username: pay.contractor.user.username,
       salaryType: pay.type,
       createdAt: pay.createdAt,
       updatedAt: pay.updatedAt,
@@ -122,12 +151,13 @@ const getAllLaborPays = async (req, res) => {
       updatedByUser: pay.updatedByUser,
       amount: Number(pay.amount),
       branch: {
-        address: pay.branch?.address || 'N/A',
-        branchName: pay.branch?.branchName || 'N/A'
+        address: pay.branch?.address || "N/A",
+        branchName: pay.branch?.branchName || "N/A",
       },
-      branchId: pay.branchId
+      branchId: pay.branchId,
     }));
 
+    // Combine results
     const allLaborPays = [...formattedEmployees, ...formattedContractors];
     const totalAmount = allLaborPays.reduce((sum, lp) => sum + lp.amount, 0);
 
@@ -138,8 +168,10 @@ const getAllLaborPays = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error(err);
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports = { getAllLaborPays };

@@ -1030,3 +1030,170 @@ Unique constraint failed on the constraint: `branch_branchName_key`
 20251014	00:44:36	a7ac760e-0c38-4e2f-acc6-6167153b6abf	ReferenceError: branchIds is not defined
 20251014	00:44:37	1889c95e-2de0-4e61-a0f0-9eb077b6472e	ReferenceError: branchIds is not defined
 20251014	00:44:37	2ddb6665-b599-4650-ac94-2ae3fad64994	ReferenceError: branchIds is not defined
+20251014	12:49:48	f1b6099a-7bbd-4b36-bd4f-ca6426b8269e	SyntaxError: Unexpected non-whitespace character after JSON at position 97 (line 34 column 1)
+20251014	13:21:18	9a913a79-1df0-4af6-a0a9-41823011b7ef	PrismaClientValidationError: 
+Invalid `prisma.approvalLog.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:197:48
+
+  194   where: { OR: [{ username }, { email }] },
+  195 });
+  196 
+→ 197 const pendingUser = await prisma.approvalLog.findFirst({
+        where: {
+          status: "pending",
+          OR: [
+            {
+              payload: {
+                path: [
+                  "username"
+                ],
+                equals: "userapprove"
+              }
+            },
+            {
+              payload: {
+                path: [
+                  "email"
+                ],
+                equals: "userapprove@gmail.com"
+              }
+            }
+          ]
+        }
+      })
+
+Argument `path`: Invalid value provided. Expected String, provided (String).
+20251014	13:21:35	abcb1d31-cace-4241-8815-46d13dd4d27f	PrismaClientValidationError: 
+Invalid `prisma.approvalLog.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:197:48
+
+  194   where: { OR: [{ username }, { email }] },
+  195 });
+  196 
+→ 197 const pendingUser = await prisma.approvalLog.findFirst({
+        where: {
+          status: "pending",
+          OR: [
+            {
+              payload: {
+                path: [
+                  "username"
+                ],
+                equals: "userapprove"
+              }
+            },
+            {
+              payload: {
+                path: [
+                  "email"
+                ],
+                equals: "userapprove@gmail.com"
+              }
+            }
+          ]
+        }
+      })
+
+Argument `path`: Invalid value provided. Expected String, provided (String).
+20251014	13:22:39	c598f230-156c-4382-ad35-d7954aa5f732	PrismaClientUnknownRequestError: 
+Invalid `prisma.approvalLog.findFirst()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\userController.js:197:48
+
+  194   where: { OR: [{ username }, { email }] },
+  195 });
+  196 
+→ 197 const pendingUser = await prisma.approvalLog.findFirst(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(Server(MysqlError { code: 3143, message: "Invalid JSON path expression. The error is around character position 1.", state: "42000" })), transient: false })
+20251014	13:24:42	de042d64-fd8f-4020-9a62-5e18a4e17230	ReferenceError: tx is not defined
+20251014	13:32:00	64227e4b-1357-47a5-8724-0ebd0d2924ab	TypeError: Cannot read properties of undefined (reading 'create')
+20251014	13:38:34	8b64b122-186e-4789-b805-6e7e39c34f00	TypeError: Cannot read properties of undefined (reading 'create')
+20251014	13:42:00	7cde092b-4362-4748-a567-f37901c97ac1	TypeError: Cannot read properties of undefined (reading 'create')
+20251014	13:55:16	d3ac6f76-8103-4d97-87eb-2c7304e83f05	PrismaClientKnownRequestError: 
+Invalid `tx.user.create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:27:28
+
+  24 
+  25 switch (action) {
+  26   case "create":
+→ 27     user = await tx.user.create(
+Unique constraint failed on the constraint: `user_username_key`
+20251014	13:59:11	c7e9c931-a405-471b-a6d0-5631c84c5ee3	PrismaClientValidationError: 
+Invalid `tx.user.create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:27:28
+
+  24 
+  25 switch (action) {
+  26   case "create":
+→ 27     user = await tx.user.create({
+           data: {
+             email: "userappr3o8ve@gmail.com",
+             phone: "93034",
+             roles: [
+               "5492f6b8-5e12-45de-a040-d91f394cc7b8",
+               "ab0435a2-e5ed-4d52-a4b0-5f77331364e5"
+             ],
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             hashPwd: "$2b$10$GTuDkAXV0yTPlWdXGnAl/OJoJ16iBjbENr2VByf6oeyjWYdNAJO3K",
+             fullName: "ye",
+             username: "usera3p8prove",
+             createdByUser: "adminreal",
+             updatedByUser: "adminreal",
+             status: "active"
+           }
+         })
+
+Argument `roles`: Invalid value provided. Expected UserRoleCreateNestedManyWithoutUserInput or UserRoleUncheckedCreateNestedManyWithoutUserInput, provided (String, String).
+20251014	15:11:02	d4c85f5f-7416-45d7-b7af-ceb6f3814a73	PrismaClientValidationError: 
+Invalid `tx.user.create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:27:28
+
+  24 
+  25 switch (action) {
+  26   case "create":
+→ 27     user = await tx.user.create({
+           data: {
+             email: "userappr3o8ve@gmail.com",
+             phone: "93034",
+             roles: [
+               "5492f6b8-5e12-45de-a040-d91f394cc7b8",
+               "ab0435a2-e5ed-4d52-a4b0-5f77331364e5"
+             ],
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             hashPwd: "$2b$10$GTuDkAXV0yTPlWdXGnAl/OJoJ16iBjbENr2VByf6oeyjWYdNAJO3K",
+             fullName: "ye",
+             username: "usera3p8prove",
+             createdByUser: "adminreal",
+             updatedByUser: "adminreal",
+             status: "active"
+           }
+         })
+
+Argument `roles`: Invalid value provided. Expected UserRoleCreateNestedManyWithoutUserInput or UserRoleUncheckedCreateNestedManyWithoutUserInput, provided (String, String).
+20251014	15:28:05	8e717a49-3f74-4809-8cd4-9f977fde595b	PrismaClientValidationError: 
+Invalid `tx.user.create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:27:28
+
+  24 
+  25 switch (action) {
+  26   case "create":
+→ 27     user = await tx.user.create({
+           data: {
+             email: "userap4prf3o8ve@gmail.com",
+             phone: "93034",
+             roles: [
+               "5492f6b8-5e12-45de-a040-d91f394cc7b8",
+               "ab0435a2-e5ed-4d52-a4b0-5f77331364e5"
+             ],
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             hashPwd: "$2b$10$Kg9BXGb9NS8tK57Ud4Szueb0bPo8bTzbnMI3NObZO34HkPS/adwTG",
+             fullName: "ye",
+             username: "useraf34p8prove",
+             createdByUser: "adminreal",
+             updatedByUser: "adminreal",
+             status: "active"
+           }
+         })
+
+Argument `roles`: Invalid value provided. Expected UserRoleCreateNestedManyWithoutUserInput or UserRoleUncheckedCreateNestedManyWithoutUserInput, provided (String, String).
+20251014	18:08:24	c2e0cebc-accb-44f3-8737-6a134304c0be	TypeError: getMainBaseRole is not a function

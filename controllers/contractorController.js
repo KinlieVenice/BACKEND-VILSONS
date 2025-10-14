@@ -92,10 +92,10 @@ const getContractor = async (req, res) => {
       0
     );
 
-    const totalContractorPays = contractor.contractorPay.reduce(
+    const totalTransactions = contractor.contractorPay.reduce(
         (sum, cp) => sum + Number(cp.amount),0);
     
-    const totalBalance = totalContractorCommission - totalContractorPays;
+    const totalBalance = totalContractorCommission - totalTransactions;
 
     const cleanContractor = {
       ...contractor,
@@ -118,7 +118,7 @@ const getContractor = async (req, res) => {
           }
         : null,
       JobOrder: jobOrders,
-      jobOrderSummary: { activeCount, archivedCount, totalContractorCommission, totalContractorPays, totalBalance }
+      jobOrderSummary: { activeCount, archivedCount, totalContractorCommission, totalTransactions, totalBalance }
     };
 
     res.status(200).json({ data: cleanContractor });
@@ -129,39 +129,27 @@ const getContractor = async (req, res) => {
 
 const getAllContractors = async (req, res) => {
   const search = req?.query?.search;
-   const branchIds = req.branchIds || [];
-   
-    const where = {
+  const branchIds = req.branchIds || [];
+
+  const where = {
       user: {
         branches: {
           some: { branchId: { in: branchIds } },
         },
+        ...(search
+          ? {
+              OR: [
+                { fullName: { contains: search } },
+                { username: { contains: search } },
+              ],
+            }
+          : {}),
       },
     };
 
-    // If there's a search query, add search conditions
-    if (search) {
-      where.user.OR = [
-        { username: { contains: search } },
-        { fullName: { contains: search } },
-        { phone: { contains: search } },
-        { email: { contains: search } },
-      ];
-    }
-
   try {
-    const branchIds = req.branchIds || [];
-
     const contractors = await prisma.contractor.findMany({
-      where: {
-        user: {
-          branches: {
-            some: {
-              branchId: { in: branchIds },
-            },
-          },
-        },
-      },
+      where,
       include: {
         contractorPay: { select: { amount: true } },
         JobOrder: {
@@ -185,9 +173,9 @@ const getAllContractors = async (req, res) => {
       },
     });
 
-    if (!contractors.length) {
-      return res.status(404).json({ message: "No contractors found" });
-    }
+    // if (!contractors.length) {
+    //   return res.status(404).json({ message: "No contractors found" });
+    // }
 
     const filter = req?.query?.filter;
     const activeStatuses = ["pending", "ongoing", "completed", "forRelease"];
@@ -290,7 +278,5 @@ const getAllContractors = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 module.exports = { getContractor, getAllContractors }

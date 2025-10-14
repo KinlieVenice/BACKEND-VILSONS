@@ -22,10 +22,13 @@ const createBranch = async (req, res) => {
     where: { branchName: name },
   });
 
-  const pendingBranch = await prisma.branchEdit.findFirst({
+  const pendingBranch = await prisma.approvalLog.findFirst({
     where: {
-      branchName: name,
-      approvalStatus: "pending",
+      payload: {
+        path: "$.branchName",
+        equals: name,
+      },
+      status: "pending",
     },
   });
 

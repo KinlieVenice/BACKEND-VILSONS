@@ -194,17 +194,35 @@ const createUser = async (req, res) => {
     where: { OR: [{ username }, { email }] },
   });
 
-  const pendingUser = await prisma.userEdit.findFirst({
-    where: { OR: [{ username }, { email }] },
+  const pendingUser = await prisma.approvalLog.findFirst({
+    where: {
+      status: "pending",
+      OR: [
+        { payload: { path: "$.username", equals: username } },
+        { payload: { path: "$.email", equals: email } },
+      ],
+    },
   });
 
   if (existingUser || pendingUser) {
+    const pendingUsername = pendingUser?.payload?.username;
+    const pendingEmail = pendingUser?.payload?.email;
+
     let message = [];
-    if ((existingUser && existingUser.username === username) ||
-        (pendingUser && pendingUser.username === username)) message.push("Username");
-    if ((existingUser && existingUser.email === email) ||
-        (pendingUser && pendingUser.email === email)) message.push("Email");
-    return res.status(400).json({ error: `${message.join(" and ")} already exist` });
+    if (
+      (existingUser && existingUser.username === username) ||
+      (pendingUsername && pendingUsername === username)
+    )
+      message.push("Username");
+    if (
+      (existingUser && existingUser.email === email) ||
+      (pendingEmail && pendingEmail === email)
+    )
+      message.push("Email");
+
+    return res
+      .status(400)
+      .json({ error: `${message.join(" and ")} already exist` });
   }
 
   try {
@@ -223,6 +241,7 @@ const createUser = async (req, res) => {
       ...(description ? { description } : {}),
       createdByUser: req.username || null,
       updatedByUser: req.username || null,
+      ...(needsApproval ? { roles, branches } : {}),
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -242,7 +261,6 @@ const createUser = async (req, res) => {
         const roleNamesToCreateTables = await Promise.all(
           roles.map((rId) => getMainBaseRole(tx, rId))
         );
-
 
         // Remove duplicates and nulls
         const uniqueRoleNames = [...new Set(roleNamesToCreateTables.filter(Boolean))];
@@ -267,20 +285,19 @@ const createUser = async (req, res) => {
         },
       });
 
-      return { userDetails };
+      return { user, userDetails } ;
     });
 
     const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
 
     return res.status(201).json({
       message,
-      data: safeUser,
+      data: needsApproval ? result.user : result.userDetails,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-
 // apply in edit too if role is changed
 
 const editUserOld = async (req, res) => {
