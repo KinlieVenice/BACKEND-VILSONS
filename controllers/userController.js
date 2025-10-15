@@ -226,7 +226,7 @@ const createUser = async (req, res) => {
   }
 
   try {
-    const needsApproval = req.approval;
+    const needsApproval = true;
     const message = needsApproval
       ? "User created is awaiting approval"
       : "User is successfully created";
@@ -288,11 +288,15 @@ const createUser = async (req, res) => {
       return { user, userDetails } ;
     });
 
-    const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
+    let safeUser;
+    if (!needsApproval) {
+      const { hashPwd: _, refreshToken, ...rest } = result.userDetails;
+      safeUser = rest;
+    }
 
     return res.status(201).json({
       message,
-      data: needsApproval ? result.user : result.userDetails,
+      data: needsApproval ? result.user : safeUser,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -471,7 +475,7 @@ const editUser = async (req, res) => {
       .json({ message: `User with ${req.params.id} doesn't exist` });
 
   try {
-    let needsApproval = req.approval;
+    let needsApproval = true;
     let message = needsApproval
         ? "User edit awaiting approval"
         : "User edited successfully";
@@ -481,9 +485,14 @@ const editUser = async (req, res) => {
 
     if (email && email !== user.email) {
       existingUser = await prisma.user.findFirst({ where: { email } });
-      pendingUser = await prisma.userEdit.findFirst({
-        where: { email, approvalStatus: "pending" },
-      });
+      pendingUser = await prisma.approvalLog.findFirst({
+        where: {
+          status: "pending",
+          OR: [
+            { payload: { path: "$.email", equals: email } },
+        ],
+      },
+  });
     }
 
     if (existingUser || pendingUser) {
@@ -500,6 +509,7 @@ const editUser = async (req, res) => {
       hashPwd: user.hashPwd,
       description: description ?? user.description,
       updatedByUser: req.username,
+      ...(needsApproval ? { roles, branches } : {}),
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -574,14 +584,18 @@ const editUser = async (req, res) => {
         },
       });
 
-      return { userDetails };
+      return { userDetails, user };
     });
 
-    const { hashPwd: _, refreshToken, ...safeUser } = result.userDetails;
+    let safeUser;
+    if (!needsApproval) {
+      const { hashPwd: _, refreshToken, ...rest } = result.userDetails;
+      safeUser = rest;
+    }
 
     return res.status(201).json({
       message,
-      data: { ...safeUser },
+      data: needsApproval ? result.user : safeUser,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -833,6 +847,8 @@ const deleteUserSS = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
+    const needsApproval = true;
+
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
@@ -856,6 +872,7 @@ const deleteUser = async (req, res) => {
         employee: {
           include: {
             employeeSalary: true,
+            employeePay: true
           },
         },
 
@@ -876,7 +893,6 @@ const deleteUser = async (req, res) => {
         createdTrucks: true,
         createdTruckEdit: true,
         createdTransaction: true,
-        createdTransactionEdit: true,
         createdJobOrder: true,
         createdJobOrderEdit: true,
         createdContractorPay: true,
@@ -897,7 +913,6 @@ const deleteUser = async (req, res) => {
         updatedTruck: true,
         updatedTruckEdit: true,
         updatedTransaction: true,
-        updatedTransactionEdit: true,
         updatedJobOrder: true,
         updatedJobOrderEdit: true,
         updatedContractorPay: true,
@@ -925,7 +940,23 @@ const deleteUser = async (req, res) => {
     let message = hasRelations ? "User marked as inactive (has related records)" : "User and related roles/branches/edits deleted successfully"
 
     await prisma.$transaction(async (tx) => {
-        if (hasRelations) {
+
+      if (needsApproval) {
+        const approval = await requestApproval(
+          "user",           // table name
+          user.id,           // record id
+          "delete",          // action type
+          user,              // payload (snapshot of data)
+          req.username        // requested by
+        );
+
+        return res.status(200).json({
+          message: "User deletion pending approval",
+          approvalId: approval.id, // include approval log ID here
+        });
+      }
+
+      if (hasRelations) {
         await tx.user.update({
           where: { id: user.id },
           data: { status: "inactive", refreshToken: null, },

@@ -84,6 +84,7 @@ const getAllLaborPays = async (req, res) => {
       createdByUser: pay.createdByUser,
       updatedByUser: pay.updatedByUser,
       amount: pay.payComponents.reduce((sum, pc) => sum + Number(pc.amount), 0),
+      payComponents: pay.payComponents,
       branch: {
         address: pay.branch?.address || "N/A",
         branchName: pay.branch?.branchName || "N/A",

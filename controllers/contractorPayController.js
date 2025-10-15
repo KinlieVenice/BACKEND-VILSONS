@@ -136,14 +136,14 @@ const getContractorPay = async (req, res) => {
 
     try {
         const contractorPay = await prisma.contractorPay.findFirst({
-            where: { contractorId: req.params.id },
+            where: { id: req.params.id },
             orderBy: { createdAt: 'desc' },
             include: { 
                 contractor: { include: { user: { select: { username: true, fullName: true } } } },
                 branch : { select: { id: true, branchName: true } } 
             },
         });
-        if (!contractorPay) return res.status((400).json({ message: "Contractor pay not found"}));
+        if (!contractorPay) return res.status(400).json({ message: "Contractor pay not found"});
 
         return res.status(201).json({ data: contractorPay})
     } catch (err) {
@@ -153,7 +153,8 @@ const getContractorPay = async (req, res) => {
 
 const getAllContractorPays = async (req, res) => {
     try {
-        const contractorPay = await prisma.contractorPay.findMany({            
+        const contractorPay = await prisma.contractorPay.findMany({       
+            orderBy: { createdAt: 'desc' },     
             include: { 
                 contractor: { include: { user: { select: { username: true, fullName: true } } } },
                 branch : { select: { id: true, address: true, branchName: true } }, 

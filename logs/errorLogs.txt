@@ -1197,3 +1197,46 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:27:
 
 Argument `roles`: Invalid value provided. Expected UserRoleCreateNestedManyWithoutUserInput or UserRoleUncheckedCreateNestedManyWithoutUserInput, provided (String, String).
 20251014	18:08:24	c2e0cebc-accb-44f3-8737-6a134304c0be	TypeError: getMainBaseRole is not a function
+20251014	19:53:26	0e82e18f-3767-4f79-b354-b781682d8b31	Error: Approval request not found
+20251014	21:54:14	18ccdc8f-9e7c-4698-973b-9173ff824e92	SyntaxError: Unexpected token ']', ..."  },
+    ], 
+    ""... is not valid JSON
+20251014	23:18:19	9210f48d-ff86-46bc-a8ad-0fdac00836b5	SyntaxError: Unexpected end of JSON input
+20251014	23:18:43	ad3086d7-1351-45a3-9fc0-80f0de436295	SyntaxError: Unexpected end of JSON input
+20251014	23:19:33	ea81cee4-6a53-4a3e-9bb7-9812823d00cd	SyntaxError: Unexpected end of JSON input
+20251014	23:23:27	fb130284-333e-46af-a9c5-935e1892b01b	SyntaxError: Unexpected end of JSON input
+20251014	23:47:17	9d9d1355-0c54-4152-b3bb-5aa3672f132f	SyntaxError: Unexpected end of JSON input
+20251014	23:50:59	6f216125-fc84-4436-902e-bc71a5913a54	Error: Cannot set headers after they are sent to the client
+20251015	04:25:33	0888f4d9-140f-4aff-8bf2-912ab72e8deb	SyntaxError: Unexpected end of JSON input
+20251015	12:38:00	30d5ee53-4051-47ea-b4be-b58d1bc82015	Error: Cannot set headers after they are sent to the client
+20251015	12:48:49	c86699f6-4e54-4f57-ab57-ae68bc4de4b4	Error: Cannot set headers after they are sent to the client
+20251015	12:49:17	f9052a01-3d90-46e5-9c29-e04b4b284e36	TypeError: relationsChecker is not a function
+20251015	12:51:36	446a1aa2-1406-4a7a-9097-8a46e6d71d6f	Error: Cannot set headers after they are sent to the client
+20251015	12:55:35	058978a0-7464-47f0-aa76-0063bf34e778	Error: Cannot set headers after they are sent to the client
+20251015	12:56:01	c324b022-5c05-4f0d-bb43-93754afcfca5	PrismaClientKnownRequestError: 
+Invalid `tx.employee.deleteMany()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:223:27
+
+  220 await tx.userEdit.deleteMany({ where: { userId: existingUser.id } });
+  221 
+  222 await tx.customer.deleteMany({ where: { userId: existingUser.id } });
+→ 223 await tx.employee.deleteMany(
+Foreign key constraint violated on the fields: (`employeeId`)
+20251015	13:03:12	2c3549c7-148d-456a-bcd3-bb050c17bc90	PrismaClientKnownRequestError: 
+Invalid `tx.employee.deleteMany()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:223:27
+
+  220 await tx.userEdit.deleteMany({ where: { userId: existingUser.id } });
+  221 
+  222 await tx.customer.deleteMany({ where: { userId: existingUser.id } });
+→ 223 await tx.employee.deleteMany(
+Foreign key constraint violated on the fields: (`employeeId`)
+20251015	13:04:45	723ac28d-9db2-409c-a35b-53dc3a0fab78	PrismaClientKnownRequestError: 
+Invalid `tx.employee.deleteMany()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:223:27
+
+  220 await tx.userEdit.deleteMany({ where: { userId: existingUser.id } });
+  221 
+  222 await tx.customer.deleteMany({ where: { userId: existingUser.id } });
+→ 223 await tx.employee.deleteMany(
+Foreign key constraint violated on the fields: (`employeeId`)

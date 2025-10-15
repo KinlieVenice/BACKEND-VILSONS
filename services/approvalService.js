@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { relationsChecker } = require("../utils/relationsChecker");
+const relationsChecker = require("../utils/relationsChecker");
 const getMainBaseRole = require("../utils/getMainBaseRole"); // make sure this exists
 
 const requestApproval = async (tableName, recordId, actionType, payload, reqUser) => {
@@ -166,53 +166,71 @@ const handleUserApproval = async (request, updateUser, tx) => {
       break;
 
     case "delete":
-      console.log("[delete] Starting user deletion");
+    console.log(`[delete] Attempting to delete user: ${recordId}`);
 
-      const existingUser = await tx.user.findUnique({
+    const existingUser = await tx.user.findUnique({
         where: { id: recordId },
         include: {
-          admin: true,
-          customer: true,
-          contractor: true,
-          employee: true,
-          roles: true,
-          branches: true,
+        admin: true,
+        customer: {
+            include: {
+            trucks: true,
+            trucksEdit: true,
+            jobOrder: true,
+            jobOrderEdit: true,
+            },
         },
-      });
+        contractor: {
+            include: {
+            contractorPay: true,
+            contractorPayEdit: true,
+            JobOrder: true,
+            JobOrderEdit: true,
+            },
+        },
+        employee: { include: { employeeSalary: true, employeePay: true } },
+        roles: true,
+        rolesEdit: true,
+        branches: true,
+        branchesEdit: true,
+        },
+    });
 
-      if (!existingUser) throw new Error("User not found for deletion");
+    if (!existingUser) throw new Error("User not found for deletion");
 
-      console.log("[delete] Checking if user has related records");
-      const hasRelations = Object.keys(existingUser).some(
-        (key) =>
-          !["id", "username", "email", "status"].includes(key) &&
-          existingUser[key] &&
-          ((Array.isArray(existingUser[key]) && existingUser[key].length > 0) ||
-            (!Array.isArray(existingUser[key]) && existingUser[key] !== null))
-      );
+    const excludedKeys = ["roles", "rolesEdit", "branches", "branchesEdit", "edits"];
+    const hasRelations = relationsChecker(existingUser, excludedKeys);
 
-      if (hasRelations) {
-        console.log("[delete] Soft deleting user");
+    console.log("[delete] Has relations:", hasRelations);
+
+    if (hasRelations) {
         await tx.user.update({
-          where: { id: recordId },
-          data: { status: "inactive", updatedByUser: updateUser },
-        });
-      } else {
-        console.log("[delete] Hard deleting user and related records");
-        await Promise.all([
-          tx.userRole.deleteMany({ where: { userId: existingUser.id } }),
-          tx.userBranch.deleteMany({ where: { userId: existingUser.id } }),
-          tx.admin.deleteMany({ where: { userId: existingUser.id } }),
-          tx.customer.deleteMany({ where: { userId: existingUser.id } }),
-          tx.employee.deleteMany({ where: { userId: existingUser.id } }),
-          tx.contractor.deleteMany({ where: { userId: existingUser.id } }),
-          tx.user.delete({ where: { id: existingUser.id } }),
-        ]);
-      }
+            where: { id: recordId },
+            data: {
+                status: "inactive",
+                refreshToken: null,
+                updatedByUser: updateUser,
+            },
+    });
+    } else {
+        await tx.userRole.deleteMany({ where: { userId: existingUser.id } });
+        await tx.userRoleEdit.deleteMany({ where: { userId: existingUser.id } });
+        await tx.userBranch.deleteMany({ where: { userId: existingUser.id } });
+        await tx.userBranchEdit.deleteMany({ where: { userId: existingUser.id } });
+        await tx.userEdit.deleteMany({ where: { userId: existingUser.id } });
 
-      user = null;
-      console.log("[delete] User deletion completed");
-      break;
+        await tx.customer.deleteMany({ where: { userId: existingUser.id } });
+        await tx.employee.deleteMany({ where: { userId: existingUser.id } });
+        await tx.contractor.deleteMany({ where: { userId: existingUser.id } });
+        await tx.admin.deleteMany({ where: { userId: existingUser.id } });
+
+        await tx.user.delete({ where: { id: existingUser.id } });
+    }
+
+    user = null;
+    console.log("[delete] Deletion completed.");
+    break;
+
 
     default:
       throw new Error(`Unknown action type: ${action}`);
@@ -221,7 +239,6 @@ const handleUserApproval = async (request, updateUser, tx) => {
   console.log("[handleUserApproval] Finished action");
   return user;
 };
-
 
 const handleUserApproval3 = async (request, updateUser, tx) => {
   const payload = request.payload;

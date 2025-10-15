@@ -6,7 +6,6 @@ const getContractor = async (req, res) => {
   if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
   }
-
   try {
     const contractor = await prisma.contractor.findUnique({
       where: { id: req.params.id },
@@ -121,9 +120,9 @@ const getContractor = async (req, res) => {
       jobOrderSummary: { activeCount, archivedCount, totalContractorCommission, totalTransactions, totalBalance }
     };
 
-    res.status(200).json({ data: cleanContractor });
+    return res.status(200).json({ data: cleanContractor });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
