@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { requestApproval, approveRequest, rejectRequest } = require("../services/approvalService")
+const { requestApproval, approveRequest, rejectRequest } = require("../../services/approvalService")
 
 const getAllApprovalLogs = async (req, res) => {
     try {

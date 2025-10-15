@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { getMonthYear } = require("../utils/monthYearFilter");
-const { branchFilter } = require("../utils/branchFilter"); 
+const { getMonthYear } = require("../../utils/monthYearFilter");
+const { branchFilter } = require("../../utils/branchFilter"); 
 
 const getAllLaborPays = async (req, res) => {
   const search = req?.query?.search?.trim()?.replace(/^["']|["']$/g, "");
@@ -84,7 +84,11 @@ const getAllLaborPays = async (req, res) => {
       createdByUser: pay.createdByUser,
       updatedByUser: pay.updatedByUser,
       amount: pay.payComponents.reduce((sum, pc) => sum + Number(pc.amount), 0),
-      payComponents: pay.payComponents,
+      payComponents: pay.payComponents.map((pc) => ({
+        componentId: pc.componentId,
+        componentName: pc.component?.componentName || "N/A",
+        amount: Number(pc.amount) || 0,
+      })),
       branch: {
         address: pay.branch?.address || "N/A",
         branchName: pay.branch?.branchName || "N/A",
@@ -110,6 +114,7 @@ const getAllLaborPays = async (req, res) => {
     const contractorPays = await prisma.contractorPay.findMany({
       where: contractorWhere,
       include: {
+        
         contractor: {
           select: {
             id: true,

@@ -1,7 +1,7 @@
-const truckIdFinder = require("../utils/truckIdFinder");
-const customerIdFinder = require("../utils/customerIdFinder");
-const jobOwnerFinder = require("../utils/jobOwnerFinder");
-const { getDateRangeFilter } = require("../utils/dateRangeFilter");
+const truckIdFinder = require("../../utils/truckIdFinder");
+const customerIdFinder = require("../../utils/customerIdFinder");
+const jobOwnerFinder = require("../../utils/jobOwnerFinder");
+const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -25,14 +25,14 @@ const createTruck = async (req, res) => {
       where: { plate },
     });
 
-    const pendingTruck = await prisma.truckEdit.findFirst({
-      where: {
-        plate,
-        approvalStatus: "pending",
-      },
-    });
+    // const pendingTruck = await prisma.truckEdit.findFirst({
+    //   where: {
+    //     plate,
+    //     approvalStatus: "pending",
+    //   },
+    // });
 
-    if (existingTruck || pendingTruck) {
+    if (existingTruck ) {
       return res.status(400).json({
         message: "Truck already exists or is pending approval",
       });
@@ -148,10 +148,10 @@ const editTruck = async (req, res) => {
 const editTruckOwner = async (req, res) => {
   const { truckId, customerId } = req.body;
 
-  if (!truckPlate || !customerUsername) {
+  if (!truckId || !customerId) {
     return res
       .status(400)
-      .json({ message: "truckPlate and customerUsername are required" });
+      .json({ message: "truckId and customerId are required" });
   }
 
   try {
@@ -169,14 +169,19 @@ const editTruckOwner = async (req, res) => {
       const truck = await tx.truck.findUnique({ where: { id: truckId } });
       if (!truck) return res.status(404).json({ message: "Truck not found" });
 
-      const pendingEdit = await tx.truckOwnershipEdit.findFirst({
-        where: {
-          truckId,
-          approvalStatus: "pending", 
-        },
-      });
+      const customer = await tx.customer.findUnique({ where: { id: customerId } });
+      if (!customer) {
+        return res.status(400).json({ message: "Customer not found" });
+      }
 
-      if (pendingEdit) return res.status(400).json({ message: "Truck already has a pending ownership transfer request" });
+      // const pendingEdit = await tx.truckOwnershipEdit.findFirst({
+      //   where: {
+      //     truckId,
+      //     approvalStatus: "pending", 
+      //   },
+      // });
+
+      // if (pendingEdit) return res.status(400).json({ message: "Truck already has a pending ownership transfer request" });
 
       // Get latest ownership
       const latestOwner = await tx.truckOwnership.findFirst({

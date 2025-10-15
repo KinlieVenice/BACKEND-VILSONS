@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { createCheckoutSession } = require("../../controllers/paymongoController");
+const { createCheckoutSession } = require("../../controllers/admin/paymongoController");
 
 // POST /paymongo/create-checkout
 router.post("/create-checkout", createCheckoutSession);

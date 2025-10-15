@@ -3,7 +3,6 @@ const ROLES_LIST = {
   EMPLOYEE: "employee",
   CONTRACTOR: "contractor",
   CUSTOMER: "customer",
-  CASHIER: "cashier",
 };
 
 module.exports = ROLES_LIST;

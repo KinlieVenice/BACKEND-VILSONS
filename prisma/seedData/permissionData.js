@@ -1,350 +1,752 @@
 async function getPermissionData() {
-  const permission = [
-    {
-      module: "Dashboard",
-      permissionName: "view_revenue_profit_overview",
-      method: "view",
-      description: "View monthly shop revenue and profit with graph",
-    },
-    {
-      module: "Dashboard",
-      permissionName: "view_expenses_overview",
-      method: "view",
-      description: "View shop total expenses with breakdown",
-    },
-    {
-      module: "Dashboard",
-      permissionName: "view_customer_balance_overview",
-      method: "view",
-      description: "View total balance  of the customer to the shop",
-    },
-    {
-      module: "Dashboard",
-      permissionName: "view_job_orders_overview",
-      method: "view",
-      description: "View all jobs orders status and recent orders",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "view_job_orders",
-      method: "view",
-      description: "View all job orders",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "create_job_order",
-      method: "create",
-      description: "Create a  new job order",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "edit_job_order",
-      method: "edit",
-      description: "Edit a job order",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "edit_job_order_status",
-      method: "edit",
-      description: "Edit the status of the job order",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "delete_job_order",
-      method: "delete",
-      description: "Delete a job order",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "view_single_job_order",
-      method: "view",
-      description: "View single job orders",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "view_assigned_job_orders",
-      method: "view",
-      description: "View assigned job orders",
-    },
-    {
-      module: "Job_Orders",
-      permissionName: "view_my_job_orders",
-      method: "view",
-      description: "View my job orders",
-    },
-    {
-      module: "Other_Incomes",
-      permissionName: "view_other_incomes",
-      method: "view",
-      description: "View all other incomes",
-    },
-    {
-      module: "Other_Incomes",
-      permissionName: "create_other_income",
-      method: "create",
-      description: "Create other income",
-    },
-    {
-      module: "Other_Incomes",
-      permissionName: "edit_other_income",
-      method: "edit",
-      description: "Edit other income",
-    },
-    {
-      module: "Other_Incomes",
-      permissionName: "delete_other_income",
-      method: "delete",
-      description: "Delete other income",
-    },
-    {
-      module: "Transactions",
-      permissionName: "view_transactions",
-      method: "view",
-      description: "View all customer transactions",
-    },
-    {
-      module: "Transactions",
-      permissionName: "create_transaction",
-      method: "create",
-      description: "Create a manual transaction",
-    },
-    {
-      module: "Transactions",
-      permissionName: "edit_transaction",
-      method: "edit",
-      description: "Edit a manual transaction",
-    },
-    {
-      module: "Transactions",
-      permissionName: "delete_transaction",
-      method: "delete",
-      description: "Delete a manual transaction",
-    },
-    {
-      module: "Finances_Revenue_And_Profit",
-      permissionName: "view_revenue_profit",
-      method: "view",
-      description: "View monthly and yearly revenue and profit of the shop",
-    },
-    {
-      module: "Finances_Operational_Materials",
-      permissionName: "view_materials",
-      method: "view",
-      description: "View all materials used in job orders",
-    },
-    {
-      module: "Finances_Operational_Equipment",
-      permissionName: "view_equipment",
-      method: "view",
-      description: "View all equipment expenses",
-    },
-    {
-      module: "Finances_Operational_Equipment",
-      permissionName: "create_equipment",
-      method: "create",
-      description: "Add a new equipment expense",
-    },
-    {
-      module: "Finances_Operational_Equipment",
-      permissionName: "edit_equipment",
-      method: "edit",
-      description: "Edit an equipment expense",
-    },
-    {
-      module: "Finances_Operational_Equipment",
-      permissionName: "delete_equipment",
-      method: "delete",
-      description: "Delete an equipment expense",
-    },
-    {
-      module: "Finances_Operational_Labor",
-      permissionName: "view_labor",
-      method: "view",
-      description: "View all labor expense",
-    },
-    {
-      module: "Finances_Operational_Labor",
-      permissionName: "create_labor",
-      method: "create",
-      description: "Add new labor expense",
-    },
-    {
-      module: "Finances_Operational_Labor",
-      permissionName: "edit_labor",
-      method: "edit",
-      description: "Edit a labor expense",
-    },
-    {
-      module: "Finances_Operational_Labor",
-      permissionName: "delete_labor",
-      method: "delete",
-      description: "Delete a labor expense",
-    },
-    {
-      module: "Finances_Overhead",
-      permissionName: "view_overhead",
-      method: "view",
-      description: "View all overhead expenses",
-    },
-    {
-      module: "Finances_Overhead",
-      permissionName: "create_overhead",
-      method: "create",
-      description: "Add a new overhead expense",
-    },
-    {
-      module: "Finances_Overhead",
-      permissionName: "edit_overhead",
-      method: "edit",
-      description: "Edit an overhead expense",
-    },
-    {
-      module: "Finances_Overhead",
-      permissionName: "delete_overhead",
-      method: "delete",
-      description: "Delete a labor expense",
-    },
-    {
-      module: "Trucks",
-      permissionName: "view_trucks",
-      method: "view",
-      description: "View all trucks",
-    },
-    {
-      module: "Trucks",
-      permissionName: "create_trucks",
-      method: "create",
-      description: "Add new truck",
-    },
-    {
-      module: "Trucks",
-      permissionName: "edit_trucks",
-      method: "edit",
-      description: "Edit a truck",
-    },
-    {
-      module: "Trucks",
-      permissionName: "delete_trucks",
-      method: "delete",
-      description: "Delete a truck",
-    },
-    {
-      module: "Trucks",
-      permissionName: "view_single_truck",
-      method: "view",
-      description: "View single truck",
-    },
-    {
-      module: "Trucks",
-      permissionName: "edit_truck_owner",
-      method: "edit",
-      description: "Transfer truck ownership",
-    },
-    {
-      module: "Activity_Logs",
-      permissionName: "view_activity_logs",
-      method: "view",
-      description: "View all activity logs of all users (including self)",
-    },
-    {
-      module: "Users_All_Users",
-      permissionName: "view_users",
-      method: "view",
-      description: "View all users",
-    },
-    {
-      module: "Users_All_Users",
-      permissionName: "create_user",
-      method: "create",
-      description: "Create a new user account",
-    },
-    {
-      module: "Users_All_Users",
-      permissionName: "edit_user_details",
-      method: "edit",
-      description: "Edit a user account",
-    },
-    {
-      module: "Users_All_Users",
-      permissionName: "edit_user_password",
-      method: "edit",
-      description: "Edit a user password",
-    },
-    {
-      module: "Users_All_Users",
-      permissionName: "delete_user",
-      method: "delete",
-      description: "Delete a user account and roles",
-    },
-    {
-      module: "Users_All_Users",
-      permissionName: "view_single_user",
-      method: "view",
-      description: "View single user",
-    },
-    {
-      module: "Branches",
-      permissionName: "view_branch",
-      method: "view",
-      description: "View a new branch",
-    },
-    {
-      module: "Branches",
-      permissionName: "create_branch",
-      method: "create",
-      description: "Create a new branch",
-    },
-    {
-      module: "Branches",
-      permissionName: "edit_branch",
-      method: "edit",
-      description: "Edit an existing branch",
-    },
-    {
-      module: "Branches",
-      permissionName: "delete_branch",
-      method: "delete",
-      description: "Delete an existing branch",
-    },
-    {
-      module: "Users_Roles_And_Permissions",
-      permissionName: "view_roles_permissions",
-      method: "view",
-      description: "View all roles and permissions",
-    },
-    {
-      module: "Users_Roles_And_Permissions",
-      permissionName: "create_roles_permissions",
-      method: "create",
-      description: "Create new roles and permissions",
-    },
-    {
-      module: "Users_Roles_And_Permissions",
-      permissionName: "edit_roles_permissions",
-      method: "edit",
-      description: "Edit roles and permissions",
-    },
-    {
-      module: "Users_Roles_And_Permissions",
-      permissionName: "delete_roles_permissions",
-      method: "delete",
-      description: "Delete roles and permissions",
-    },
-    {
-      module: "Profile",
-      permissionName: "edit_profile_details",
-      method: "edit",
-      description: "Edit user’s own profile details",
-    },
-    {
-      module: "Profile",
-      permissionName: "edit_profile_password",
-      method: "edit",
-      description: "Edit user’s own password",
-    },
+  // const permission = [
+  //   {
+  //     module: "Dashboard",
+  //     permissionName: "view_revenue_profit_overview",
+  //     method: "view",
+  //     description: "View monthly shop revenue and profit with graph",
+  //   },
+  //   {
+  //     module: "Dashboard",
+  //     permissionName: "view_expenses_overview",
+  //     method: "view",
+  //     description: "View shop total expenses with breakdown",
+  //   },
+  //   {
+  //     module: "Dashboard",
+  //     permissionName: "view_customer_balance_overview",
+  //     method: "view",
+  //     description: "View total balance  of the customer to the shop",
+  //   },
+  //   {
+  //     module: "Dashboard",
+  //     permissionName: "view_job_orders_overview",
+  //     method: "view",
+  //     description: "View all jobs orders status and recent orders",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "view_job_orders",
+  //     method: "view",
+  //     description: "View all job orders",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "create_job_order",
+  //     method: "create",
+  //     description: "Create a  new job order",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "edit_job_order",
+  //     method: "edit",
+  //     description: "Edit a job order",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "edit_job_order_status",
+  //     method: "edit",
+  //     description: "Edit the status of the job order",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "delete_job_order",
+  //     method: "delete",
+  //     description: "Delete a job order",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "view_single_job_order",
+  //     method: "view",
+  //     description: "View single job orders",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "view_assigned_job_orders",
+  //     method: "view",
+  //     description: "View assigned job orders",
+  //   },
+  //   {
+  //     module: "Job_Orders",
+  //     permissionName: "view_my_job_orders",
+  //     method: "view",
+  //     description: "View my job orders",
+  //   },
+  //   {
+  //     module: "Other_Incomes",
+  //     permissionName: "view_other_incomes",
+  //     method: "view",
+  //     description: "View all other incomes",
+  //   },
+  //   {
+  //     module: "Other_Incomes",
+  //     permissionName: "create_other_income",
+  //     method: "create",
+  //     description: "Create other income",
+  //   },
+  //   {
+  //     module: "Other_Incomes",
+  //     permissionName: "edit_other_income",
+  //     method: "edit",
+  //     description: "Edit other income",
+  //   },
+  //   {
+  //     module: "Other_Incomes",
+  //     permissionName: "delete_other_income",
+  //     method: "delete",
+  //     description: "Delete other income",
+  //   },
+  //   {
+  //     module: "Transactions",
+  //     permissionName: "view_transactions",
+  //     method: "view",
+  //     description: "View all customer transactions",
+  //   },
+  //   {
+  //     module: "Transactions",
+  //     permissionName: "create_transaction",
+  //     method: "create",
+  //     description: "Create a manual transaction",
+  //   },
+  //   {
+  //     module: "Transactions",
+  //     permissionName: "edit_transaction",
+  //     method: "edit",
+  //     description: "Edit a manual transaction",
+  //   },
+  //   {
+  //     module: "Transactions",
+  //     permissionName: "delete_transaction",
+  //     method: "delete",
+  //     description: "Delete a manual transaction",
+  //   },
+  //   {
+  //     module: "Finances_Revenue_And_Profit",
+  //     permissionName: "view_revenue_profit",
+  //     method: "view",
+  //     description: "View monthly and yearly revenue and profit of the shop",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Materials",
+  //     permissionName: "view_materials",
+  //     method: "view",
+  //     description: "View all materials used in job orders",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Equipment",
+  //     permissionName: "view_equipment",
+  //     method: "view",
+  //     description: "View all equipment expenses",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Equipment",
+  //     permissionName: "create_equipment",
+  //     method: "create",
+  //     description: "Add a new equipment expense",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Equipment",
+  //     permissionName: "edit_equipment",
+  //     method: "edit",
+  //     description: "Edit an equipment expense",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Equipment",
+  //     permissionName: "delete_equipment",
+  //     method: "delete",
+  //     description: "Delete an equipment expense",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Labor",
+  //     permissionName: "view_labor",
+  //     method: "view",
+  //     description: "View all labor expense",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Labor",
+  //     permissionName: "create_labor",
+  //     method: "create",
+  //     description: "Add new labor expense",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Labor",
+  //     permissionName: "edit_labor",
+  //     method: "edit",
+  //     description: "Edit a labor expense",
+  //   },
+  //   {
+  //     module: "Finances_Operational_Labor",
+  //     permissionName: "delete_labor",
+  //     method: "delete",
+  //     description: "Delete a labor expense",
+  //   },
+  //   {
+  //     module: "Finances_Overhead",
+  //     permissionName: "view_overhead",
+  //     method: "view",
+  //     description: "View all overhead expenses",
+  //   },
+  //   {
+  //     module: "Finances_Overhead",
+  //     permissionName: "create_overhead",
+  //     method: "create",
+  //     description: "Add a new overhead expense",
+  //   },
+  //   {
+  //     module: "Finances_Overhead",
+  //     permissionName: "edit_overhead",
+  //     method: "edit",
+  //     description: "Edit an overhead expense",
+  //   },
+  //   {
+  //     module: "Finances_Overhead",
+  //     permissionName: "delete_overhead",
+  //     method: "delete",
+  //     description: "Delete a labor expense",
+  //   },
+  //   {
+  //     module: "Trucks",
+  //     permissionName: "view_trucks",
+  //     method: "view",
+  //     description: "View all trucks",
+  //   },
+  //   {
+  //     module: "Trucks",
+  //     permissionName: "create_trucks",
+  //     method: "create",
+  //     description: "Add new truck",
+  //   },
+  //   {
+  //     module: "Trucks",
+  //     permissionName: "edit_trucks",
+  //     method: "edit",
+  //     description: "Edit a truck",
+  //   },
+  //   {
+  //     module: "Trucks",
+  //     permissionName: "delete_trucks",
+  //     method: "delete",
+  //     description: "Delete a truck",
+  //   },
+  //   {
+  //     module: "Trucks",
+  //     permissionName: "view_single_truck",
+  //     method: "view",
+  //     description: "View single truck",
+  //   },
+  //   {
+  //     module: "Trucks",
+  //     permissionName: "edit_truck_owner",
+  //     method: "edit",
+  //     description: "Transfer truck ownership",
+  //   },
+  //   {
+  //     module: "Activity_Logs",
+  //     permissionName: "view_activity_logs",
+  //     method: "view",
+  //     description: "View all activity logs of all users (including self)",
+  //   },
+  //   {
+  //     module: "Users_All_Users",
+  //     permissionName: "view_users",
+  //     method: "view",
+  //     description: "View all users",
+  //   },
+  //   {
+  //     module: "Users_All_Users",
+  //     permissionName: "create_user",
+  //     method: "create",
+  //     description: "Create a new user account",
+  //   },
+  //   {
+  //     module: "Users_All_Users",
+  //     permissionName: "edit_user_details",
+  //     method: "edit",
+  //     description: "Edit a user account",
+  //   },
+  //   {
+  //     module: "Users_All_Users",
+  //     permissionName: "edit_user_password",
+  //     method: "edit",
+  //     description: "Edit a user password",
+  //   },
+  //   {
+  //     module: "Users_All_Users",
+  //     permissionName: "delete_user",
+  //     method: "delete",
+  //     description: "Delete a user account and roles",
+  //   },
+  //   {
+  //     module: "Users_All_Users",
+  //     permissionName: "view_single_user",
+  //     method: "view",
+  //     description: "View single user",
+  //   },
+  //   {
+  //     module: "Branches",
+  //     permissionName: "view_branch",
+  //     method: "view",
+  //     description: "View a new branch",
+  //   },
+  //   {
+  //     module: "Branches",
+  //     permissionName: "create_branch",
+  //     method: "create",
+  //     description: "Create a new branch",
+  //   },
+  //   {
+  //     module: "Branches",
+  //     permissionName: "edit_branch",
+  //     method: "edit",
+  //     description: "Edit an existing branch",
+  //   },
+  //   {
+  //     module: "Branches",
+  //     permissionName: "delete_branch",
+  //     method: "delete",
+  //     description: "Delete an existing branch",
+  //   },
+  //   {
+  //     module: "Users_Roles_And_Permissions",
+  //     permissionName: "view_roles_permissions",
+  //     method: "view",
+  //     description: "View all roles and permissions",
+  //   },
+  //   {
+  //     module: "Users_Roles_And_Permissions",
+  //     permissionName: "create_roles_permissions",
+  //     method: "create",
+  //     description: "Create new roles and permissions",
+  //   },
+  //   {
+  //     module: "Users_Roles_And_Permissions",
+  //     permissionName: "edit_roles_permissions",
+  //     method: "edit",
+  //     description: "Edit roles and permissions",
+  //   },
+  //   {
+  //     module: "Users_Roles_And_Permissions",
+  //     permissionName: "delete_roles_permissions",
+  //     method: "delete",
+  //     description: "Delete roles and permissions",
+  //   },
+  //   {
+  //     module: "Profile",
+  //     permissionName: "edit_profile_details",
+  //     method: "edit",
+  //     description: "Edit user’s own profile details",
+  //   },
+  //   {
+  //     module: "Profile",
+  //     permissionName: "edit_profile_password",
+  //     method: "edit",
+  //     description: "Edit user’s own password",
+  //   },
+  // ];
+
+  const permissions = [
+  // ===== DASHBOARD =====
+  {
+    module: "Dashboard",
+    permissionName: "view_dashboard_revenue",
+    method: "view",
+    description: "View total and monthly revenue overview on dashboard",
+  },
+  {
+    module: "Dashboard",
+    permissionName: "view_dashboard_profit",
+    method: "view",
+    description: "View total and monthly profit overview on dashboard",
+  },
+  {
+    module: "Dashboard",
+    permissionName: "view_dashboard_expenses",
+    method: "view",
+    description: "View shop expenses summary on dashboard",
+  },
+  {
+    module: "Dashboard",
+    permissionName: "view_dashboard_customer_balance",
+    method: "view",
+    description: "View total customer balances on dashboard",
+  },
+  {
+    module: "Dashboard",
+    permissionName: "view_dashboard_job_orders",
+    method: "view",
+    description: "View job order summary and recent orders on dashboard",
+  },
+
+  // ===== JOB ORDERS =====
+  {
+    module: "Job_Orders",
+    permissionName: "view_job_orders",
+    method: "view",
+    description: "View all job orders",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "create_job_order",
+    method: "create",
+    description: "Create a new job order",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "edit_job_order",
+    method: "edit",
+    description: "Edit job order details",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "view_assigned_job_orders",
+    method: "view",
+    description: "View assigned job orders",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "view_my_job_orders",
+    method: "view",
+    description: "View my job orders only",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "edit_job_order_status",
+    method: "edit",
+    description: "Update job order status",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "delete_job_order",
+    method: "delete",
+    description: "Delete a job order",
+  },
+  {
+    module: "Job_Orders",
+    permissionName: "accept_job_order",
+    method: "edit",
+    description: "Accept and approve job order assignment",
+  },
+
+  // ===== OTHER INCOMES =====
+  {
+    module: "Other_Incomes",
+    permissionName: "view_other_incomes",
+    method: "view",
+    description: "View all other income records",
+  },
+  {
+    module: "Other_Incomes",
+    permissionName: "create_other_income",
+    method: "create",
+    description: "Add new income record",
+  },
+  {
+    module: "Other_Incomes",
+    permissionName: "edit_other_income",
+    method: "edit",
+    description: "Edit existing income record",
+  },
+  {
+    module: "Other_Incomes",
+    permissionName: "delete_other_income",
+    method: "delete",
+    description: "Delete an income record",
+  },
+
+  // ===== TRANSACTIONS =====
+  {
+    module: "Transactions",
+    permissionName: "view_transactions",
+    method: "view",
+    description: "View all transactions",
+  },
+  {
+    module: "Transactions",
+    permissionName: "create_transaction",
+    method: "create",
+    description: "Create a new transaction",
+  },
+  {
+    module: "Transactions",
+    permissionName: "edit_transaction",
+    method: "edit",
+    description: "Edit transaction details",
+  },
+  {
+    module: "Transactions",
+    permissionName: "delete_transaction",
+    method: "delete",
+    description: "Delete a transaction record",
+  },
+
+  // ===== REVENUE & PROFIT =====
+  {
+    module: "Finances_Revenue_And_Profit",
+    permissionName: "view_revenue_profit",
+    method: "view",
+    description: "View shop’s revenue and profit breakdown",
+  },
+
+  // ===== FINANCES: MATERIALS =====
+  {
+    module: "Finances_Operational_Materials",
+    permissionName: "view_materials",
+    method: "view",
+    description: "View all materials used in operations",
+  },
+
+  // ===== FINANCES: EQUIPMENTS =====
+  {
+    module: "Finances_Operational_Equipment",
+    permissionName: "view_equipments",
+    method: "view",
+    description: "View all equipment expenses",
+  },
+  {
+    module: "Finances_Operational_Equipment",
+    permissionName: "create_equipment",
+    method: "create",
+    description: "Add a new equipment expense",
+  },
+  {
+    module: "Finances_Operational_Equipment",
+    permissionName: "edit_equipment",
+    method: "edit",
+    description: "Edit equipment expense details",
+  },
+  {
+    module: "Finances_Operational_Equipment",
+    permissionName: "delete_equipment",
+    method: "delete",
+    description: "Delete equipment record",
+  },
+
+  // ===== FINANCES: LABOR =====
+  {
+    module: "Finances_Operational_Labor",
+    permissionName: "view_labors",
+    method: "view",
+    description: "View labor-related expenses",
+  },
+  {
+    module: "Finances_Operational_Labor",
+    permissionName: "create_labor",
+    method: "create",
+    description: "Add new labor expense",
+  },
+  {
+    module: "Finances_Operational_Labor",
+    permissionName: "edit_labor",
+    method: "edit",
+    description: "Edit labor expense details",
+  },
+  {
+    module: "Finances_Operational_Labor",
+    permissionName: "delete_labor",
+    method: "delete",
+    description: "Delete a labor expense record",
+  },
+
+  // ===== FINANCES: OVERHEAD =====
+  {
+    module: "Finances_Overhead",
+    permissionName: "view_overheads",
+    method: "view",
+    description: "View all overhead expenses",
+  },
+  {
+    module: "Finances_Overhead",
+    permissionName: "create_overhead",
+    method: "create",
+    description: "Add new overhead expense",
+  },
+  {
+    module: "Finances_Overhead",
+    permissionName: "edit_overhead",
+    method: "edit",
+    description: "Edit overhead expense",
+  },
+  {
+    module: "Finances_Overhead",
+    permissionName: "delete_overhead",
+    method: "delete",
+    description: "Delete an overhead expense",
+  },
+
+  // ===== TRUCKS =====
+  {
+    module: "Trucks",
+    permissionName: "view_trucks",
+    method: "view",
+    description: "View all trucks",
+  },
+  {
+    module: "Trucks",
+    permissionName: "create_truck",
+    method: "create",
+    description: "Add new truck record",
+  },
+  {
+    module: "Trucks",
+    permissionName: "edit_truck",
+    method: "edit",
+    description: "Edit truck details",
+  },
+  {
+    module: "Trucks",
+    permissionName: "edit_truck_owner",
+    method: "edit",
+    description: "Change truck ownership",
+  },
+  {
+    module: "Trucks",
+    permissionName: "delete_truck",
+    method: "delete",
+    description: "Delete truck record",
+  },
+
+  // ===== ACTIVITY LOGS =====
+  {
+    module: "Activity_Logs",
+    permissionName: "view_activity_logs",
+    method: "view",
+    description: "View all user activity logs",
+  },
+
+  // ===== USERS =====
+  {
+    module: "Users_All_Users",
+    permissionName: "view_users",
+    method: "view",
+    description: "View all user accounts",
+  },
+  {
+    module: "Users_All_Users",
+    permissionName: "create_user",
+    method: "create",
+    description: "Create a new user account",
+  },
+  {
+    module: "Users_All_Users",
+    permissionName: "edit_user_details",
+    method: "edit",
+    description: "Edit user details",
+  },
+  {
+    module: "Users_All_Users",
+    permissionName: "edit_user_password",
+    method: "edit",
+    description: "Change user password",
+  },
+  {
+    module: "Users_All_Users",
+    permissionName: "delete_user",
+    method: "delete",
+    description: "Delete user account",
+  },
+
+  // ===== BRANCHES =====
+  {
+    module: "Branches",
+    permissionName: "view_branches",
+    method: "view",
+    description: "View branch details",
+  },
+  {
+    module: "Branches",
+    permissionName: "create_branch",
+    method: "create",
+    description: "Create new branch",
+  },
+  {
+    module: "Branches",
+    permissionName: "edit_branch",
+    method: "edit",
+    description: "Edit branch details",
+  },
+  {
+    module: "Branches",
+    permissionName: "delete_branch",
+    method: "delete",
+    description: "Delete branch",
+  },
+
+  // ===== ROLES & PERMISSIONS =====
+  {
+    module: "Users_Roles_And_Permissions",
+    permissionName: "view_roles_permissions",
+    method: "view",
+    description: "View all roles and permissions",
+  },
+  {
+    module: "Users_Roles_And_Permissions",
+    permissionName: "create_roles_permissions",
+    method: "create",
+    description: "Create new role or permission set",
+  },
+  {
+    module: "Users_Roles_And_Permissions",
+    permissionName: "edit_roles_permissions",
+    method: "edit",
+    description: "Edit role or permission set",
+  },
+  {
+    module: "Users_Roles_And_Permissions",
+    permissionName: "delete_roles_permissions",
+    method: "delete",
+    description: "Delete role or permission set",
+  },
+
+  // ===== APPROVAL LOGS =====
+  {
+    module: "Approval_Logs",
+    permissionName: "view_approval_logs",
+    method: "view",
+    description: "View all approval requests",
+  },
+  {
+    module: "Approval_Logs",
+    permissionName: "accept_approval_logs",
+    method: "edit",
+    description: "Approve or reject pending requests",
+  },
+
+  // ===== OTHER RECORDS =====
+  {
+    module: "Contractors",
+    permissionName: "view_contractors",
+    method: "view",
+    description: "View all contractors",
+  },
+  {
+    module: "Customers",
+    permissionName: "view_customers",
+    method: "view",
+    description: "View all customers",
+  },
+  {
+    module: "Employees",
+    permissionName: "view_employees",
+    method: "view",
+    description: "View all employees",
+  },
+
+  // ===== PROFILE =====
+  {
+    module: "Profile",
+    permissionName: "edit_profile_details",
+    method: "edit",
+    description: "Edit own profile details",
+  },
+  {
+    module: "Profile",
+    permissionName: "edit_profile_password",
+    method: "edit",
+    description: "Change own password",
+  },
   ];
 
-  return permission
+  return permissions
 }
 
 module.exports = getPermissionData;

@@ -10,8 +10,8 @@ const getContractor = async (req, res) => {
     const contractor = await prisma.contractor.findUnique({
       where: { id: req.params.id },
        include: {
-        contractorPay: { select: { amount: true } },
-        JobOrder: {
+        contractorPay: true,
+        jobOrders: {
           select: {
             id: true,
             jobOrderCode: true,
@@ -40,21 +40,21 @@ const getContractor = async (req, res) => {
     const filter = req?.query?.filter;
     const activeStatuses = ['pending', 'ongoing', 'completed', 'forRelease'];
 
-    let filteredJobOrders = contractor.JobOrder;
+    let filteredJobOrders = contractor.jobOrders;
     if (filter === "active") {
-      filteredJobOrders = contractor.JobOrder.filter(jo =>
+      filteredJobOrders = contractor.jobOrders.filter(jo =>
         activeStatuses.includes(jo.status)
       );
     } else if (filter === "archived") {
-      filteredJobOrders = contractor.JobOrder.filter(jo => jo.status === "archive");
+      filteredJobOrders = contractor.jobOrders.filter(jo => jo.status === "archived");
     }
 
     // count
-    const activeCount = contractor.JobOrder.filter(jo =>
+    const activeCount = contractor.jobOrders.filter(jo =>
       activeStatuses.includes(jo.status)
     ).length;
-    const archivedCount = contractor.JobOrder.filter(
-      jo => jo.status === "archive"
+    const archivedCount = contractor.jobOrders.filter(
+      jo => jo.status === "archived"
     ).length;
 
 
@@ -97,7 +97,7 @@ const getContractor = async (req, res) => {
     const totalBalance = totalContractorCommission - totalTransactions;
 
     const cleanContractor = {
-      ...contractor,
+      // ...contractor,
       user: contractor.user
         ? {
             id: contractor.user.id,
@@ -106,6 +106,7 @@ const getContractor = async (req, res) => {
             username: contractor.user.username,
             email: contractor.user.email,
             phone: contractor.user.phone,
+            commission: contractor.commission,
             roles: contractor.user.roles.map(r => ({
               roleId: r.role.id,
               roleName: r.role.roleName
@@ -116,7 +117,8 @@ const getContractor = async (req, res) => {
             }))
           }
         : null,
-      JobOrder: jobOrders,
+      contractorPay: contractor.contractorPay,
+      jobOrders,
       jobOrderSummary: { activeCount, archivedCount, totalContractorCommission, totalTransactions, totalBalance }
     };
 
@@ -151,7 +153,7 @@ const getAllContractors = async (req, res) => {
       where,
       include: {
         contractorPay: { select: { amount: true } },
-        JobOrder: {
+        jobOrders: {
           select: {
             id: true,
             jobOrderCode: true,
@@ -181,23 +183,23 @@ const getAllContractors = async (req, res) => {
 
     const formattedContractors = contractors.map((contractor) => {
       // Apply filter (active/archived)
-      let filteredJobOrders = contractor.JobOrder;
+      let filteredJobOrders = contractor.jobOrders;
       if (filter === "active") {
-        filteredJobOrders = contractor.JobOrder.filter((jo) =>
+        filteredJobOrders = contractor.jobOrders.filter((jo) =>
           activeStatuses.includes(jo.status)
         );
       } else if (filter === "archived") {
-        filteredJobOrders = contractor.JobOrder.filter(
-          (jo) => jo.status === "archive"
+        filteredJobOrders = contractor.jobOrders.filter(
+          (jo) => jo.status === "archived"
         );
       }
 
       // Counts
-      const activeCount = contractor.JobOrder.filter((jo) =>
+      const activeCount = contractor.jobOrders.filter((jo) =>
         activeStatuses.includes(jo.status)
       ).length;
-      const archivedCount = contractor.JobOrder.filter(
-        (jo) => jo.status === "archive"
+      const archivedCount = contractor.jobOrders.filter(
+        (jo) => jo.status === "archived"
       ).length;
 
       // Map job orders
@@ -245,7 +247,7 @@ const getAllContractors = async (req, res) => {
       return {
         user: contractor.user
           ? {
-              id: contractor.user.id,
+              userId: contractor.user.id,
               contractorId: contractor.id,
               fullName: contractor.user.fullName,
               username: contractor.user.username,

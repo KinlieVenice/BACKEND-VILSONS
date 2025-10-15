@@ -249,7 +249,7 @@ const getCustomerBalance = async (req, res) => {
   try {
     const customers = await prisma.customer.findMany({
       include: {
-        jobOrder: {
+        jobOrders: {
           select: {
             jobOrderCode: true,
             labor: true,
@@ -266,7 +266,7 @@ const getCustomerBalance = async (req, res) => {
     let totalBalanceAllCustomers = 0;
 
     for (const customer of customers) {
-      const jobOrders = customer.jobOrder.map((jo) => {
+      const jobOrders = customer.jobOrders.map((jo) => {
         const totalMaterials = jo.materials.reduce(
           (sum, m) => sum + Number(m.price) * Number(m.quantity),
           0
@@ -275,7 +275,7 @@ const getCustomerBalance = async (req, res) => {
       });
 
       const grandTotalBill = jobOrders.reduce((sum, bill) => sum + bill, 0);
-      const jobOrderCodes = customer.jobOrder.map((jo) => jo.jobOrderCode);
+      const jobOrderCodes = customer.jobOrders.map((jo) => jo.jobOrderCode);
 
       const totalTransactions = await prisma.transaction.aggregate({
         _sum: { amount: true },

@@ -2,17 +2,21 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const createEmployeePay = async (req, res) => {
-  const { userId, payComponents, branchId } = req.body;
+  const { userId, payComponents = [], branchId } = req.body;
 
   try {
-    if (payComponents && payComponents.length > 0) {
-        const invalid = payComponents.some(
-          (pc) => !pc.componentId || !pc.amount
-        );
-        if (invalid) {
-          throw new Error("Each payComponent must include non-empty componentId and amount");
-        }
+    if (payComponents.length > 0) {
+      const invalid = payComponents.some(
+        (pc) => !pc.componentId || !pc.amount
+      );
+      if (invalid) {
+        return res.status(400).json({ message: "Each payComponent must include non-empty componentId and amount"});
       }
+    }
+
+    if (!payComponents || payComponents.length === 0) {
+      return res.status(400).json({ message: "Total salary cannot be 0" });
+    }
 
     // Check if user is an employee
     const employee = await prisma.employee.findFirst({
@@ -33,22 +37,26 @@ const createEmployeePay = async (req, res) => {
         },
       });
 
-      // 2️⃣ Process all payComponents
-      const processedComponents = await Promise.all(
+      // 2️⃣ Fetch all existing components
+      const allComponents = await tx.component.findMany();
+
+      // 3️⃣ Process payComponents (create missing ones if needed)
+      const userComponents = await Promise.all(
         payComponents.map(async (pc) => {
-          // Check if componentId exists
           const existing = await tx.component.findUnique({
             where: { id: pc.componentId },
           });
 
           if (!existing) {
             let newComponent = await tx.component.findFirst({
-              where: { componentName: pc.componentName }
-            })
+              where: { componentName: pc.componentName },
+            });
 
-            if (newComponent) return res.status(400).json({ message: `Component ${pc.componentName} already exists`})
-            // componentId not found → create new component using componentName
-            
+            if (newComponent)
+              throw new Error(
+                `Component ${pc.componentName} already exists`
+              );
+
             newComponent = await tx.component.create({
               data: { componentName: pc.componentName },
             });
@@ -56,28 +64,50 @@ const createEmployeePay = async (req, res) => {
             return { ...pc, componentId: newComponent.id };
           }
 
-          return pc; // keep original if valid ID
+          return pc;
         })
       );
 
-      // 3️⃣ Create payComponent entries
+      // 4️⃣ Merge userComponents with allComponents (fill missing with amount 0)
+      const processedComponents = allComponents.map((component) => {
+        const match = userComponents.find(
+          (pc) =>
+            pc.componentId === component.id ||
+            pc.componentName === component.componentName
+        );
+
+        if (match) {
+          return {
+            componentId: component.id,
+            amount: Number(match.amount) || 0,
+          };
+        }
+
+        // component not submitted → default 0
+        return {
+          componentId: component.id,
+          amount: 0,
+        };
+      });
+
+      // 5️⃣ Create all payComponents
       await tx.payComponent.createMany({
         data: processedComponents.map((pc) => ({
           employeePayId: employeePay.id,
           componentId: pc.componentId,
-          amount: Number(pc.amount) || 0,
+          amount: pc.amount,
           createdByUser: req.username,
           updatedByUser: req.username,
         })),
       });
 
-      // 4️⃣ Calculate total cost
+      // 6️⃣ Compute total
       const totalComponentCost = processedComponents.reduce(
-        (sum, pc) => sum + Number(pc.amount || 0),
+        (sum, pc) => sum + Number(pc.amount),
         0
       );
 
-      // 5️⃣ Re-fetch employeePay with payComponents + components
+      // 7️⃣ Re-fetch full record
       const employeePayWithComponents = await tx.employeePay.findUnique({
         where: { id: employeePay.id },
         include: {
@@ -98,103 +128,124 @@ const createEmployeePay = async (req, res) => {
 };
 
 const editEmployeePay = async (req, res) => {
-  const { userId, payComponents, branchId } = req.body;
-  let employee;
+  const { userId, payComponents = [], branchId } = req.body;
 
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    const employeePay = await prisma.employeePay.findFirst({ 
+    // 1️⃣ Fetch existing employeePay
+    const employeePay = await prisma.employeePay.findFirst({
       where: { id: req.params.id },
-      include: { payComponents: { include: { component: true } } }
+      include: { payComponents: { include: { component: true } } },
     });
-    if (!employeePay) return res.status(404).json({ message: `Employee pay with ID: ${req.params.id} not found` });
+    if (!employeePay)
+      return res
+        .status(404)
+        .json({ message: `Employee pay with ID: ${req.params.id} not found` });
 
+    // 2️⃣ If updating employee link, validate userId
+    let employee;
     if (userId) {
-      employee = await prisma.employee.findFirst({ where: { userId } })
-      if (!employee) return res.status(404).json({ message: `Employee with ID: ${userId} not found` });
+      employee = await prisma.employee.findFirst({ where: { userId } });
+      if (!employee)
+        return res
+          .status(404)
+          .json({ message: `Employee with userId: ${userId} not found` });
     }
 
-    let totalComponentCost = 0;
+    if (payComponents.length > 0) {
+      const invalid = payComponents.some(
+        (pc) => !pc.componentId || !pc.amount
+      );
+      if (invalid) {
+        return res.status(400).json({ message: "Each payComponent must include non-empty componentId and amount"});
+      }
+    }
+
+    if (!payComponents || payComponents.length === 0) {
+      return res.status(400).json({ message: "Total salary cannot be 0" });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
-      if (payComponents && payComponents.length > 0) {
-        const invalid = payComponents.some(
-          (pc) => !pc.componentId || !pc.amount
-        );
-        if (invalid) {
-          throw new Error("Each payComponent must include non-empty componentId and non-zero amount");
-        }
+      // 3️⃣ Get all existing components from DB
+      const allComponents = await tx.component.findMany();
 
-        const processedComponents = await Promise.all(
-          payComponents.map(async (pc) => {
-            // Check if componentId exists
-            const existing = await tx.component.findUnique({
-              where: { id: pc.componentId },
-            });
+      // 4️⃣ Validate and process payComponents (existing + missing ones)
+      const processedComponents = await Promise.all(
+        allComponents.map(async (component) => {
+          const match = payComponents.find(
+            (pc) =>
+              pc.componentId === component.id ||
+              pc.componentName === component.componentName
+          );
 
-            if (!existing) {
-              let newComponent = await tx.component.findFirst({
-                where: { componentName: pc.componentName }
-              })
+          // If found in submitted data → use it
+          if (match) {
+            return {
+              componentId: component.id,
+              amount: Number(match.amount) || 0,
+            };
+          }
 
-              if (newComponent) throw new Error(`Component ${pc.componentName} already exists`);
-              // componentId not found → create new component using componentName
-              
-              newComponent = await tx.component.create({
-                data: { componentName: pc.componentName },
-              });
+          // Not found → add missing one with amount = 0
+          return {
+            componentId: component.id,
+            amount: 0,
+          };
+        })
+      );
 
-              return { ...pc, componentId: newComponent.id };
-            }
+      // 5️⃣ Remove old payComponents
+      await tx.payComponent.deleteMany({ where: { employeePayId: employeePay.id } });
 
-            return pc; // keep original if valid ID
-          })
-        );
+      // 6️⃣ Create new payComponents (all included)
+      await tx.payComponent.createMany({
+        data: processedComponents.map((pc) => ({
+          employeePayId: employeePay.id,
+          componentId: pc.componentId,
+          amount: Number(pc.amount) || 0,
+          createdByUser: req.username,
+          updatedByUser: req.username,
+        })),
+      });
 
-        await tx.payComponent.deleteMany({ where: { employeePayId: employeePay.id } });
-
-        // 3️⃣ Create payComponent entries
-        await tx.payComponent.createMany({
-          data: processedComponents.map((pc) => ({
-            employeePayId: employeePay.id,
-            componentId: pc.componentId,
-            amount: Number(pc.amount) || 0,
-            createdByUser: req.username,
-            updatedByUser: req.username,
-          })),
-        });
-
-        totalComponentCost = processedComponents.reduce(
-          (sum, pc) => sum + Number(pc.amount), 0
-        );
-      }
-
+      // 7️⃣ Update employeePay
       await tx.employeePay.update({
         where: { id: employeePay.id },
         data: {
-          employeeId: userId ? employee.id : employeePay.employeeId ,
-          branchId: branchId ? branchId : employeePay.branchId,
-          updatedByUser: req.username
-        }
-      })
-
-      return await tx.employeePay.findFirst({
-        where: { id: employeePay.id },
-        include: { 
-          payComponents: { 
-            include: { component: true } 
-          } 
-        }
+          employeeId: userId ? employee.id : employeePay.employeeId,
+          branchId: branchId || employeePay.branchId,
+          updatedByUser: req.username,
+          updatedAt: new Date(),
+        },
       });
-    })
-    
-    return res.status(201).json({ data: {...result, totalComponentCost} });
+
+      // 8️⃣ Calculate total
+      const totalComponentCost = processedComponents.reduce(
+        (sum, pc) => sum + Number(pc.amount),
+        0
+      );
+
+      // 9️⃣ Re-fetch updated employeePay
+      const updated = await tx.employeePay.findFirst({
+        where: { id: employeePay.id },
+        include: {
+          payComponents: {
+            include: { component: true },
+          },
+        },
+      });
+
+      return { ...updated, totalComponentCost };
+    });
+
+    return res.status(201).json({ data: result });
   } catch (err) {
-    return res.status(500).json({ message: err.message }); // Fixed: err.status to err.message
+    console.error(err);
+    return res.status(500).json({ message: err.message });
   }
-}
+};
 
 const deleteEmployeePay = async (req, res) => {
   if (!req?.params?.id)

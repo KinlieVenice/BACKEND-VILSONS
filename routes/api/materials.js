@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const materialController = require("../../controllers/materialController");
+const materialController = require("../../controllers/admin/materialController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 

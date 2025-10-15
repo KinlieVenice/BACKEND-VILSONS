@@ -1,10 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
-const relationsChecker = require("../utils/relationsChecker");
-const { getDateRangeFilter } = require("../utils/dateRangeFilter");
-const getMainBaseRole = require("../utils/getMainBaseRole.js");
-const { requestApproval } = require("../services/approvalService")
+const relationsChecker = require("../../utils/relationsChecker");
+const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
+const getMainBaseRole = require("../../utils/getMainBaseRole.js");
+const { requestApproval } = require("../../services/approvalService")
 
 
 const createUserOLD = async (req, res) => {
@@ -184,7 +184,7 @@ const createUser = async (req, res) => {
     branches,
   } = req.body;
 
-  if (!name || !username || !phone || !email || !roles || !branches) {
+  if (!name || !username || !phone || !email || !roles) {
     return res.status(400).json({
       message: "Name, username, email, phone, branches, and roles are required",
     });
@@ -226,7 +226,7 @@ const createUser = async (req, res) => {
   }
 
   try {
-    const needsApproval = true;
+    const needsApproval = req.approval;
     const message = needsApproval
       ? "User created is awaiting approval"
       : "User is successfully created";
@@ -274,29 +274,25 @@ const createUser = async (req, res) => {
       if (!needsApproval) await tx.userRole.createMany({ data: userRoleData });
 
       // userBranch table
-      const userBranchData = branches.map((branch) => ({ branchId: branch, userId: user.id }));
-      if (!needsApproval) await tx.userBranch.createMany({ data: userBranchData });
+      const userBranchData =
+        branches?.length > 0
+          ? branches.map((branch) => ({ branchId: branch, userId: user.id }))
+          : [];
+
+      if (!needsApproval && userBranchData.length > 0) {
+        await tx.userBranch.createMany({ data: userBranchData });
+      }
 
       const userDetails = await tx.user.findFirst({
         where: { id: user.id },
-        include: {
-          roles: { include: { role: true } },
-          branches: { include: { branch: true } },
-        },
       });
 
       return { user, userDetails } ;
     });
 
-    let safeUser;
-    if (!needsApproval) {
-      const { hashPwd: _, refreshToken, ...rest } = result.userDetails;
-      safeUser = rest;
-    }
-
     return res.status(201).json({
       message,
-      data: needsApproval ? result.user : safeUser,
+      data: needsApproval ? { approvalId: result.user.id, username: result.user.payload.username, fullName: result.user.payload.fullName } : { userId: result.userDetails.id, username: result.userDetails.username,  fullName: result.userDetails.fullName } ,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -847,7 +843,7 @@ const deleteUserSS = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    const needsApproval = true;
+    const needsApproval = req.approval;
 
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
@@ -856,75 +852,47 @@ const deleteUser = async (req, res) => {
         customer: {
           include: {
             trucks: true,
-            trucksEdit: true,
-            jobOrder: true,
-            jobOrderEdit: true,
+            jobOrders: true,
           },
         },
         contractor: {
           include: {
             contractorPay: true,
-            contractorPayEdit: true,
-            JobOrder: true,
-            JobOrderEdit: true,
+            jobOrders: true,
           },
         },
         employee: {
           include: {
-            employeeSalary: true,
             employeePay: true
           },
         },
 
         // exclude these from relation checking
         roles: true,
-        rolesEdit: true,
         branches: true,
-        branchesEdit: true,
 
         // keep all other created/updated relations
         activityLog: true,
         createdUsers: true,
         updatedUsers: true,
-        createdUserEdit: true,
         createdRole: true,
         createdBranches: true,
-        createdBranchEdit: true,
         createdTrucks: true,
-        createdTruckEdit: true,
-        createdTransaction: true,
-        createdJobOrder: true,
-        createdJobOrderEdit: true,
-        createdContractorPay: true,
-        createdContractorPayEdit: true,
-        createdEmployeeSalary: true,
-        createdEmployeeSalaryEdit: true,
-        createdEquipment: true,
-        createdEquipmentEdit: true,
-        createdOtherIncome: true,
-        createdOtherIncomeEdit: true,
-        createdOverhead: true,
-        createdOverheadEdit: true,
-        transferredTruckOwnership: true,
-        transferredTruckOwnershipEdit: true,
-        updatedUserEdits: true,
+        createdTransactions: true,
+        createdJobOrders: true,
+        createdContractorPays: true,
+        createdEquipments: true,
+        createdOtherIncomes: true,
+        createdOverheads: true,
+        transferredTruckOwnerships: true,
         updatedBranches: true,
-        updatedBranchEdits: true,
-        updatedTruck: true,
-        updatedTruckEdit: true,
-        updatedTransaction: true,
-        updatedJobOrder: true,
-        updatedJobOrderEdit: true,
-        updatedContractorPay: true,
-        updatedContractorPayEdit: true,
-        updatedEmployeeSalary: true,
-        updatedEmployeeSalaryEdit: true,
-        updatedEquipment: true,
-        updatedEquipmentEdit: true,
-        updatedOtherIncome: true,
-        updatedOtherIncomeEdit: true,
-        updatedOverhead: true,
-        updatedOverheadEdit: true,
+        updatedTrucks: true,
+        updatedTransactions: true,
+        updatedJobOrders: true,
+        updatedContractorPays: true,
+        updatedEquipments: true,
+        updatedOtherIncomes: true,
+        updatedOverheads: true,
       },
     });
 
@@ -933,7 +901,7 @@ const deleteUser = async (req, res) => {
     }
 
     // 🔍 Check relations, but ignore roles/branches/edits
-    const excludedKeys = ["roles", "rolesEdit", "branches", "branchesEdit", "edits"];
+    const excludedKeys = ["roles", "branches"];
     const hasRelations = relationsChecker(user, excludedKeys);
     console.log(hasRelations)
 
@@ -964,17 +932,13 @@ const deleteUser = async (req, res) => {
       } else {
         // delete excluded relations first
         await tx.userRole.deleteMany({ where: { userId: user.id } });
-        await tx.userRoleEdit.deleteMany({ where: { userId: user.id } });
         await tx.userBranch.deleteMany({ where: { userId: user.id } });
-        await tx.userBranchEdit.deleteMany({ where: { userId: user.id } });
-        await tx.userEdit.deleteMany({ where: { userId: user.id } });
 
         await tx.customer.deleteMany({ where: { userId: user.id } });
         await tx.employee.deleteMany({ where: { userId: user.id } });
         await tx.contractor.deleteMany({ where: { userId: user.id } });
         await tx.admin.deleteMany({ where: { userId: user.id } });
 
-        await tx.userEdit.deleteMany({ where: { userId: user.id } });
 
         // finally delete the user
         await tx.user.delete({ where: { id: user.id } });
@@ -988,7 +952,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-//only view own branches
 const getAllUsers = async (req, res) => {
   try {
     const role = req?.query?.role;

@@ -1,14 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const overheadController = require("../../controllers/overheadController");
+const overheadController = require("../../controllers/admin/overheadController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_OVERHEAD), overheadController.createOverhead)
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_OVERHEAD), overheadController.getAllOverheads)
-
-
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_OVERHEADS), overheadController.getAllOverheads)
 
 router.route("/:id")
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_OVERHEAD), overheadController.deleteOverhead)

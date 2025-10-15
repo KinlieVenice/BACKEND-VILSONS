@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { getMonthYear } = require("../utils/monthYearFilter");
-const { branchFilter } = require("../utils/branchFilter");
+const { getMonthYear } = require("../../utils/monthYearFilter");
+const { branchFilter } = require("../../utils/branchFilter");
 
 /*
   description String

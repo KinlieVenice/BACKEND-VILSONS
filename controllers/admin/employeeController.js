@@ -47,7 +47,7 @@ const getAllEmployees = async (req, res) => {
           },
         },
         employeePay: {
-          orderBy: { createdAt: "desc" },
+          orderBy: { updatedAt: "desc" },
           take: 1, // Only the latest record
           include: {
             payComponents: {
@@ -75,7 +75,7 @@ const getAllEmployees = async (req, res) => {
       return {
         user: emp.user
           ? {
-              id: emp.user.id,
+              userId: emp.user.id,
               employeeId: emp.id,
               fullName: emp.user.fullName,
               username: emp.user.username,
@@ -102,7 +102,6 @@ const getAllEmployees = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 
 const getEmployee = async (req, res) => {
   try {
@@ -145,10 +144,12 @@ const getEmployee = async (req, res) => {
           },
         },
         employeePay: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
+          orderBy: { updatedAt: "desc" },
+          take: 1, // Only the latest record
           include: {
-            payComponents: { include: { component: true } },
+            payComponents: {
+              include: { component: true },
+            },
           },
         },
       },
@@ -158,8 +159,7 @@ const getEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found." });
     }
 
-    // Get components from latest pay
-    const latestPayComponents = employee.employeePay[0]?.payComponents || [];
+    const latestPayComponents = emp.employeePay[0]?.payComponents || [];
 
     // Map all components and merge with actual amounts from latest pay
     const mergedComponents = allComponents.map((comp) => {
@@ -174,7 +174,7 @@ const getEmployee = async (req, res) => {
     const formattedEmployee = {
       user: employee.user
         ? {
-            id: employee.user.id,
+            userId: employee.user.id,
             employeeId: employee.id,
             fullName: employee.user.fullName,
             username: employee.user.username,
@@ -197,7 +197,7 @@ const getEmployee = async (req, res) => {
       })),
     };
 
-    return res.status(200).json({ data: { employee: formattedEmployee } });
+    return res.status(200).json({ data: formattedEmployee });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: err.message });
@@ -291,7 +291,5 @@ const getEmployeeold = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
-
 
 module.exports = { getAllEmployees, getEmployee }

@@ -1,12 +1,11 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const generateJobOrderCode = require("../utils/generateJobOrderCode");
-const relationsChecker = require("../utils/relationsChecker");
-const { getDateRangeFilter } = require("../utils/dateRangeFilter");
-const { branchFilter } = require("../utils/branchFilter"); 
+const generateJobOrderCode = require("../../utils/generateJobOrderCode");
+const relationsChecker = require("../../utils/relationsChecker");
+const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
+const { branchFilter } = require("../../utils/branchFilter"); 
 
-
-
+// "POST /"
 const createJobOrder = async (req, res) => {
   const {
     customerId,
@@ -162,6 +161,7 @@ const createJobOrder = async (req, res) => {
   }
 };
 
+// "PUT /:id"
 const editJobOrder = async (req, res) => {
   const {
     customerId,
@@ -311,106 +311,7 @@ const editJobOrder = async (req, res) => {
   }
 };
 
-const acceptJobOrder = async (req, res) => {
-  const { id, accept } = req.params;
-  if (!id) return res.status(400).json({ message: "ID is required" });
-  console.log(id);
-
-  try {
-    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
-    if (!jobOrder)
-      return res
-        .status(404)
-        .json({ message: `Job order with ID: ${id} not found` });
-
-    if (!jobOrder.contractorId)
-      return res
-        .status(403)
-        .json({ message: "This job order has no contractor assigned" });
-
-    const contractor = await prisma.contractor.findFirst({
-      where: { id: jobOrder.contractorId },
-    });
-    if (!contractor)
-      return res.status(404).json({ message: `User is not a contractor` });
-
-    if (contractor.userId !== req.id || jobOrder.contractorId === null) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to accept this job order" });
-    }
-
-    const isAccepted = accept === "true";
-
-    const result = await prisma.jobOrder.update({
-      where: { id: jobOrder.id },
-      data: {
-        status: isAccepted ? "ongoing" : "pending",
-        contractorId: isAccepted ? jobOrder.contractorId : null,
-        updatedByUser: req.username,
-      },
-    });
-
-    let message = `Job order is now set to ${result.status}`;
-
-    return res.status(200).json({ message, data: result });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
-
-const editJobOrderStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  if (!id) return res.status(400).json({ message: "ID is required" });
-
-  try {
-    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
-    if (!jobOrder)
-      return res
-        .status(404)
-        .json({ message: `Job order with ID: ${id} not found` });
-
-    if (!jobOrder.contractorId)
-      return res.status(404).json({ message: "No contractor assigned yet" });
-
-    if (status === "pending")
-      return res
-        .status(404)
-        .json({ message: "Status can't be pending if contractor is assigned" });
-
-    const needsApproval = req.approval;
-    let message;
-
-    const jobOrderData = {
-      status,
-      contractorId: jobOrder.contractorId,
-      updatedByUser: req.username,
-      jobOrderId: needsApproval ? jobOrder.id : undefined,
-      jobOrderCode: jobOrder.jobOrderCode,
-      requestType: needsApproval ? "edit" : undefined,
-      createdByUser: needsApproval ? req.username : jobOrder.createdByUser,
-    };
-
-    const result = await prisma.$transaction(async (tx) => {
-      message = needsApproval
-        ? "Job Order status awaiting approval"
-        : "Job order status successfully updated";
-
-      return needsApproval
-        ? tx.jobOrderEdit.create({ data: jobOrderData })
-        : tx.jobOrder.update({
-            where: { id: jobOrder.id },
-            data: jobOrderData,
-          });
-    });
-
-    return res.status(200).json({ message, data: result });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
-
+// "DELETE /:id"
 const deleteJobOrder = async (req, res) => {
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
@@ -495,6 +396,7 @@ const deleteJobOrder = async (req, res) => {
   }
 };
 
+// "GET /"
 const getAllJobOrders = async (req, res) => {
   const statusGroup = req?.params.statusGroup; // 'active' or 'archive'
   const search = req?.query?.search;
@@ -511,7 +413,7 @@ const getAllJobOrders = async (req, res) => {
   if (statusGroup === 'active') {
     where = { ...where, status: { in: ['pending', 'ongoing', 'completed', 'forRelease'] } };
   } else if (statusGroup === 'archived') {
-    where = { ...where, status: 'archive' };
+    where = { ...where, status: 'archived' };
   } else if (statusGroup) {
     return res.status(200).json({ data: { jobOrders: [], }, pagination: { totalItems: 0, totalPages: 0, currentPage: 1 } });
   }
@@ -686,6 +588,7 @@ const getAllJobOrders = async (req, res) => {
   }
 };
 
+// "GET /id"
 const getJobOrder = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -771,6 +674,108 @@ const getJobOrder = async (req, res) => {
   }
 };
 
+const acceptJobOrder = async (req, res) => {
+  const { id, accept } = req.params;
+  if (!id) return res.status(400).json({ message: "ID is required" });
+  console.log(id);
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${id} not found` });
+
+    if (!jobOrder.contractorId)
+      return res
+        .status(403)
+        .json({ message: "This job order has no contractor assigned" });
+
+    const contractor = await prisma.contractor.findFirst({
+      where: { id: jobOrder.contractorId },
+    });
+    if (!contractor)
+      return res.status(404).json({ message: `User is not a contractor` });
+
+    if (contractor.userId !== req.id || jobOrder.contractorId === null) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to accept this job order" });
+    }
+
+    const isAccepted = accept === "true";
+
+    const result = await prisma.jobOrder.update({
+      where: { id: jobOrder.id },
+      data: {
+        status: isAccepted ? "ongoing" : "pending",
+        contractorId: isAccepted ? jobOrder.contractorId : null,
+        updatedByUser: req.username,
+      },
+    });
+
+    let message = `Job order is now set to ${result.status}`;
+
+    return res.status(200).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const editJobOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!id) return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${id} not found` });
+
+    if (!jobOrder.contractorId)
+      return res.status(404).json({ message: "No contractor assigned yet" });
+
+    if (status === "pending")
+      return res
+        .status(404)
+        .json({ message: "Status can't be pending if contractor is assigned" });
+
+    const needsApproval = req.approval;
+    let message;
+
+    const jobOrderData = {
+      status,
+      contractorId: jobOrder.contractorId,
+      updatedByUser: req.username,
+      jobOrderId: needsApproval ? jobOrder.id : undefined,
+      jobOrderCode: jobOrder.jobOrderCode,
+      requestType: needsApproval ? "edit" : undefined,
+      createdByUser: needsApproval ? req.username : jobOrder.createdByUser,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      message = needsApproval
+        ? "Job Order status awaiting approval"
+        : "Job order status successfully updated";
+
+      return needsApproval
+        ? tx.jobOrderEdit.create({ data: jobOrderData })
+        : tx.jobOrder.update({
+            where: { id: jobOrder.id },
+            data: jobOrderData,
+          });
+    });
+
+    return res.status(200).json({ message, data: result });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+// CONTRACTOR
 const getAllAssignedJobOrders = async (req, res) => {
   const search = req?.query?.search;
   const status = req?.query?.status;
@@ -843,6 +848,7 @@ const getAllAssignedJobOrders = async (req, res) => {
   }
 };
 
+// CONTRACTOR
 const getAssignedJobOrder = async (req, res) => {
   if (!req?.params?.id) {
     return res.status(400).json({ message: "Job Order ID is required" });
@@ -887,6 +893,7 @@ const getAssignedJobOrder = async (req, res) => {
   }
 };
 
+// CUSTOMER
 const getAllMyJobOrders = async (req, res) => {
   const search = req?.query?.search;
   const status = req?.query?.status;
@@ -956,6 +963,7 @@ const getAllMyJobOrders = async (req, res) => {
   }
 };
 
+// CUSTOMER
 const getMyJobOrder = async (req, res) => {
   if (!req?.params?.id) {
     return res.status(400).json({ message: "Job Order ID is required" });

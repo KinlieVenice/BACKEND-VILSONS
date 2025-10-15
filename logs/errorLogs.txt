@@ -1240,3 +1240,6 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:223
   222 await tx.customer.deleteMany({ where: { userId: existingUser.id } });
 → 223 await tx.employee.deleteMany(
 Foreign key constraint violated on the fields: (`employeeId`)
+20251015	17:00:54	14398058-f936-4687-8ba7-dc81b894b7bb	Error: Cannot set headers after they are sent to the client
+20251015	18:54:03	72f85f22-0bdd-4185-8c83-05c2d7d0817d	ReferenceError: truckPlate is not defined
+20251015	18:58:23	837a03e8-3e3f-42fc-8984-100785c0c8c2	Error: Cannot set headers after they are sent to the client

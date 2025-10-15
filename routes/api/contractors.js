@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const contractorController = require("../../controllers/contractorController");
+const contractorController = require("../../controllers/admin/contractorController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 

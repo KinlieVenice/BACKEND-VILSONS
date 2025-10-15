@@ -1,16 +1,16 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { getMonthYear } = require("../utils/monthYearFilter");
+const { getMonthYear } = require("../../utils/monthYearFilter");
 
 
 const createTransaction = async (req, res) => {
     const { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
 
-    if (!jobOrderCode || !senderName || !amount || !mop || !status) return res.status(404).json({ message: "All jobOrderCode, senderName, amount, mop, status required"});
+    if (!jobOrderCode || !senderName || !amount || !mop || !status) return res.status(400).json({ message: "All jobOrderCode, senderName, amount, mop, status required"});
 
     try {
         const jobOrder = await prisma.jobOrder.findFirst({ where: { jobOrderCode }});
-        if (!jobOrder) return res.status(404).json({ message: "Job order not found" });
+        if (!jobOrder) return res.status(400).json({ message: "Job order not found" });
 
         const result = await prisma.$transaction(async (tx) => {
             const phpAmount = amount;

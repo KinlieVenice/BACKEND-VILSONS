@@ -25,7 +25,7 @@ const getCustomerOld = async (req, res) => {
                 }
             }
             },
-            jobOrder: {
+            jobOrders: {
             select: {
                 id: true,
                 jobOrderCode: true,
@@ -54,21 +54,21 @@ const getCustomerOld = async (req, res) => {
     const filter = req?.query?.filter;
     const activeStatuses = ['pending', 'ongoing', 'completed', 'forRelease'];
 
-    let filteredJobOrders = customer.jobOrder;
+    let filteredJobOrders = customer.jobOrders;
     if (filter === "active") {
-      filteredJobOrders = customer.jobOrder.filter(jo =>
+      filteredJobOrders = customer.jobOrders.filter(jo =>
         activeStatuses.includes(jo.status)
       );
     } else if (filter === "archived") {
-      filteredJobOrders = customer.jobOrder.filter(jo => jo.status === "archive");
+      filteredJobOrders = customer.jobOrders.filter(jo => jo.status === "archived");
     }
 
     // count
-    const activeCount = customer.jobOrder.filter(jo =>
+    const activeCount = customer.jobOrders.filter(jo =>
       activeStatuses.includes(jo.status)
     ).length;
-    const archivedCount = customer.jobOrder.filter(
-      jo => jo.status === "archive"
+    const archivedCount = customer.jobOrders.filter(
+      jo => jo.status === "archived"
     ).length;
 
 
@@ -93,7 +93,7 @@ const getCustomerOld = async (req, res) => {
     });
 
     const grandTotalBill = jobOrders.reduce((sum, jo) => sum + Number(jo.totalBill), 0);
-    const jobOrderCodes = customer.jobOrder.map(jo => jo.jobOrderCode);
+    const jobOrderCodes = customer.jobOrders.map(jo => jo.jobOrderCode);
 
     let totalTransactions = await prisma.transaction.aggregate({
       _sum: { amount: true },
@@ -167,7 +167,7 @@ const getCustomer = async (req, res) => {
             }
           }
         },
-        jobOrder: {
+        jobOrders: {
           select: {
             id: true,
             jobOrderCode: true,
@@ -195,25 +195,25 @@ const getCustomer = async (req, res) => {
     const filter = req?.query?.filter;
     const activeStatuses = ['pending', 'ongoing', 'completed', 'forRelease'];
 
-    let filteredJobOrders = customer.jobOrder;
+    let filteredJobOrders = customer.jobOrders;
     if (filter === "active") {
-      filteredJobOrders = customer.jobOrder.filter(jo =>
+      filteredJobOrders = customer.jobOrders.filter(jo =>
         activeStatuses.includes(jo.status)
       );
     } else if (filter === "archived") {
-      filteredJobOrders = customer.jobOrder.filter(jo => jo.status === "archive");
+      filteredJobOrders = customer.jobOrders.filter(jo => jo.status === "archived");
     }
 
     // count
-    const activeCount = customer.jobOrder.filter(jo =>
+    const activeCount = customer.jobOrders.filter(jo =>
       activeStatuses.includes(jo.status)
     ).length;
-    const archivedCount = customer.jobOrder.filter(
-      jo => jo.status === "archive"
+    const archivedCount = customer.jobOrders.filter(
+      jo => jo.status === "archived"
     ).length;
 
     // Get all job order codes
-    const jobOrderCodes = customer.jobOrder.map(jo => jo.jobOrderCode);
+    const jobOrderCodes = customer.jobOrders.map(jo => jo.jobOrderCode);
 
     // Get all related transactions for these job orders
     const transactions = await prisma.transaction.groupBy({
@@ -278,7 +278,7 @@ const getCustomer = async (req, res) => {
             }))
           }
         : null,
-      jobOrder: jobOrders,
+      jobOrders: jobOrders,
       trucks: customer.trucks.map(t => ({
         truckId: t.truck.id,
         createdAt: t.truck.createdAt,

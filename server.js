@@ -15,7 +15,6 @@ const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const verifyJWT = require('./middleware/verifyJWT');
 const sanitizeInput = require('./middleware/sanitizeInput');
-const { webhookHandler } = require("./controllers/onlineTransactionController")
 
 // CORS setup (temporary open version for development)
 app.use(corsMiddleware); // apply global CORS middleware

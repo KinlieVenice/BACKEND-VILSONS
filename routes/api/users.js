@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../../controllers/userController");
+const userController = require("../../controllers/admin/userController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST")
 
@@ -12,7 +12,7 @@ router.route("/:id/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);
 
 router.route("/:id")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_SINGLE_USER),userController.getUser)
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS),userController.getUser)
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS),userController.editUser)
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser);
 

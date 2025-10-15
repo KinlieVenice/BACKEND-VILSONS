@@ -82,13 +82,15 @@ const handleUserApproval = async (request, updateUser, tx) => {
       }
 
       // 3️⃣ Create userBranch entries
-      if (branches.length > 0) {
-        console.log("[create] Creating userBranch entries");
-        await tx.userBranch.createMany({
-          data: branches.map((branchId) => ({ userId: user.id, branchId })),
-        });
-      }
+     const userBranchData =
+        branches?.length > 0
+          ? branches.map((branch) => ({ branchId: branch, userId: user.id }))
+          : [];
 
+      if (userBranchData.length > 0) {
+        await tx.userBranch.createMany({ data: userBranchData });
+      }
+      
       console.log("[create] User creation completed");
       break;
 
@@ -173,32 +175,55 @@ const handleUserApproval = async (request, updateUser, tx) => {
         include: {
         admin: true,
         customer: {
-            include: {
+          include: {
             trucks: true,
-            trucksEdit: true,
-            jobOrder: true,
-            jobOrderEdit: true,
-            },
+            jobOrders: true,
+          },
         },
         contractor: {
-            include: {
+          include: {
             contractorPay: true,
-            contractorPayEdit: true,
-            JobOrder: true,
-            JobOrderEdit: true,
-            },
+            jobOrders: true,
+          },
         },
-        employee: { include: { employeeSalary: true, employeePay: true } },
+        employee: {
+          include: {
+            employeePay: true
+          },
+        },
+
+        // exclude these from relation checking
         roles: true,
-        rolesEdit: true,
         branches: true,
-        branchesEdit: true,
-        },
+
+        // keep all other created/updated relations
+        activityLog: true,
+        createdUsers: true,
+        updatedUsers: true,
+        createdRole: true,
+        createdBranches: true,
+        createdTrucks: true,
+        createdTransactions: true,
+        createdJobOrders: true,
+        createdContractorPays: true,
+        createdEquipments: true,
+        createdOtherIncomes: true,
+        createdOverheads: true,
+        transferredTruckOwnerships: true,
+        updatedBranches: true,
+        updatedTrucks: true,
+        updatedTransactions: true,
+        updatedJobOrders: true,
+        updatedContractorPays: true,
+        updatedEquipments: true,
+        updatedOtherIncomes: true,
+        updatedOverheads: true,
+      },
     });
 
     if (!existingUser) throw new Error("User not found for deletion");
 
-    const excludedKeys = ["roles", "rolesEdit", "branches", "branchesEdit", "edits"];
+    const excludedKeys = ["roles", "branches"];
     const hasRelations = relationsChecker(existingUser, excludedKeys);
 
     console.log("[delete] Has relations:", hasRelations);
@@ -214,10 +239,7 @@ const handleUserApproval = async (request, updateUser, tx) => {
     });
     } else {
         await tx.userRole.deleteMany({ where: { userId: existingUser.id } });
-        await tx.userRoleEdit.deleteMany({ where: { userId: existingUser.id } });
         await tx.userBranch.deleteMany({ where: { userId: existingUser.id } });
-        await tx.userBranchEdit.deleteMany({ where: { userId: existingUser.id } });
-        await tx.userEdit.deleteMany({ where: { userId: existingUser.id } });
 
         await tx.customer.deleteMany({ where: { userId: existingUser.id } });
         await tx.employee.deleteMany({ where: { userId: existingUser.id } });
