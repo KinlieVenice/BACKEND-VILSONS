@@ -6,9 +6,10 @@ const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 
 router.route("/")
 .post(roleController.createRole)
+.get(roleController.getAllRoles)
 
 router.route("/:roleId")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_ROLES_PERMISSIONS), roleController.editRolePermission)
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_ROLES_PERMISSIONS),roleController.getRolePermission)
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_ROLES_PERMISSIONS),roleController.getRolePermissions)
 
 module.exports = router;

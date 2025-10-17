@@ -1243,3 +1243,76 @@ Foreign key constraint violated on the fields: (`employeeId`)
 20251015	17:00:54	14398058-f936-4687-8ba7-dc81b894b7bb	Error: Cannot set headers after they are sent to the client
 20251015	18:54:03	72f85f22-0bdd-4185-8c83-05c2d7d0817d	ReferenceError: truckPlate is not defined
 20251015	18:58:23	837a03e8-3e3f-42fc-8984-100785c0c8c2	Error: Cannot set headers after they are sent to the client
+20251015	23:14:11	e9f79dd6-9745-4078-bfa8-788f61c84b05	Error: Cannot set headers after they are sent to the client
+20251015	23:26:35	72b0afbf-3a17-4843-908a-eabcd4bb4f8f	PrismaClientValidationError: 
+Invalid `tx.user.update()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:106:28
+
+  103 console.log("[edit] User payload:", editPayload);
+  104 
+  105 // Update user
+→ 106 user = await tx.user.update({
+        where: {
+          id: "af3d4199-61a4-40aa-bfc9-6106c142eada"
+        },
+        data: {
+          make: "nissan",
+          ~~~~
+          model: "cocoa",
+          plate: "riz-202",
+          createdByUser: "superkinlie",
+          updatedByUser: "superkinlie",
+      ?   id?: String | StringFieldUpdateOperationsInput,
+      ?   fullName?: String | StringFieldUpdateOperationsInput,
+      ?   username?: String | StringFieldUpdateOperationsInput,
+      ?   phone?: String | StringFieldUpdateOperationsInput,
+      ?   email?: String | StringFieldUpdateOperationsInput,
+      ?   hashPwd?: String | StringFieldUpdateOperationsInput,
+      ?   description?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   refreshToken?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   status?: AccountStatus | NullableEnumAccountStatusFieldUpdateOperationsInput | Null,
+      ?   createdAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   updatedAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   admin?: AdminUpdateOneWithoutUserNestedInput,
+      ?   customer?: CustomerUpdateOneWithoutUserNestedInput,
+      ?   contractor?: ContractorUpdateOneWithoutUserNestedInput,
+      ?   employee?: EmployeeUpdateOneWithoutUserNestedInput,
+      ?   activityLog?: ActivityLogUpdateManyWithoutUserNestedInput,
+      ?   roles?: UserRoleUpdateManyWithoutUserNestedInput,
+      ?   branches?: UserBranchUpdateManyWithoutUserNestedInput,
+      ?   createdUsers?: UserUpdateManyWithoutCreatedByNestedInput,
+      ?   updatedUsers?: UserUpdateManyWithoutUpdatedByNestedInput,
+      ?   createdRole?: RoleUpdateManyWithoutCreatedByNestedInput,
+      ?   createdBranches?: BranchUpdateManyWithoutCreatedByNestedInput,
+      ?   createdTrucks?: TruckUpdateManyWithoutCreatedByNestedInput,
+      ?   createdTransactions?: TransactionUpdateManyWithoutCreatedByNestedInput,
+      ?   createdJobOrders?: JobOrderUpdateManyWithoutCreatedByNestedInput,
+      ?   createdContractorPays?: ContractorPayUpdateManyWithoutCreatedByNestedInput,
+      ?   createdEmployeePays?: EmployeePayUpdateManyWithoutCreatedByNestedInput,
+      ?   createdPayComponents?: PayComponentUpdateManyWithoutCreatedByNestedInput,
+      ?   createdEquipments?: EquipmentUpdateManyWithoutCreatedByNestedInput,
+      ?   createdOtherIncomes?: OtherIncomeUpdateManyWithoutCreatedByNestedInput,
+      ?   createdOverheads?: OverheadUpdateManyWithoutCreatedByNestedInput,
+      ?   transferredTruckOwnerships?: TruckOwnershipUpdateManyWithoutTransferredByNestedInput,
+      ?   updatedBranches?: BranchUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedTrucks?: TruckUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedTransactions?: TransactionUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedJobOrders?: JobOrderUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedContractorPays?: ContractorPayUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedEmployeePays?: EmployeePayUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedPayComponents?: PayComponentUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedEquipments?: EquipmentUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedOtherIncomes?: OtherIncomeUpdateManyWithoutUpdatedByNestedInput,
+      ?   updatedOverheads?: OverheadUpdateManyWithoutUpdatedByNestedInput,
+      ?   requestedLogs?: ApprovalLogUpdateManyWithoutRequestedByNestedInput,
+      ?   approvedLogs?: ApprovalLogUpdateManyWithoutApprovedByNestedInput,
+      ?   createdBy?: UserUpdateOneWithoutCreatedUsersNestedInput,
+      ?   updatedBy?: UserUpdateOneWithoutUpdatedUsersNestedInput
+        }
+      })
+
+Unknown argument `make`. Did you mean `email`? Available options are marked with ?.
+20251015	23:29:08	dc1330be-4e12-4c39-aa0c-6eedf4ae29a7	TypeError: Cannot read properties of undefined (reading 'update')
+20251015	23:43:33	7a8692ca-0227-4e8a-aa67-63eb491a847e	Error: Cannot set headers after they are sent to the client
+20251017	18:45:39	1eafb26d-53bf-4220-ac0b-b45495010efd	ReferenceError: err is not defined
+20251017	18:54:57	908bf724-b387-41b7-83d6-fb5d3c8d3a3f	Error: Cannot set headers after they are sent to the client

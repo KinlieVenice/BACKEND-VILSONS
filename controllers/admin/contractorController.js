@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 
-const getContractor = async (req, res) => {
+const getContractorOld = async (req, res) => {
   if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
   }
@@ -127,6 +127,142 @@ const getContractor = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+const getContractor = async (req, res) => {
+  if (!req?.params?.id) {
+    return res.status(400).json({ message: "ID is required" });
+  }
+
+  try {
+    const contractor = await prisma.contractor.findUnique({
+      where: { id: req.params.id },
+      include: {
+        contractorPay: true,
+        jobOrders: {
+          select: {
+            id: true,
+            jobOrderCode: true,
+            status: true,
+            createdAt: true,
+            contractorPercent: true,
+            labor: true,
+            materials: { select: { price: true, quantity: true } },
+            truck: { select: { plate: true, id: true } },
+          },
+        },
+        user: {
+          include: {
+            roles: { select: { role: { select: { id: true, roleName: true } } } },
+            branches: { select: { branch: { select: { id: true, branchName: true } } } },
+          },
+        },
+      },
+    });
+
+    if (!contractor) {
+      return res.status(404).json({ message: "Contractor not found" });
+    }
+
+    // Separate active and archived
+    const activeStatuses = ["pending", "ongoing", "completed", "forRelease"];
+
+    const activeJobOrders = contractor.jobOrders.filter((jo) =>
+      activeStatuses.includes(jo.status)
+    );
+
+    const archivedJobOrders = contractor.jobOrders.filter(
+      (jo) => jo.status === "archived"
+    );
+
+    // Helper for mapping job orders
+    const mapJobOrders = (jobOrders) =>
+      jobOrders.map((jo) => {
+        const totalMaterials = jo.materials.reduce(
+          (sum, m) => sum + Number(m.price) * Number(m.quantity),
+          0
+        );
+
+        const contractorCommission = Number(jo.labor) * Number(jo.contractorPercent);
+        const shopCommission = Number(jo.labor) - contractorCommission;
+        const totalBill = Number(jo.labor) + totalMaterials;
+
+        return {
+          id: jo.id,
+          jobOrderCode: jo.jobOrderCode,
+          status: jo.status,
+          createdAt: jo.createdAt,
+          contractorPercent: jo.contractorPercent,
+          labor: jo.labor,
+          plate: jo.truck.plate,
+          truckId: jo.truck.id,
+          contractorCommission,
+          shopCommission,
+          totalMaterials,
+          totalBill,
+        };
+      });
+
+    const activeOrders = mapJobOrders(activeJobOrders);
+    const archivedOrders = mapJobOrders(archivedJobOrders);
+
+    // Totals & summary (based on ALL job orders)
+    const allOrders = [...activeOrders, ...archivedOrders];
+
+    const totalContractorCommission = allOrders.reduce(
+      (sum, jo) => sum + jo.contractorCommission,
+      0
+    );
+
+    const totalTransactions = contractor.contractorPay.reduce(
+      (sum, cp) => sum + Number(cp.amount),
+      0
+    );
+
+    const totalBalance = totalContractorCommission - totalTransactions;
+
+    const activeCount = activeOrders.length;
+    const archivedCount = archivedOrders.length;
+
+    const cleanContractor = {
+      user: contractor.user
+        ? {
+            id: contractor.user.id,
+            contractorId: req.params.id,
+            fullName: contractor.user.fullName,
+            username: contractor.user.username,
+            email: contractor.user.email,
+            phone: contractor.user.phone,
+            commission: contractor.commission,
+            roles: contractor.user.roles.map((r) => ({
+              roleId: r.role.id,
+              roleName: r.role.roleName,
+            })),
+            branches: contractor.user.branches.map((b) => ({
+              branchId: b.branch.id,
+              branchName: b.branch.branchName,
+            })),
+          }
+        : null,
+      contractorPay: contractor.contractorPay,
+      jobOrders: {
+        active: activeOrders,
+        archived: archivedOrders,
+      },
+      jobOrderSummary: {
+        activeCount,
+        archivedCount,
+        totalContractorCommission,
+        totalTransactions,
+        totalBalance,
+      },
+    };
+
+    return res.status(200).json({ data: cleanContractor });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 const getAllContractors = async (req, res) => {
   const search = req?.query?.search;

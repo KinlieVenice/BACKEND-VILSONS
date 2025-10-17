@@ -6,7 +6,7 @@ const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
 const { branchFilter } = require("../../utils/branchFilter"); 
 
 // "POST /"
-const createJobOrder = async (req, res) => {
+const createJobOrderOld = async (req, res) => {
   const {
     customerId,
     truckId,
@@ -154,6 +154,222 @@ const createJobOrder = async (req, res) => {
         shopCommission,
         totalMaterialCost,
         materials: materials || [],
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const createJobOrder = async (req, res) => {
+  const {
+    customerId,
+    truckId, // Either provide truckId OR plate+model+make
+    plate,   // Required if truckId not provided
+    model,   // Required if truckId not provided
+    make,    // Required if truckId not provided
+    branchId,
+    contractorId,
+    description,
+    materials,
+    labor,
+  } = req.body;
+
+  if (!description || !customerId || !branchId || (!truckId && (!plate || !model || !make))) {
+    return res.status(400).json({
+      message: "Customer, branch, description, and either truckId OR (plate, model, make) are required",
+    });
+  }
+
+  try {
+    // Validate existence of required foreign keys
+    const [customer, branch] = await Promise.all([
+      prisma.customer.findUnique({ where: { id: customerId } }),
+      prisma.branch.findUnique({ where: { id: branchId } }),
+    ]);
+
+    if (!customer) return res.status(400).json({ message: "Invalid customer ID" });
+    if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
+
+    // Validate contractor if provided
+    let contractor = null;
+    if (contractorId) {
+      contractor = await prisma.contractor.findUnique({ where: { id: contractorId } });
+      if (!contractor)
+        return res.status(400).json({ message: "Invalid contractor ID" });
+    }
+
+    let truck = null;
+    let finalTruckId = truckId;
+    let ownership = null;
+
+    // If truckId is provided, validate existing truck and ownership
+    if (truckId) {
+      truck = await prisma.truck.findUnique({ where: { id: truckId } });
+      if (!truck) return res.status(400).json({ message: "Invalid truck ID" });
+
+      // Validate if customer owns the truck (ownership with no endDate)
+      ownership = await prisma.truckOwnership.findFirst({
+        where: { truckId, customerId, endDate: null },
+      });
+
+      if (!ownership) {
+        return res.status(400).json({
+          message: "This truck is not currently owned by the specified customer",
+        });
+      }
+    } 
+    // If plate, model, make are provided, create new truck and ownership
+    else if (plate && model && make) {
+      // Check if plate already exists
+      const existingTruck = await prisma.truck.findUnique({
+        where: { plate },
+      });
+
+      if (existingTruck) {
+        return res.status(400).json({
+          message: "A truck with this plate number already exists",
+        });
+      }
+
+      // Create new truck and ownership in transaction
+      const newTruckData = await prisma.$transaction(async (tx) => {
+        // Create new truck
+        const newTruck = await tx.truck.create({
+          data: {
+            plate,
+            model,
+            make,
+            createdByUser: req.username,
+            updatedByUser: req.username,
+          },
+        });
+
+        // Create ownership record for the customer
+        await tx.truckOwnership.create({
+          data: {
+            truckId: newTruck.id,
+            customerId,
+            transferredByUser: req.username,
+            startDate: new Date(),
+            // endDate remains null for current ownership
+          },
+        });
+
+        return newTruck;
+      });
+
+      truck = newTruckData;
+      finalTruckId = newTruckData.id;
+    }
+
+
+    const needsApproval = req.approval;
+    const newCode = await generateJobOrderCode(prisma);
+
+    const jobOrderData = {
+      customerId,
+      branchId,
+      truckId: finalTruckId,
+      description,
+      ...(contractorId && { contractorId }),
+      ...(labor && { labor }),
+      createdByUser: req.username,
+      updatedByUser: req.username,
+    };
+
+    let contractorPercent = 0,
+      contractorCommission = 0,
+      shopCommission = 0,
+      totalMaterialCost = 0;
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Compute contractor commission if applicable
+      if (contractor && labor) {
+        contractorPercent = contractor.commission;
+        contractorCommission = labor * contractorPercent;
+        shopCommission = labor - contractorCommission;
+      }
+
+      const jobOrderModel = needsApproval ? tx.jobOrderEdit : tx.jobOrder;
+      const materialModel = needsApproval ? tx.materialEdit : tx.material;
+
+      const jobOrderInclude = {
+        truck: { select: { id: true, plate: true, model: true, make: true } },
+        customer: { include: { user: { select: { username: true, fullName: true } } } },
+        contractor: contractorId
+          ? { include: { user: { select: { username: true, fullName: true } } } }
+          : false,
+        branch: { select: { id: true, branchName: true } },
+      };
+
+      const jobOrder = await jobOrderModel.create({
+        data: {
+          ...jobOrderData,
+          jobOrderCode: needsApproval ? null : newCode,
+          requestType: needsApproval ? "create" : undefined,
+          contractorPercent,
+        },
+        include: jobOrderInclude,
+      });
+
+      // Handle materials
+      if (materials && materials.length > 0) {
+        const invalid = materials.some(
+          (m) => !m.name || !m.price || !m.quantity
+        );
+        if (invalid)
+          return res.status(400).json({
+            message:
+              "Each material must include non-empty name, non-zero price, and non-zero quantity",
+          });
+
+        await materialModel.createMany({
+          data: materials.map((m) => ({
+            jobOrderId: needsApproval ? null : jobOrder.id,
+            materialName: m.name,
+            quantity: m.quantity,
+            price: m.price,
+            ...(needsApproval && { requestType: "create" }),
+          })),
+        });
+
+        totalMaterialCost = materials.reduce(
+          (sum, m) => sum + m.price * m.quantity,
+          0
+        );
+      }
+
+      return jobOrder;
+    });
+
+    const {
+      truckId: _,
+      customerId: __,
+      contractorId: ___,
+      branchId: ____,
+      ...jobOrderFields
+    } = result;
+
+    return res.status(201).json({
+      message: needsApproval
+        ? "Job order awaiting approval"
+        : "Job order successfully created",
+      data: {
+        ...jobOrderFields,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+        materials: materials || [],
+        // Include truck info if new truck was created
+        ...(truck && !truckId && { 
+          truck: { 
+            id: truck.id, 
+            plate: truck.plate, 
+            model: truck.model, 
+            make: truck.make 
+          } 
+        }),
       },
     });
   } catch (err) {
@@ -398,7 +614,7 @@ const deleteJobOrder = async (req, res) => {
 
 // "GET /"
 const getAllJobOrders = async (req, res) => {
-  const statusGroup = req?.params.statusGroup; // 'active' or 'archive'
+  const statusGroup = req?.params.statusGroup; // 'active' or 'archived'
   const search = req?.query?.search;
   const status = req?.query?.status;
   const branch = req?.query?.branch;

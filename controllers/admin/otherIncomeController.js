@@ -29,13 +29,7 @@ const createOtherIncome = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const otherIncome = needsApproval
-        ? await tx.otherIncomeEdit.create({
-            data: {
-              ...otherIncomeData,
-              requestType: "create",
-              otherIncomeId: null,
-            },
-          })
+        ? await requestApproval('otherIncome', null, 'create', otherIncomeData, req.username)
         : await tx.otherIncome.create({
             data: otherIncomeData,
           });
@@ -78,14 +72,9 @@ const editOtherIncome = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedOtherIncome = needsApproval
-        ? await tx.otherIncomeEdit.create({
-            data: {
-              ...otherIncomeData,
-              createdByUser: req.username,
-              otherIncomeId: otherIncome.id,
-              requestType: "edit",
-            },
-          })
+        ? await requestApproval('otherIncome', req.params.id, 'edit', {
+              ...updatedData,
+              createdByUser: req.username }, req.username)
         : await tx.otherIncome.update({
             where: { id: otherIncome.id },
             data: otherIncomeData,
@@ -125,14 +114,7 @@ const deleteOtherIncome = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedOtherIncome = needsApproval
-        ? await tx.otherIncomeEdit.create({
-            data: {
-              ...otherIncomeData,
-              createdByUser: req.username,
-              otherIncomeId: otherIncome.id,
-              requestType: "delete",
-            },
-          })
+        ? await requestApproval( "otherIncome", otherIncome.id, "delete", otherIncome, req.username)
         : await tx.otherIncome.delete({
             where: { id: otherIncome.id },
           });

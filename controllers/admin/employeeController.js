@@ -159,7 +159,7 @@ const getEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found." });
     }
 
-    const latestPayComponents = emp.employeePay[0]?.payComponents || [];
+    const latestPayComponents = employee.employeePay[0]?.payComponents || [];
 
     // Map all components and merge with actual amounts from latest pay
     const mergedComponents = allComponents.map((comp) => {

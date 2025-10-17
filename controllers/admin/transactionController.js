@@ -12,6 +12,8 @@ const createTransaction = async (req, res) => {
         const jobOrder = await prisma.jobOrder.findFirst({ where: { jobOrderCode }});
         if (!jobOrder) return res.status(400).json({ message: "Job order not found" });
 
+        const needsApproval = req.approval;
+
         const result = await prisma.$transaction(async (tx) => {
             const phpAmount = amount;
             const transactionData = {
@@ -20,7 +22,9 @@ const createTransaction = async (req, res) => {
                 createdByUser: req.username,
                 updatedByUser: req.username
             }
-            const transaction = await tx.transaction.create({
+            const transaction = needsApproval 
+            ? await requestApproval('transaction', null, 'create', transactionData, req.username)
+            : await tx.transaction.create({
                 data: transactionData
             })
             return transaction
@@ -38,7 +42,10 @@ const editTransaction = async (req, res) => {
     try {
         const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
         if (!transaction) return res.status(404).json({ message: "Transaction not found" });
+
+        const needsApproval = req.approval;
          const result = await prisma.$transaction(async (tx) => {
+        
             const transactionData = {
                 jobOrderCode: jobOrderCode ?? transaction.jobOrderCode,
                 senderName: senderName ?? transaction.senderName, 
@@ -48,11 +55,16 @@ const editTransaction = async (req, res) => {
                 status: status ?? transaction.status,
                 updatedByUser: req.username
             }
-            const updatedTransaction = await tx.transaction.update({
+
+            const editedTransaction = needsApproval 
+             ? await requestApproval('transaction', req.params.id, 'edit', {
+              ...updatedData,
+              createdByUser: req.username }, req.username)
+            : await tx.transaction.update({
                 where: { id: transaction.id },
                 data: transactionData
             })
-            return updatedTransaction
+            return editedTransaction
         })
         return res.status(201).json({ message: "Transaction edit completed", result })
     } catch (err) {
@@ -66,9 +78,12 @@ const deleteTransaction = async (req, res) => {
     try {
         const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
         if (!transaction) return res.status(404).json({ message: "Transaction not found" });
+        const needsApproval = req.approval;
          const result = await prisma.$transaction(async (tx) => {
             
-            const deletedTransaction = await tx.transaction.delete({
+            const deletedTransaction = needsApproval
+            ? await requestApproval( "transaction", transaction.id, "delete", transaction, req.username)
+            : await tx.transaction.delete({
                 where: { id: transaction.id },
             })
             return deletedTransaction

@@ -28,9 +28,8 @@ const createContractorPay = async (req, res)  => {
 
         const result = await prisma.$transaction(async (tx) => {
             const contractoyPay = needsApproval 
-            ? await tx.contractorPayEdit.create({
-                data: {...contractorPayData, requestType: "create", contractorPayId: null}
-            }) : await tx.contractorPay.create({
+            ? await requestApproval('contractorPay', null, 'create', contractorPayData, req.username) 
+            : await tx.contractorPay.create({
                 data: contractorPayData
             });
 
@@ -76,9 +75,9 @@ const editContractorPay = async (req, res) => {
 
         const result = await prisma.$transaction(async (tx) => {
             const editedContractorPay = needsApproval 
-                ? await tx.contractorPayEdit.create({
-                    data: { ...contractorPayData, requestType: "edit", contractorPayId: req.params.id, createdByUser: req.username }
-                })
+                ? await requestApproval('contractorPay', req.params.id, 'edit', {
+                ...updatedData,
+                createdByUser: req.username }, req.username)
                 : await tx.contractorPay.update({
                     where: { id: contractorPay.id },
                     data: contractorPayData

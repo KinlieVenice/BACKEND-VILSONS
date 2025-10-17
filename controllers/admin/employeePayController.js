@@ -10,7 +10,7 @@ const createEmployeePay = async (req, res) => {
         (pc) => !pc.componentId || !pc.amount
       );
       if (invalid) {
-        return res.status(400).json({ message: "Each payComponent must include non-empty componentId and amount"});
+        return res.status(400).json({ message: "Total salary cannot be 0" });
       }
     }
 
@@ -107,6 +107,8 @@ const createEmployeePay = async (req, res) => {
         0
       );
 
+      if (totalComponentCost === 0) return res.status(400).json({ message: "Total salary cannot be 0"});7
+
       // 7️⃣ Re-fetch full record
       const employeePayWithComponents = await tx.employeePay.findUnique({
         where: { id: employeePay.id },
@@ -134,7 +136,10 @@ const editEmployeePay = async (req, res) => {
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    // 1️⃣ Fetch existing employeePay
+    if (!payComponents || payComponents.length === 0) {
+      return res.status(400).json({ message: "Total salary cannot be 0" });
+    }
+
     const employeePay = await prisma.employeePay.findFirst({
       where: { id: req.params.id },
       include: { payComponents: { include: { component: true } } },
@@ -152,19 +157,6 @@ const editEmployeePay = async (req, res) => {
         return res
           .status(404)
           .json({ message: `Employee with userId: ${userId} not found` });
-    }
-
-    if (payComponents.length > 0) {
-      const invalid = payComponents.some(
-        (pc) => !pc.componentId || !pc.amount
-      );
-      if (invalid) {
-        return res.status(400).json({ message: "Each payComponent must include non-empty componentId and amount"});
-      }
-    }
-
-    if (!payComponents || payComponents.length === 0) {
-      return res.status(400).json({ message: "Total salary cannot be 0" });
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -226,6 +218,8 @@ const editEmployeePay = async (req, res) => {
         (sum, pc) => sum + Number(pc.amount),
         0
       );
+
+      if (totalComponentCost === 0) return res.status(400).json({ message: "Total salary cannot be 0"})
 
       // 9️⃣ Re-fetch updated employeePay
       const updated = await tx.employeePay.findFirst({

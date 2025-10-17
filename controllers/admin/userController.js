@@ -172,6 +172,7 @@ const createUserOLD = async (req, res) => {
   }
 };
 
+// GET /
 const createUser = async (req, res) => {
   const {
     name,
@@ -458,6 +459,7 @@ const editUserOld = async (req, res) => {
   }
 };
 
+// PUT /:id
 const editUser = async (req, res) => {
   const { name, phone, email, description, roles, branches } = req.body;
 
@@ -471,7 +473,7 @@ const editUser = async (req, res) => {
       .json({ message: `User with ${req.params.id} doesn't exist` });
 
   try {
-    let needsApproval = true;
+    let needsApproval = req.approval;
     let message = needsApproval
         ? "User edit awaiting approval"
         : "User edited successfully";
@@ -598,6 +600,7 @@ const editUser = async (req, res) => {
   }
 };
 
+// PUT me/
 const editProfile = async (req, res) => {
   const { name, phone, email, description } = req.body;
 
@@ -658,6 +661,7 @@ const editProfile = async (req, res) => {
   }
 };
 
+// PUT me/password
 const editProfilePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
@@ -713,6 +717,7 @@ const editProfilePassword = async (req, res) => {
   }
 };
 
+// PUT /users/:id/password
 const editUserPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
@@ -752,7 +757,7 @@ const editUserPassword = async (req, res) => {
   }
 
   try {
-    const needsApproval = req.approval;
+    const needsApproval = true;
     let message;
 
     const updatedData = {
@@ -841,6 +846,7 @@ const deleteUserSS = async (req, res) => {
   }
 };
 
+// DELETE /:id
 const deleteUser = async (req, res) => {
   try {
     const needsApproval = req.approval;
@@ -952,6 +958,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// GET /users
 const getAllUsers = async (req, res) => {
   try {
     const role = req?.query?.role;
@@ -1051,6 +1058,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// GET /:id
 const getUser = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -1086,6 +1094,7 @@ const getUser = async (req, res) => {
   }
 };
 
+// GET /me
 const getMyProfile = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({

@@ -28,13 +28,7 @@ const createOverhead = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const overhead = needsApproval
-        ? await tx.overheadEdit.create({
-            data: {
-              ...overheadData,
-              requestType: "create",
-              overheadId: null,
-            },
-          })
+        ? await requestApproval('overhead', null, 'create', overheadData, req.username)
         : await tx.overhead.create({
             data: overheadData,
           });
@@ -77,14 +71,9 @@ const editOverhead = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedOverhead = needsApproval
-        ? await tx.overheadEdit.create({
-            data: {
-              ...overheadData,
-              createdByUser: req.username,
-              overheadId: overhead.id,
-              requestType: "edit",
-            },
-          })
+        ? await requestApproval('overhead', req.params.id, 'edit', {
+              ...updatedData,
+              createdByUser: req.username }, req.username)
         : await tx.overhead.update({
             where: { id: overhead.id },
             data: overheadData,
@@ -125,14 +114,7 @@ const deleteOverhead = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedOverhead = needsApproval
-        ? await tx.overheadEdit.create({
-            data: {
-              ...overheadData,
-              createdByUser: req.username,
-              overheadId: overhead.id,
-              requestType: "delete",
-            },
-          })
+        ? await requestApproval( "overhead", overhead.id, "delete", overhead, req.username)
         : await tx.overhead.delete({
             where: { id: overhead.id },
           });

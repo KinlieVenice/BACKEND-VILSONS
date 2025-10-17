@@ -2,6 +2,8 @@ const truckIdFinder = require("../../utils/truckIdFinder");
 const customerIdFinder = require("../../utils/customerIdFinder");
 const jobOwnerFinder = require("../../utils/jobOwnerFinder");
 const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
+const { requestApproval } = require("../../services/approvalService")
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -25,14 +27,17 @@ const createTruck = async (req, res) => {
       where: { plate },
     });
 
-    // const pendingTruck = await prisma.truckEdit.findFirst({
-    //   where: {
-    //     plate,
-    //     approvalStatus: "pending",
-    //   },
-    // });
+    const pendingTruck = await prisma.approvalLog.findFirst({
+      where: {
+        payload: {
+          path: "$.plate",
+          equals: plate,
+        },
+        status: "pending",
+      },
+    });
 
-    if (existingTruck ) {
+    if (existingTruck || pendingTruck) {
       return res.status(400).json({
         message: "Truck already exists or is pending approval",
       });
@@ -51,9 +56,7 @@ const createTruck = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const truck = needsApproval
-        ? await tx.truckEdit.create({
-            data: { ...truckData, requestType: "create" },
-          })
+        ? await requestApproval('truck', null, 'create', truckData, req.username)
         : await tx.truck.create({
             data: truckData,
           });
@@ -92,10 +95,13 @@ const editTruck = async (req, res) => {
         where: { plate },
       });
 
-      const pendingTruck = await prisma.truckEdit.findFirst({
+      const pendingTruck = await prisma.approvalLog.findFirst({
         where: {
-          plate,
-          approvalStatus: "pending",
+          payload: {
+            path: "$.plate",
+            equals: plate,
+          },
+          status: "pending",
         },
       });
 
@@ -116,14 +122,9 @@ const editTruck = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const truck_edit = needsApproval
-        ? await tx.truckEdit.create({
-            data: {
-              truckId: truck.id,
+        ? await requestApproval('truck', req.params.id, 'edit', {
               ...truckData,
-              createdByUser: req.username,
-              requestType: "edit",
-            },
-          })
+              createdByUser: req.username }, req.username)
         : await tx.truck.update({
             where: { id: truck.id },
             data: truckData,
@@ -174,14 +175,18 @@ const editTruckOwner = async (req, res) => {
         return res.status(400).json({ message: "Customer not found" });
       }
 
-      // const pendingEdit = await tx.truckOwnershipEdit.findFirst({
-      //   where: {
-      //     truckId,
-      //     approvalStatus: "pending", 
-      //   },
-      // });
+      const pendingTruck = await prisma.approvalLog.findFirst({
+        where: {
+          payload: {
+            path: "$.truckId",
+            equals: truckId,
+          },
+          status: "pending",
+          tableName: "truckOwnership"
+        },
+      });
 
-      // if (pendingEdit) return res.status(400).json({ message: "Truck already has a pending ownership transfer request" });
+      if (pendingTruck) return res.status(400).json({ message: "Truck already has a pending ownership transfer request" });
 
       // Get latest ownership
       const latestOwner = await tx.truckOwnership.findFirst({
@@ -196,9 +201,9 @@ const editTruckOwner = async (req, res) => {
       ) return res.status(400).json({ message: "Truck is already owned by this customer" });
     
       if (needsApproval) {
-        newTruckOwner = await tx.truckOwnershipEdit.create({
-          data: { ...truckData, requestType: "edit" },
-        });
+        await requestApproval('truckOwnership', req.params.id, 'edit', {
+              ...truckData,
+              createdByUser: req.username }, req.username)
         message = "Truck owner transfer awaiting approval";
       } else {
         if (latestOwner) {

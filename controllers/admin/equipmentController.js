@@ -32,13 +32,7 @@ const createEquipment = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const equipment = needsApproval
-        ? await tx.equipmentEdit.create({
-            data: {
-              ...equipmentData,
-              requestType: "create",
-              equipmentId: null,
-            },
-          })
+        ?await requestApproval('equipment', null, 'create', equipmentData, req.username)
         : await tx.equipment.create({
             data: equipmentData,
           });
@@ -82,14 +76,9 @@ const editEquipment = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedEquipment = needsApproval
-        ? await tx.equipmentEdit.create({
-            data: {
-              ...equipmentData,
-              createdByUser: req.username,
-              requestType: "edit",
-              equipmentId: equipment.id,
-            },
-          })
+        ? await requestApproval('equipment', req.params.id, 'edit', {
+              ...updatedData,
+              createdByUser: req.username }, req.username)
         : await tx.equipment.update({
             where: { id: equipment.id },
             data: equipmentData,
@@ -134,14 +123,7 @@ const deleteEquipment = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedEquipment = needsApproval
-        ? await tx.equipmentEdit.create({
-            data: {
-              ...equipmentData,
-              createdByUser: req.username,
-              requestType: "delete",
-              equipmentId: equipment.id,
-            },
-          })
+        ? await requestApproval( "equipment", equipment.id, "delete", equipment, req.username)
         : await tx.equipment.delete({
             where: { id: equipment.id },
           });
