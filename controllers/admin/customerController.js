@@ -463,5 +463,88 @@ const getCustomer = async (req, res) => {
   }
 };
 
+const getAllCustomers = async (req, res) => {
+  const search = req?.query?.search;
 
-module.exports = { getCustomer }
+  const where = {
+      user: {
+        ...(search
+          ? {
+              OR: [
+                { fullName: { contains: search } },
+                { username: { contains: search } },
+              ],
+            }
+          : {}),
+      },
+    };
+
+  try {
+    const customers = await prisma.customer.findMany({
+      where,
+      include: {
+        trucks: {
+          where: { endDate: null },
+          select: {
+            id: true,
+            truck: {
+              select: {
+                createdAt: true,
+                id: true,
+                plate: true,
+                make: true,
+                model: true,
+              },
+            },
+          },
+        },
+        user: {
+          include: {
+            roles: {
+              select: { role: { select: { id: true, roleName: true } } },
+            },
+            branches: {
+              select: { branch: { select: { id: true, branchName: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const cleanCustomers = customers.map((customer) => ({
+      user: customer.user
+        ? {
+            id: customer.user.id,
+            customerId: customer.id,
+            fullName: customer.user.fullName,
+            username: customer.user.username,
+            email: customer.user.email,
+            phone: customer.user.phone,
+            createdAt: customer.user.createdAt,
+            roles: customer.user.roles.map((r) => ({
+              roleId: r.role.id,
+              roleName: r.role.roleName,
+            })),
+            branches: customer.user.branches.map((b) => ({
+              branchId: b.branch.id,
+              branchName: b.branch.branchName,
+            })),
+          }
+        : null,
+      trucks: customer.trucks.map((t) => ({
+        truckId: t.truck.id,
+        createdAt: t.truck.createdAt,
+        plate: t.truck.plate,
+        model: t.truck.model,
+        make: t.truck.make,
+      })),
+    }));
+
+    return res.status(200).json({ data: cleanCustomers });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+module.exports = { getCustomer, getAllCustomers }

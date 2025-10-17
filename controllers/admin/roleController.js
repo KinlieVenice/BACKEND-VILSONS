@@ -162,6 +162,92 @@ const editRolePermission = async (req, res) => {
   }
 };
 
+const editRolePermissions = async (req, res) => {
+  const { roleId } = req.params;
+  const updates = req.body; // full array from frontend
+
+  if (!roleId) {
+    return res.status(400).json({ message: "Role ID is required" });
+  }
+
+  if (!Array.isArray(updates) || updates.length === 0) {
+    return res.status(400).json({ message: "No permissions provided" });
+  }
+
+  try {
+    // 1️⃣ Get current permissions of this role
+    const currentRolePermissions = await prisma.rolePermission.findMany({
+      where: { roleId },
+      select: { id: true, permissionId: true, approval: true },
+    });
+
+    // Convert to Map for fast lookups
+    const currentMap = new Map(
+      currentRolePermissions.map((rp) => [rp.permissionId, rp])
+    );
+
+    // 2️⃣ Prepare what to create/update/delete
+    const toCreate = [];
+    const toUpdate = [];
+    const toDelete = [];
+
+    for (const item of updates) {
+      const { permissionId, allowed, approval } = item;
+      const existing = currentMap.get(permissionId);
+
+      if (allowed) {
+        if (!existing) {
+          // Permission newly allowed → create
+          toCreate.push({ roleId, permissionId, approval });
+        } else if (existing.approval !== approval) {
+          // Approval changed → update
+          toUpdate.push({ id: existing.id, approval });
+        }
+      } else {
+        if (existing) {
+          // No longer allowed → delete
+          toDelete.push(existing.id);
+        }
+      }
+    }
+
+    // 3️⃣ Run all DB operations in transaction
+    await prisma.$transaction(async (tx) => {
+      // Create new permissions
+      if (toCreate.length > 0) {
+        await tx.rolePermission.createMany({ data: toCreate });
+      }
+
+      // Update changed approvals
+      for (const upd of toUpdate) {
+        await tx.rolePermission.update({
+          where: { id: upd.id },
+          data: { approval: upd.approval },
+        });
+      }
+
+      // Delete removed permissions
+      if (toDelete.length > 0) {
+        await tx.rolePermission.deleteMany({
+          where: { id: { in: toDelete } },
+        });
+      }
+    });
+
+    return res.status(200).json({
+      message: "Role permissions updated successfully",
+      summary: {
+        created: toCreate.length,
+        updated: toUpdate.length,
+        deleted: toDelete.length,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error updating role permissions", error: error.message });
+  }
+};
+
 const getRolePermissions = async (req, res) => {
   const { roleId } = req.params;
 
@@ -257,23 +343,5 @@ const getAllRoles = async (req, res) => {
   }
 }
 
-
-const getRolePermission = async (req, res) => {
-  if (!req?.params?.roleId) return res.status(404).json({ message: "Id needed"});
-
-  try {
-    const result = await prisma.$transaction(async (tx) => {
-        const role = await tx.role.findFirst({
-          where: { id: req.params.roleId },
-          include: { permissions: {  include: { permission: true } }}
-        })
-        return role
-    })
-    return res.status(200).json({ data: result })
-  } catch (err) {
-    return res.status(500).json({ message: err.message })
-  }
-}
-
-module.exports = { createRole, editRolePermission, getRolePermission, getRolePermissions, getAllRoles };
+module.exports = { createRole, editRolePermission, editRolePermissions, getRolePermissions, getAllRoles };
 

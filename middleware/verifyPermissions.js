@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const idFinders = require("../utils/idFinders");
+const permissionIdFinder = require("../utils/permissionIdFinder");
 
 
 const verifyPermission = (allowedPermissions) => {
@@ -28,7 +28,7 @@ const verifyPermission = (allowedPermissions) => {
 
       // console.log(userPermissions);
 
-      const allowedPermissionId = await idFinders.permissionIdFinder(allowedPermissions);
+      const allowedPermissionId = await permissionIdFinder(allowedPermissions);
 
       const matchedPermission = userPermissions.find((perm) =>
         allowedPermissionId.includes(perm.permissionId)

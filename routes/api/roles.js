@@ -9,7 +9,7 @@ router.route("/")
 .get(roleController.getAllRoles)
 
 router.route("/:roleId")
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_ROLES_PERMISSIONS), roleController.editRolePermission)
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_ROLES_PERMISSIONS), roleController.editRolePermissions)
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ROLES_PERMISSIONS),roleController.getRolePermissions)
 
 module.exports = router;
