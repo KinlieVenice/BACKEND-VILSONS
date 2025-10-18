@@ -5,14 +5,14 @@ const createEmployeePay = async (req, res) => {
   const { userId, payComponents = [], branchId } = req.body;
 
   try {
-    if (payComponents.length > 0) {
-      const invalid = payComponents.some(
-        (pc) => !pc.componentId || !pc.amount
-      );
-      if (invalid) {
-        return res.status(400).json({ message: "Total salary cannot be 0" });
-      }
-    }
+    // if (payComponents.length > 0) {
+    //   const invalid = payComponents.some(
+    //     (pc) => !pc.componentId || !pc.amount
+    //   );
+    //   if (invalid) {
+    //     return res.status(400).json({ message: "Total salary cannot be 0" });
+    //   }
+    // }
 
     if (!payComponents || payComponents.length === 0) {
       return res.status(400).json({ message: "Total salary cannot be 0" });
@@ -37,9 +37,6 @@ const createEmployeePay = async (req, res) => {
         },
       });
 
-      // 2️⃣ Fetch all existing components
-      const allComponents = await tx.component.findMany();
-
       // 3️⃣ Process payComponents (create missing ones if needed)
       const userComponents = await Promise.all(
         payComponents.map(async (pc) => {
@@ -52,10 +49,7 @@ const createEmployeePay = async (req, res) => {
               where: { componentName: pc.componentName },
             });
 
-            if (newComponent)
-              throw new Error(
-                `Component ${pc.componentName} already exists`
-              );
+            if (newComponent) return res.status(400).json({ message: "New component already exists" })
 
             newComponent = await tx.component.create({
               data: { componentName: pc.componentName },
@@ -67,6 +61,9 @@ const createEmployeePay = async (req, res) => {
           return pc;
         })
       );
+
+      // 2️⃣ Fetch all existing components
+      const allComponents = await tx.component.findMany();
 
       // 4️⃣ Merge userComponents with allComponents (fill missing with amount 0)
       const processedComponents = allComponents.map((component) => {

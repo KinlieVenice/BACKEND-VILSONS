@@ -351,11 +351,13 @@ const getTruck = async (req, res) => {
     return res.status(400).json({ message: "ID is required" });
 
   try {
-
     const truck = await prisma.truck.findUnique({
       where: { id: req.params.id },
       include: {
         owners: {
+          orderBy: {
+            startDate: "desc", // ✅ newest ownership first
+          },
           include: {
             customer: {
               include: { user: true },
@@ -378,8 +380,9 @@ const getTruck = async (req, res) => {
       truck.owners.length > 0
         ? truck.owners.map((owner) => ({
             customerId: owner.customer?.id || null,
-            customerUserId: owner.customer?.user?.id || null,
-            ownerFullName: owner.customer?.user?.fullName || null,
+            userId: owner.customer?.user?.id || null,
+            fullName: owner.customer?.user?.fullName || null,
+            username: owner.customer?.user?.username || null,
             transferredByUser: owner.transferredByUser,
             startDate: owner.startDate,
             endDate: owner.endDate,
@@ -389,7 +392,6 @@ const getTruck = async (req, res) => {
     const jobOrders =
       truck.jobOrders.length > 0
         ? truck.jobOrders.map((jo) => {
-            // Find the active owner at job order creation time
             const ownerAtCreation = jobOwnerFinder(owners, jo.createdAt);
 
             const materialsTotal = jo.materials.reduce(
@@ -403,39 +405,37 @@ const getTruck = async (req, res) => {
               jobOrderId: jo.id,
               jobOrderCode: jo.jobOrderCode,
               customerId: ownerAtCreation?.customerId,
-              customerUserId: ownerAtCreation?.customerUserId,
-              ownerFullName: ownerAtCreation?.ownerFullName,
+              customerUserId: ownerAtCreation?.userId,
+              customerFullName: ownerAtCreation?.fullName,
+              customerUsername: ownerAtCreation?.username,
               createdAt: jo.createdAt,
               totalBill,
               status: jo.status,
             };
           })
         : [];
-    
-    const filter = req?.query?.filter;
+
+    // ✅ Group job orders by status
     const activeStatuses = ["pending", "ongoing", "completed", "for release"];
 
-    let filteredJobOrders = jobOrders;
-    if (filter === "active") {
-      filteredJobOrders = jobOrders.filter((jo) =>
-        activeStatuses.includes(jo.status)
-      );
-    } else if (filter === "archived") {
-      filteredJobOrders = jobOrders.filter((jo) => jo.status === "archive");
-    }
-
-    const activeCount = jobOrders.filter((jo) =>
+    const activeJobOrders = jobOrders.filter((jo) =>
       activeStatuses.includes(jo.status)
-    ).length;
-    const archivedCount = jobOrders.filter((jo) => jo.status === "archive").length;
+    );
+
+    const archivedJobOrders = jobOrders.filter(
+      (jo) => jo.status === "archive"
+    );
 
     const truckWithOwnersAndJobOrders = {
       ...truck,
       owners,
-      jobOrders: filteredJobOrders,
+      jobOrders: {
+        active: activeJobOrders,
+        archived: archivedJobOrders,
+      },
       jobOrderSummary: {
-        activeCount,
-        archivedCount,
+        activeCount: activeJobOrders.length,
+        archivedCount: archivedJobOrders.length,
       },
     };
 
@@ -444,6 +444,7 @@ const getTruck = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 
 module.exports = {
