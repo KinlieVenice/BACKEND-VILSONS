@@ -1,8 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const relationsChecker = require("../utils/relationsChecker");
-const getMainBaseRole = require("../utils/getMainBaseRole"); // make sure this exists
-const generateJobOrderCode = require("../utils/generateJobOrderCode");
+const relationsChecker = require("../relationsChecker");
+const getMainBaseRole = require("../getMainBaseRole"); // make sure this exists
+const generateJobOrderCode = require("../generateJobOrderCode");
 
 const requestApproval = async (tableName, recordId, actionType, payload, reqUser) => {
     return prisma.approvalLog.create({
@@ -477,14 +477,18 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       console.log("[edit] Starting job order update from approval");
 
       const {
+        jobOrderId,
+        updateData,
         materials: editMaterials = [],
-        ...editPayload
       } = payload;
 
-      // Update job order
+      // Update job order - spread the updateData directly
       jobOrder = await tx.jobOrder.update({
-        where: { id: recordId },
-        data: { ...editPayload, updatedByUser: updateUser },
+        where: { id: jobOrderId },
+        data: {
+          ...updateData, // Spread the updateData fields directly
+          updatedByUser: updateUser,
+        },
         include: {
           truck: { select: { id: true, plate: true, model: true, make: true } },
           customer: {
@@ -492,7 +496,7 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
               user: { select: { username: true, fullName: true } },
             },
           },
-          contractor: editPayload.contractorId
+          contractor: updateData.contractorId
             ? { include: { user: { select: { username: true, fullName: true } } } }
             : false,
           branch: { select: { id: true, branchName: true } },
@@ -503,11 +507,11 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       if (editMaterials.length > 0) {
         console.log("[edit] Updating material entries");
         
-        await tx.material.deleteMany({ where: { jobOrderId: recordId } });
+        await tx.material.deleteMany({ where: { jobOrderId: jobOrderId } });
         
         await tx.material.createMany({
           data: editMaterials.map((m) => ({
-            jobOrderId: recordId,
+            jobOrderId: jobOrderId,
             materialName: m.name,
             quantity: m.quantity,
             price: m.price,

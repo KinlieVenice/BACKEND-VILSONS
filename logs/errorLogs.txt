@@ -1332,3 +1332,147 @@ Unknown argument `make`. Did you mean `email`? Available options are marked with
 20251018	17:25:44	45620909-b025-451f-950d-4e9e83f8da4c	Error: Cannot set headers after they are sent to the client
 20251018	17:26:18	0654346b-dbc2-455b-b74c-6a526d177681	Error: Cannot set headers after they are sent to the client
 20251018	17:26:21	c1fc5836-6c22-4d61-8032-6c3509784bc6	Error: Cannot set headers after they are sent to the client
+20251018	18:39:10	40b88500-e295-42fa-8228-6138e38b5180	Error: A truck with this plate number already exists
+20251018	18:39:35	7086168a-899c-456f-bbb5-9588b3b26285	PrismaClientValidationError: 
+Invalid `tx.jobOrder.update()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:485:36
+
+  482 } = payload;
+  483 
+  484 // Update job order
+→ 485 jobOrder = await tx.jobOrder.update({
+        where: {
+          id: "7c6fa5c5-0066-4272-bc23-453977ebbeca"
+        },
+        data: {
+          jobOrderId: "7c6fa5c5-0066-4272-bc23-453977ebbeca",
+          ~~~~~~~~~~
+          updateData: {
+            labor: null,
+            truckId: "e93b91c5-9bb1-431a-ab0e-8f84c55fda78",
+            branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+            customerId: "f4eaa47b-37bd-4fa7-82d6-f557d1e4efce",
+            description: "Welding and painting",
+            contractorId: "16ce727c-06f5-44c2-abae-6bf67b2bb874"
+          },
+          updatedByUser: "superkinlie",
+      ?   id?: String | StringFieldUpdateOperationsInput,
+      ?   jobOrderCode?: String | StringFieldUpdateOperationsInput,
+      ?   status?: OrderStatus | EnumOrderStatusFieldUpdateOperationsInput,
+      ?   description?: String | StringFieldUpdateOperationsInput,
+      ?   labor?: Decimal | NullableDecimalFieldUpdateOperationsInput | Null,
+      ?   contractorPercent?: Decimal | NullableDecimalFieldUpdateOperationsInput | Null,
+      ?   completedAt?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,
+      ?   createdAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   updatedAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   transactions?: TransactionUpdateManyWithoutJobOrderNestedInput,
+      ?   materials?: MaterialUpdateManyWithoutJobOrderNestedInput,
+      ?   truck?: TruckUpdateOneRequiredWithoutJobOrdersNestedInput,
+      ?   branch?: BranchUpdateOneRequiredWithoutJobOrdersNestedInput,
+      ?   contractor?: ContractorUpdateOneWithoutJobOrdersNestedInput,
+      ?   customer?: CustomerUpdateOneRequiredWithoutJobOrdersNestedInput,
+      ?   createdBy?: UserUpdateOneRequiredWithoutCreatedJobOrdersNestedInput,
+      ?   updatedBy?: UserUpdateOneRequiredWithoutUpdatedJobOrdersNestedInput
+        },
+        include: {
+          truck: {
+            select: {
+              id: true,
+              plate: true,
+              model: true,
+              make: true
+            }
+          },
+          customer: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  fullName: true
+                }
+              }
+            }
+          },
+          contractor: false,
+          branch: {
+            select: {
+              id: true,
+              branchName: true
+            }
+          }
+        }
+      })
+
+Unknown argument `jobOrderId`. Did you mean `jobOrderCode`? Available options are marked with ?.
+20251018	18:42:03	83b94723-1f47-4146-a893-3c307b255232	PrismaClientValidationError: 
+Invalid `tx.jobOrder.update()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:485:36
+
+  482 } = payload;
+  483 
+  484 // Update job order
+→ 485 jobOrder = await tx.jobOrder.update({
+        where: {
+          id: "7c6fa5c5-0066-4272-bc23-453977ebbeca"
+        },
+        data: {
+          jobOrderId: "7c6fa5c5-0066-4272-bc23-453977ebbeca",
+          ~~~~~~~~~~
+          updateData: {
+            labor: null,
+            truckId: "e93b91c5-9bb1-431a-ab0e-8f84c55fda78",
+            branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+            customerId: "f4eaa47b-37bd-4fa7-82d6-f557d1e4efce",
+            description: "Welding and painting",
+            contractorId: "16ce727c-06f5-44c2-abae-6bf67b2bb874"
+          },
+          updatedByUser: "superkinlie",
+      ?   id?: String | StringFieldUpdateOperationsInput,
+      ?   jobOrderCode?: String | StringFieldUpdateOperationsInput,
+      ?   status?: OrderStatus | EnumOrderStatusFieldUpdateOperationsInput,
+      ?   description?: String | StringFieldUpdateOperationsInput,
+      ?   labor?: Decimal | NullableDecimalFieldUpdateOperationsInput | Null,
+      ?   contractorPercent?: Decimal | NullableDecimalFieldUpdateOperationsInput | Null,
+      ?   completedAt?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,
+      ?   createdAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   updatedAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   transactions?: TransactionUpdateManyWithoutJobOrderNestedInput,
+      ?   materials?: MaterialUpdateManyWithoutJobOrderNestedInput,
+      ?   truck?: TruckUpdateOneRequiredWithoutJobOrdersNestedInput,
+      ?   branch?: BranchUpdateOneRequiredWithoutJobOrdersNestedInput,
+      ?   contractor?: ContractorUpdateOneWithoutJobOrdersNestedInput,
+      ?   customer?: CustomerUpdateOneRequiredWithoutJobOrdersNestedInput,
+      ?   createdBy?: UserUpdateOneRequiredWithoutCreatedJobOrdersNestedInput,
+      ?   updatedBy?: UserUpdateOneRequiredWithoutUpdatedJobOrdersNestedInput
+        },
+        include: {
+          truck: {
+            select: {
+              id: true,
+              plate: true,
+              model: true,
+              make: true
+            }
+          },
+          customer: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  fullName: true
+                }
+              }
+            }
+          },
+          contractor: false,
+          branch: {
+            select: {
+              id: true,
+              branchName: true
+            }
+          }
+        }
+      })
+
+Unknown argument `jobOrderId`. Did you mean `jobOrderCode`? Available options are marked with ?.
+20251018	20:34:29	862fc2be-3fe1-4172-92e4-a79e79d0763f	TypeError: checkPendingApproval is not a function

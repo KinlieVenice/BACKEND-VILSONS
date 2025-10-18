@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { requestApproval } = require("../../services/approvalService")
+const { requestApproval } = require("../../utils/services/approvalService")
 /*
 branchName           String         @db.VarChar(100)
   description    String

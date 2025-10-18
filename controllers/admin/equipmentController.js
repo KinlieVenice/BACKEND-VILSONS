@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { branchFilter } = require("../../utils/branchFilter");
 const { getMonthYear } = require("../../utils/monthYearFilter");
-const { requestApproval } = require("../../services/approvalService")
+const { requestApproval } = require("../../utils/services/approvalService")
 
 
 /*

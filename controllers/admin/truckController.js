@@ -2,7 +2,7 @@ const truckIdFinder = require("../../utils/truckIdFinder");
 const customerIdFinder = require("../../utils/customerIdFinder");
 const jobOwnerFinder = require("../../utils/jobOwnerFinder");
 const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
-const { requestApproval } = require("../../services/approvalService")
+const { requestApproval } = require("../../utils/services/approvalService")
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();

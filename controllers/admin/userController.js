@@ -1,10 +1,11 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
-const relationsChecker = require("../../utils/relationsChecker");
 const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
 const getMainBaseRole = require("../../utils/getMainBaseRole.js");
-const { requestApproval } = require("../../services/approvalService")
+const { requestApproval } = require("../../utils/services/approvalService")
+const checkPendingApproval = require("../../utils/services/checkPendingApproval")
+const relationsChecker = require("../../utils/relationsChecker");
 
 
 const createUserOLD = async (req, res) => {
@@ -195,29 +196,21 @@ const createUser = async (req, res) => {
     where: { OR: [{ username }, { email }] },
   });
 
-  const pendingUser = await prisma.approvalLog.findFirst({
-    where: {
-      status: "pending",
-      OR: [
-        { payload: { path: "$.username", equals: username } },
-        { payload: { path: "$.email", equals: email } },
-      ],
-    },
-  });
+  const pendingUsername = await checkPendingApproval(prisma, 'user', ['username'], username);
+  const pendingEmail = await checkPendingApproval(prisma, 'user', ['email'], email);
 
-  if (existingUser || pendingUser) {
-    const pendingUsername = pendingUser?.payload?.username;
-    const pendingEmail = pendingUser?.payload?.email;
+  console.log(pendingUsername)
 
+  if (existingUser || pendingUsername || pendingEmail) {
     let message = [];
     if (
       (existingUser && existingUser.username === username) ||
-      (pendingUsername && pendingUsername === username)
+      (pendingUsername && pendingUsername.value === username)
     )
       message.push("Username");
     if (
       (existingUser && existingUser.email === email) ||
-      (pendingEmail && pendingEmail === email)
+      (pendingEmail && pendingEmail.value === email)
     )
       message.push("Email");
 
