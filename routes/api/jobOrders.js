@@ -22,6 +22,6 @@ router.route("/:id/status")
 
 //PERM EDIT
 router.route("/:id/contractor/:accept")
-.patch(verifyPermission(PERMISSIONS_LIST.ACCEPT_JOB_ORDER), jobOrderController.acceptJobOrder)
+
 
 module.exports = router;

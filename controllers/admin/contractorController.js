@@ -263,7 +263,6 @@ const getContractor = async (req, res) => {
   }
 };
 
-
 const getAllContractors = async (req, res) => {
   const search = req?.query?.search;
   const branchIds = req.branchIds || [];

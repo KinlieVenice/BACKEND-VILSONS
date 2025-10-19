@@ -1476,3 +1476,8 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\services\approvalService.js:485
 
 Unknown argument `jobOrderId`. Did you mean `jobOrderCode`? Available options are marked with ?.
 20251018	20:34:29	862fc2be-3fe1-4172-92e4-a79e79d0763f	TypeError: checkPendingApproval is not a function
+20251018	20:47:44	2ede344e-7bb6-4ea1-9762-05422573a0f1	ReferenceError: checkPendingApproval is not defined
+20251018	23:29:37	bcf26460-686a-4e98-9951-550f042b4519	ReferenceError: jobOrdepayload is not defined
+20251018	23:30:04	dbd82edf-6d13-4a2c-99b3-e8fef6e51a0b	ReferenceError: Cannot access 'jobOrderId' before initialization
+20251019	15:55:10	8f7c58ae-fe40-47be-a5f2-cc59f7f43ada	Error: Approval request not found
+20251019	21:30:49	0a32b95b-3028-45de-b755-74adb4a87449	TypeError: Cannot read properties of undefined (reading 'trim')

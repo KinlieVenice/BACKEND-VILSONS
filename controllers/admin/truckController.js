@@ -27,15 +27,7 @@ const createTruck = async (req, res) => {
       where: { plate },
     });
 
-    const pendingTruck = await prisma.approvalLog.findFirst({
-      where: {
-        payload: {
-          path: "$.plate",
-          equals: plate,
-        },
-        status: "pending",
-      },
-    });
+    const pendingTruck = await checkPendingApproval(prisma, 'truck', ['plate'], plate);
 
     if (existingTruck || pendingTruck) {
       return res.status(400).json({
@@ -92,20 +84,13 @@ const editTruck = async (req, res) => {
 
     if (plate) {
       const existingTruck = await prisma.truck.findFirst({
-        where: { plate },
+        where: { plate, id: { not: req.params.id } },
       });
 
-      const pendingTruck = await prisma.approvalLog.findFirst({
-        where: {
-          payload: {
-            path: "$.plate",
-            equals: plate,
-          },
-          status: "pending",
-        },
-      });
+      const pendingTruck = await checkPendingApproval(prisma, 'truck', ['plate'], plate);
+      const pendingJobOrderTruck = await checkPendingApproval(prisma, 'jobOrder', ['truckData', 'plate'], plate);
 
-      if (existingTruck || pendingTruck) {
+      if (existingTruck || pendingTruck || pendingJobOrderTruck) {
         return res.status(400).json({
           message: "Truck already exists or is pending approval",
         });
@@ -311,7 +296,7 @@ const getAllTrucks = async (req, res) => {
             include: {
               customer: {
                 include: {
-                  user: { select: { fullName: true, id: true } },
+                  user: { select: { fullName: true, id: true, username: true } },
                 },
               },
             },
@@ -327,6 +312,7 @@ const getAllTrucks = async (req, res) => {
         customerId: truck.owners[0]?.customer?.id || null,
         customerUserId: truck.owners[0]?.customer?.user?.id || null,
         customerFullName: truck.owners[0]?.customer?.user?.fullName || null, // irst active owner only
+        customerUsername: truck.owners[0]?.customer?.user?.username || null, // irst active owner only
         createdAt: truck.createdAt,
       }));
 

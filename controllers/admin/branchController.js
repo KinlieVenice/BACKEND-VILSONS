@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { requestApproval } = require("../../utils/services/approvalService")
+const checkPendingApproval = require("../../utils/services/checkPendingApproval")
+
 /*
 branchName           String         @db.VarChar(100)
   description    String
@@ -22,15 +24,7 @@ const createBranch = async (req, res) => {
     where: { branchName: name },
   });
 
-  const pendingBranch = await prisma.approvalLog.findFirst({
-    where: {
-      payload: {
-        path: "$.branchName",
-        equals: name,
-      },
-      status: "pending",
-    },
-  });
+  const pendingBranch = await checkPendingApproval(prisma, 'branch', ['branchName'], name);
 
   if (existingBranch || pendingBranch) {
     return res
@@ -74,8 +68,6 @@ const createBranch = async (req, res) => {
 
 const editBranch = async (req, res) => {
   const { name, description, address } = req.body;
-  let existingBranch;
-  let pendingBranch;
 
   if (!req.params.id) return res.status(404).json({ message: "ID is required" });
 
@@ -87,22 +79,17 @@ const editBranch = async (req, res) => {
       .json({ message: `Branch with ${req.params.id} not found` });
       
   if (name && name !== branch.branchName) {
-    existingBranch = await prisma.branch.findFirst({
+    const existingBranch = await prisma.branch.findFirst({
       where: { branchName: name },
     });
 
-    pendingBranch = await prisma.branchEdit.findFirst({
-      where: {
-        branchName: name,
-        approvalStatus: "pending",
-      },
-    });
-  }
+    const pendingBranch = await checkPendingApproval(prisma, 'branch', ['branchName'], name);
 
-  if (existingBranch || pendingBranch)
+     if (existingBranch || pendingBranch)
     return res
       .status(400)
       .json({ message: "Branch name already in exists or pending approval" });
+  }
 
   try {
     const needsApproval = req.approval;

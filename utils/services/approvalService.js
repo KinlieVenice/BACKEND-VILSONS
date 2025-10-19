@@ -263,6 +263,8 @@ const handleUserApproval = async (request, updateUser, tx) => {
   return user;
 };
 
+
+
 const handleJobOrderApproval = async (request, updateUser, tx) => {
   const { payload, actionType: action, recordId, requestedByUser } = request;
 
@@ -285,38 +287,106 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       console.log("[create] Job order data:", jobOrderData);
       console.log("[create] Materials:", materials);
 
-      let finalCustomerId;
-      let finalTruckId;
+      let customer = null;
+      let activeTruckId = truckData.truckId;
 
-      // Handle Customer Creation/Validation
+      // 1️⃣ Existing customer logic
       if (customerData.customerId) {
-        // Existing customer - validate
-        const existingCustomer = await tx.customer.findUnique({
+        customer = await tx.customer.findUnique({
           where: { id: customerData.customerId },
         });
-        if (!existingCustomer) {
-          throw new Error("Invalid customer ID in approval payload");
-        }
-        finalCustomerId = customerData.customerId;
-      } else {
-        // New customer - create user and customer
-        console.log("[create] Creating new customer");
-        const { name, email, phone, username } = customerData;
-        
-        if (!name || !email || !phone || !username) {
-          throw new Error("Missing required customer fields for new customer");
+
+        // Handle truck assignment/transfer for existing customer
+        if (truckData.truckId) {
+          // Check current ownership
+          const currentOwnership = await tx.truckOwnership.findFirst({
+            where: { 
+              truckId: truckData.truckId,
+              endDate: null 
+            },
+          });
+
+          if (currentOwnership) {
+            if (currentOwnership.customerId !== customerData.customerId) {
+              // Transfer ownership - end previous ownership and create new one
+              await tx.truckOwnership.updateMany({
+                where: { 
+                  truckId: truckData.truckId,
+                  endDate: null 
+                },
+                data: { 
+                  endDate: new Date() 
+                },
+              });
+
+              await tx.truckOwnership.create({
+                data: {
+                  truckId: truckData.truckId,
+                  customerId: customerData.customerId,
+                  startDate: new Date(),
+                  transferredByUser: updateUser,
+                },
+              });
+            }
+            // If already owned by this customer, no action needed
+          } else {
+            // Truck has no current owner - assign ownership
+            await tx.truckOwnership.create({
+              data: {
+                truckId: truckData.truckId,
+                customerId: customerData.customerId,
+                startDate: new Date(),
+                transferredByUser: updateUser,
+              },
+            });
+          }
+          
+          activeTruckId = truckData.truckId;
         }
 
-        // Use your existing roleIdFinder function
+        // If no truckId, but new truck details provided, create new truck for them
+        if (!truckData.truckId && truckData.plate && truckData.model && truckData.make) {
+          const existingTruck = await tx.truck.findUnique({ 
+            where: { plate: truckData.plate } 
+          });
+          if (existingTruck) {
+            throw new Error("A truck with this plate number already exists. Transfer ownership first.");
+          }
+
+          const createdTruck = await tx.truck.create({
+            data: {
+              plate: truckData.plate,
+              model: truckData.model,
+              make: truckData.make,
+              createdByUser: requestedByUser,
+              updatedByUser: updateUser,
+            },
+          });
+
+          await tx.truckOwnership.create({
+            data: {
+              truckId: createdTruck.id,
+              customerId: customer.id,
+              startDate: new Date(),
+              transferredByUser: updateUser,
+            },
+          });
+
+          activeTruckId = createdTruck.id;
+        } 
+      }
+
+      // 2️⃣ Handle new customer
+      else if (customerData.name && customerData.email && customerData.phone && customerData.username) {
         const roleId = await roleIdFinder(ROLES_LIST.CUSTOMER);
 
         const newUser = await tx.user.create({
           data: {
-            fullName: name,
+            fullName: customerData.name,
             hashPwd: await bcrypt.hash(process.env.DEFAULT_PASSWORD, 10),
-            email,
-            phone,
-            username,
+            email: customerData.email,
+            phone: customerData.phone.toString(),
+            username: customerData.username,
             roles: {
               create: [
                 {
@@ -325,7 +395,7 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
               ],
             },
             createdByUser: requestedByUser,
-            updatedByUser: updateUser,
+            updatedByUser: updateUser
           },
         });
 
@@ -333,102 +403,100 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
           data: { userId: newUser.id },
         });
 
-        finalCustomerId = newCustomer.id;
-        console.log(`[create] New customer created with ID: ${finalCustomerId}`);
+        let finalTruck;
+
+        if (truckData.plate && truckData.model && truckData.make) {
+          // Create new truck for new customer
+          finalTruck = await tx.truck.create({
+            data: {
+              plate: truckData.plate,
+              model: truckData.model,
+              make: truckData.make,
+              createdByUser: requestedByUser,
+              updatedByUser: updateUser,
+              owners: {
+                create: {
+                  customerId: newCustomer.id,
+                  startDate: new Date(),
+                  transferredByUser: updateUser,
+                },
+              },
+            },
+          });
+        } else if (truckData.truckId) {
+          // Validate truck exists in transaction context
+          const existingTruck = await tx.truck.findUnique({
+            where: { id: truckData.truckId },
+          });
+          if (!existingTruck) {
+            throw new Error("Truck not found");
+          }
+
+          // For new customer with existing truck - transfer ownership
+          await tx.truckOwnership.updateMany({
+            where: { 
+              truckId: truckData.truckId,
+              endDate: null 
+            },
+            data: { 
+              endDate: new Date() 
+            },
+          });
+
+          await tx.truckOwnership.create({
+            data: {
+              truckId: truckData.truckId,
+              customerId: newCustomer.id,
+              startDate: new Date(),
+              transferredByUser: updateUser,
+            },
+          });
+
+          finalTruck = existingTruck;
+        } else {
+          throw new Error("Either truckId or plate details are required for new customer");
+        }
+
+        customer = newCustomer;
+        activeTruckId = finalTruck.id;
       }
 
-      // Handle Truck Creation/Validation
-      if (truckData.truckId) {
-        // Existing truck - validate ownership
-        const existingTruck = await tx.truck.findUnique({
-          where: { id: truckData.truckId },
-        });
-        if (!existingTruck) {
-          throw new Error("Invalid truck ID in approval payload");
-        }
+      // Calculate commissions
+      let contractor = null;
+      let contractorPercent = 0,
+        contractorCommission = 0,
+        shopCommission = 0,
+        totalMaterialCost = 0;
 
-        // Check ownership
-        const ownership = await tx.truckOwnership.findFirst({
-          where: { 
-            truckId: truckData.truckId, 
-            customerId: finalCustomerId, 
-            endDate: null 
-          },
-        });
-
-        if (!ownership) {
-          throw new Error("Truck ownership validation failed for existing truck");
-        }
-
-        finalTruckId = truckData.truckId;
-      } else {
-        // New truck - create truck and ownership
-        console.log("[create] Creating new truck");
-        const { plate, model, make } = truckData;
-        
-        if (!plate || !model || !make) {
-          throw new Error("Missing required truck fields for new truck");
-        }
-
-        // Check if truck with same plate already exists
-        const existingTruck = await tx.truck.findUnique({ 
-          where: { plate } 
-        });
-        if (existingTruck) {
-          throw new Error("A truck with this plate number already exists");
-        }
-
-        const newTruck = await tx.truck.create({
-          data: {
-            plate,
-            model,
-            make,
-            createdByUser: requestedByUser,
-            updatedByUser: updateUser,
-          },
-        });
-
-        // Create ownership record
-        await tx.truckOwnership.create({
-          data: {
-            truckId: newTruck.id,
-            customerId: finalCustomerId,
-            startDate: new Date(),
-            transferredByUser: updateUser,
-          },
-        });
-
-        finalTruckId = newTruck.id;
-        console.log(`[create] New truck created with ID: ${finalTruckId}`);
-      }
-
-      // Validate contractor if provided
       if (jobOrderData.contractorId) {
-        const contractor = await tx.contractor.findUnique({
+        contractor = await tx.contractor.findUnique({
           where: { id: jobOrderData.contractorId },
         });
-        if (!contractor) {
-          throw new Error("Invalid contractor ID in approval payload");
+
+        if (jobOrderData.labor) {
+          contractorPercent = contractor.commission;
+          contractorCommission = jobOrderData.labor * contractorPercent;
+          shopCommission = jobOrderData.labor - contractorCommission;
         }
       }
 
-      // Validate branch
-      const branch = await tx.branch.findUnique({
-        where: { id: jobOrderData.branchId },
-      });
-      if (!branch) {
-        throw new Error("Invalid branch ID in approval payload");
-      }
+      const finalJobOrderData = {
+        customerId: customer.id,
+        branchId: jobOrderData.branchId,
+        truckId: activeTruckId,
+        description: jobOrderData.description,
+        ...(jobOrderData.contractorId && { contractorId: jobOrderData.contractorId }),
+        ...(jobOrderData.labor && { labor: jobOrderData.labor }),
+        createdByUser: requestedByUser,
+        updatedByUser: updateUser,
+      };
 
-      // ✅ 5️⃣ Create the main job order record
+      // Create job order
       jobOrder = await tx.jobOrder.create({
         data: {
-          ...jobOrderData,
-          jobOrderCode: await generateJobOrderCode(prisma),
-          customerId: finalCustomerId,
-          truckId: finalTruckId,
-          createdByUser: requestedByUser,
-          updatedByUser: updateUser,
+          ...finalJobOrderData,
+          jobOrderCode: await generateJobOrderCode(tx),
+          contractorPercent,
         },
         include: {
           truck: { select: { id: true, plate: true, model: true, make: true } },
@@ -445,19 +513,8 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       });
       console.log(`[create] Job order created with ID: ${jobOrder.id}`);
 
-      // ✅ 6️⃣ Create materials if provided
-      if (materials.length > 0) {
-        console.log("[create] Creating material entries");
-        
-        const invalid = materials.some(
-          (m) => !m.name || !m.price || !m.quantity
-        );
-        if (invalid) {
-          throw new Error(
-            "Each material must include non-empty name, non-zero price, and non-zero quantity"
-          );
-        }
-
+      // Create materials if provided
+      if (materials && materials.length > 0) {
         await tx.material.createMany({
           data: materials.map((m) => ({
             jobOrderId: jobOrder.id,
@@ -467,26 +524,34 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
           })),
         });
 
-        console.log(`[create] Created ${materials.length} material entries`);
+        totalMaterialCost = materials.reduce(
+          (sum, m) => sum + m.price * m.quantity,
+          0
+        );
       }
 
-      console.log("[create] Job order creation completed");
-      break;
+      // Return consistent structure
+      return {
+        jobOrder,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+        materials: materials || [],
+      };
 
     case "edit":
       console.log("[edit] Starting job order update from approval");
 
       const {
-        jobOrderId,
         updateData,
         materials: editMaterials = [],
       } = payload;
 
       // Update job order - spread the updateData directly
       jobOrder = await tx.jobOrder.update({
-        where: { id: jobOrderId },
+        where: { id: recordId },
         data: {
-          ...updateData, // Spread the updateData fields directly
+          ...updateData,
           updatedByUser: updateUser,
         },
         include: {
@@ -507,11 +572,11 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       if (editMaterials.length > 0) {
         console.log("[edit] Updating material entries");
         
-        await tx.material.deleteMany({ where: { jobOrderId: jobOrderId } });
+        await tx.material.deleteMany({ where: { jobOrderId: recordId } });
         
         await tx.material.createMany({
           data: editMaterials.map((m) => ({
-            jobOrderId: jobOrderId,
+            jobOrderId: recordId,
             materialName: m.name,
             quantity: m.quantity,
             price: m.price,
@@ -530,13 +595,27 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       const existingJobOrder = await tx.jobOrder.findUnique({
         where: { id: recordId },
         include: {
+          transactions: true,
           materials: true,
         },
       });
 
       if (!existingJobOrder) throw new Error("Job order not found for deletion");
-      
+
+      // Check if job order has relations that prevent deletion
+      const excludedKeys = ["labor", "contractorPercent", "materials"];
+      const hasRelations = relationsChecker(existingJobOrder, excludedKeys);
+
+      console.log("[delete] Has relations:", hasRelations);
+
+      if (hasRelations) {
+        throw new Error("Job order cannot be deleted as it's connected to other records");
+      }
+
+      // Delete materials first (due to foreign key constraints)
       await tx.material.deleteMany({ where: { jobOrderId: recordId } });
+      
+      // Delete the job order
       await tx.jobOrder.delete({ where: { id: recordId } });
 
       jobOrder = null;
