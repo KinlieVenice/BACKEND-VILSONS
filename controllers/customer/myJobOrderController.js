@@ -1,14 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const generateJobOrderCode = require("../../utils/generateJobOrderCode");
-const relationsChecker = require("../../utils/relationsChecker");
-const { getDateRangeFilter } = require("../../utils/dateRangeFilter");
-const { branchFilter } = require("../../utils/branchFilter"); 
+const { getDateRangeFilter } = require("../../utils/filters/dateRangeFilter");
 const bcrypt = require("bcrypt");
-const ROLES_LIST = require("../../constants/ROLES_LIST");
-const roleIdFinder = require("../../utils/roleIdFinder");
-const { requestApproval } = require("../../utils/services/approvalService")
-const checkPendingApproval = require("../../utils/services/checkPendingApproval")
 
 
 // CUSTOMER

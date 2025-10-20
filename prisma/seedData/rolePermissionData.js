@@ -1,7 +1,7 @@
 const ROLES_LIST = require("../../constants/ROLES_LIST");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
-const roleIdFinder = require("../../utils/roleIdFinder");
-const permissionIdFinder = require("../../utils/permissionIdFinder");
+const roleIdFinder = require("../../utils/finders/roleIdFinder");
+const permissionIdFinder = require("../../utils/filters/permissionIdFinder");
 
 async function getRolePermissionData() {
   const admin = [

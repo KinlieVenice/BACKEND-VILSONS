@@ -1,7 +1,7 @@
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const getMainBaseRole = require("../../utils/getMainBaseRole.js");
+const getMainBaseRole = require("../../utils/services/getMainBaseRole.js");
 
 const createRole = async (req, res) => {
   try {

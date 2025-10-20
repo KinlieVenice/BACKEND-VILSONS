@@ -1,0 +1,20 @@
+const express = require("express");
+const router = express.Router();
+const truckController = require("../../../controllers/admin/maintabs/truckController");
+const verifyPermission = require("../../../middleware/verifyPermissions");
+const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
+
+router.route("/")
+  .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCK),truckController.createTruck)
+  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getAllTrucks);
+
+router.route("/ownership")
+  .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK_OWNER),truckController.editTruckOwner)
+
+router.route("/:id")
+  .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCK),truckController.deleteTruck)
+  .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK),truckController.editTruck)
+  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getTruck);
+
+
+module.exports = router;

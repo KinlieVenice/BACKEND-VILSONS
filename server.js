@@ -41,27 +41,35 @@ app.use("/logout", require("./routes/logout"));
 app.use(express.static(path.join(__dirname, "views")));
 
 app.use(verifyJWT);
-app.use("/api/users", require("./routes/api/users"));
-app.use("/api/roles", require("./routes/api/roles"));
-app.use("/api/approval-logs", require("./routes/api/approvalLogs"));
+app.use("/api/users", require("./routes/api/maintabs/users"));
+app.use("/api/dashboard", require("./routes/api/maintabs/dashboard"));
+app.use("/api/trucks", require("./routes/api/maintabs/trucks"));
+app.use("/api/job-orders", require("./routes/api/maintabs/jobOrders"));
+app.use("/api/approval-logs", require("./routes/api/maintabs/approvalLogs"));
+app.use("/api/other-incomes", require("./routes/api/maintabs/otherincomes"));
+
+
 app.use("/api/branches", require("./routes/api/branches"));
-app.use("/api/dashboard", require("./routes/api/dashboard"));
-app.use("/api/trucks", require("./routes/api/trucks"));
-app.use("/api/job-orders", require("./routes/api/jobOrders"));
-app.use("/api/contractor-pays", require("./routes/api/contractorPays"));
-app.use("/api/employee-pays", require("./routes/api/employeePays"));
-app.use("/api/labors", require("./routes/api/labors"));
+app.use("/api/roles", require("./routes/api/roles"));
+
+
+// EXPENSES ROUTES
+app.use("/api/contractor-pays", require("./routes/api/expenses/contractorPays"));
+app.use("/api/employee-pays", require("./routes/api/expenses/employeePays"));
+app.use("/api/labors", require("./routes/api/expenses/labors"));
+app.use("/api/equipments", require("./routes/api/expenses/equipments"));
+app.use("/api/materials", require("./routes/api/expenses/materials"));
+app.use("/api/overheads", require("./routes/api/expenses/overheads"));
+
+// ROLES RELATED
 app.use("/api/me", require("./routes/api/me"));
-app.use("/api/contractors", require("./routes/api/contractors"));
-app.use("/api/employees", require("./routes/api/employees"));
-app.use("/api/customers", require("./routes/api/customers"));
-app.use("/api/equipments", require("./routes/api/equipments"));
-app.use("/api/materials", require("./routes/api/materials"));
-app.use("/api/other-incomes", require("./routes/api/otherincomes"));
-app.use("/api/overheads", require("./routes/api/overheads"));
+app.use("/api/contractors", require("./routes/api/roles/contractors"));
+app.use("/api/employees", require("./routes/api/roles/employees"));
+app.use("/api/customers", require("./routes/api/roles/customers"));
+
 app.use("/api/online-transactions", require("./routes/api/onlineTransactions"));
-app.use("/api/transactions", require("./routes/api/transactions"));
-app.use("/api/finances", require("./routes/api/finances"));
+app.use("/api/transactions", require("./routes/api/maintabs/transactions"));
+app.use("/api/finances", require("./routes/api/maintabs/finances"));
 
 
 app.all(/^.*$/, (req, res) => {

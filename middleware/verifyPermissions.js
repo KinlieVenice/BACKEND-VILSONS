@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const permissionIdFinder = require("../utils/permissionIdFinder");
+const permissionIdFinder = require("../utils/finders/permissionIdFinder");
 
 
 const verifyPermission = (allowedPermissions) => {

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const assignedJobOrderController = require("../../controllers/contractor/assignedJobOrderController");
 const myJobOrderController = require("../../controllers/customer/myJobOrderController");
-const userController = require("../../controllers/admin/userController");
+const userController = require("../../controllers/admin/maintabs/userController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 

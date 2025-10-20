@@ -1,8 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const relationsChecker = require("../relationsChecker");
-const getMainBaseRole = require("../getMainBaseRole"); // make sure this exists
-const generateJobOrderCode = require("../generateJobOrderCode");
+const relationsChecker = require("../services/relationsChecker");
+const getMainBaseRole = require("./getMainBaseRole"); // make sure this exists
+const generateJobOrderCode = require("./generateJobOrderCode");
 
 const requestApproval = async (tableName, recordId, actionType, payload, reqUser) => {
     return prisma.approvalLog.create({
