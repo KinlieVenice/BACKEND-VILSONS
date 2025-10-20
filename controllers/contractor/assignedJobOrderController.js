@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getDateRangeFilter } = require("../../utils/filters/dateRangeFilter");
-const { branchFilter } = require("../../utils/filters/branchFilter"); 
 
 // CONTRACTOR
 const getAllAssignedJobOrders = async (req, res) => {
