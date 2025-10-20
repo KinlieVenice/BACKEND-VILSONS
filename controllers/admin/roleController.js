@@ -285,28 +285,38 @@ const getRolePermissions = async (req, res) => {
 
     const rolePermissions = role.permissions;
 
-    // ✅ Map role’s own permissions
+    // ✅ If no base role, just return role permissions directly
+    if (!mainBaseRoleName) {
+      const finalPermissions = rolePermissions.map((rp) => ({
+        permissionId: rp.permissionId,
+        permissionName: rp.permission.permissionName,
+        allowed: true,
+        approval: rp.approval,
+      }));
+
+      return res.json({
+        roleId,
+        baseRoleId: role.baseRoleId,
+        mainBaseRole: null,
+        permissions: finalPermissions,
+      });
+    }
+
+    // ✅ Only process merging logic if we have a base role
     const rolePermissionMap = new Map(
       rolePermissions.map((rp) => [rp.permissionId, rp])
     );
 
     // ✅ Merge base and role permissions
-    const allPermissions = basePermissions.length
-      ? basePermissions.map((bp) => {
-          const override = rolePermissionMap.get(bp.permissionId);
-          return {
-            permissionId: bp.permissionId,
-            permissionName: bp.permission.permissionName,
-            allowed: Boolean(override),
-            approval: override ? override.approval : bp.approval,
-          };
-        })
-      : rolePermissions.map((rp) => ({
-          permissionId: rp.permissionId,
-          permissionName: rp.permission.permissionName,
-          allowed: true,
-          approval: rp.approval,
-        }));
+    const allPermissions = basePermissions.map((bp) => {
+      const override = rolePermissionMap.get(bp.permissionId);
+      return {
+        permissionId: bp.permissionId,
+        permissionName: bp.permission.permissionName,
+        allowed: Boolean(override),
+        approval: override ? override.approval : bp.approval,
+      };
+    });
 
     // ✅ Add child-only permissions
     const basePermissionIds = new Set(basePermissions.map((bp) => bp.permissionId));
@@ -324,7 +334,7 @@ const getRolePermissions = async (req, res) => {
     return res.json({
       roleId,
       baseRoleId: role.baseRoleId,
-      mainBaseRole: mainBaseRoleName || null,
+      mainBaseRole: mainBaseRoleName,
       permissions: finalPermissions,
     });
   } catch (error) {

@@ -730,6 +730,42 @@ async function getPermissionData() {
     method: "view",
     description: "View all employees",
   },
+  {
+    module: "Contractors",
+    permissionName: "view_contractor_dashboard",
+    method: "view",
+    description: "View contractor dashboard",
+  },
+  {
+    module: "Customers",
+    permissionName: "view_customer_dashboard",
+    method: "view",
+    description: "View customer dashboard",
+  },
+  {
+    module: "Customers",
+    permissionName: "view_customer_trucks",
+    method: "view",
+    description: "View customer trucks",
+  },
+  {
+    module: "Customers",
+    permissionName: "view_customer_transactions",
+    method: "view",
+    description: "View customer transactions",
+  },
+  {
+    module: "Customers",
+    permissionName: "create_customer_transactions",
+    method: "create",
+    description: "Create customer transactions",
+  },
+  {
+    module: "Contractors",
+    permissionName: "view_contractor_finances",
+    method: "view",
+    description: "View contractor finances",
+  },
 
   // ===== PROFILE =====
   {

@@ -3,9 +3,9 @@ const prisma = new PrismaClient();
 
 const getAllLabor = async (req, res) => {
   try {
-    const result = await prisma.$transaction(async (prismaTx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // 1️⃣ Find contractor by userId
-      const contractor = await prismaTx.contractor.findUnique({
+      const contractor = await tx.contractor.findUnique({
         where: { userId: req.id },
         select: { id: true },
       });
@@ -15,7 +15,7 @@ const getAllLabor = async (req, res) => {
       }
 
       // 2️⃣ Get labor records (type, createdAt, amount)
-      const labors = await prismaTx.contractorPay.findMany({
+      const labors = await tx.contractorPay.findMany({
         where: { contractorId: contractor.id },
         select: {
           type: true,
@@ -30,7 +30,7 @@ const getAllLabor = async (req, res) => {
       }, 0);
 
       // 4️⃣ Get job orders for contractor
-      const jobOrders = await prismaTx.jobOrder.findMany({
+      const jobOrders = await tx.jobOrder.findMany({
         where: { contractorId: contractor.id },
         select: {
           labor: true,
@@ -56,3 +56,5 @@ const getAllLabor = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+module.exports = { getAllLabor };

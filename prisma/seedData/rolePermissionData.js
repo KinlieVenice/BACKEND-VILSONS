@@ -1,7 +1,7 @@
 const ROLES_LIST = require("../../constants/ROLES_LIST");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
 const roleIdFinder = require("../../utils/finders/roleIdFinder");
-const permissionIdFinder = require("../../utils/filters/permissionIdFinder");
+const permissionIdFinder = require("../../utils/finders/permissionIdFinder");
 
 async function getRolePermissionData() {
   const admin = [
@@ -358,6 +358,16 @@ async function getRolePermissionData() {
       ),
       approval: false,
     },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CONTRACTOR),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_CONTRACTOR_DASHBOARD),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CONTRACTOR),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_CONTRACTOR_FINANCES),
+      approval: false,
+    },   
   ];
 
   const customer = [
@@ -389,6 +399,21 @@ async function getRolePermissionData() {
       ),
       approval: false,
     },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CUSTOMER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_CUSTOMER_TRUCKS),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CUSTOMER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.VIEW_CUSTOMER_TRANSACTIONS),
+      approval: false,
+    },
+    {
+      roleId: await roleIdFinder(ROLES_LIST.CUSTOMER),
+      permissionId: await permissionIdFinder(PERMISSIONS_LIST.CREATE_CUSTOMER_TRANSACTIONS),
+      approval: false,
+    }
   ];
 
   return [...admin, ...employee, ...contractor, ...customer];

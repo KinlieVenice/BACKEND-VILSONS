@@ -2,8 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const defaultPassword = require("../utils/defaultPassword");
 const ROLES_LIST = require("../constants/ROLES_LIST");
-const roleIdFinder = require("../utils/roleIdFinder");
-const branchIdFinder = require("../utils/branchIdFinder");
+const roleIdFinder = require("../utils/finders/roleIdFinder");
+const branchIdFinder = require("../utils/finders/branchIdFinder");
 const getRolePermissionData = require("../prisma/seedData/rolePermissionData");
 const getPermissionData = require("../prisma/seedData/permissionData");
 

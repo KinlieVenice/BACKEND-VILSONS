@@ -496,8 +496,8 @@ const editJobOrder = async (req, res) => {
           truckId: jobOrder.truckId,
           branchId: branchId ?? jobOrder.branchId,
           description: description ?? jobOrder.description,
-          contractorId: contractorId === "" ? null : contractorId ?? jobOrder.contractorId,
-          labor: labor === "" ? null : labor ?? jobOrder.labor,
+          contractorId: contractorId === undefined ? null : contractorId ?? jobOrder.contractorId,
+          labor: labor === undefined ? null : labor ?? jobOrder.labor,
         },
         materials: materials || [],
       };
@@ -542,8 +542,8 @@ const editJobOrder = async (req, res) => {
         truckId: jobOrder.truckId,
         branchId: branchId ?? jobOrder.branchId,
         description: description ?? jobOrder.description,
-        contractorId: contractorId === "" ? null : contractorId ?? jobOrder.contractorId,
-        labor: labor === "" ? null : labor ?? jobOrder.labor,
+        contractorId: contractorId === undefined ? null : contractorId ?? jobOrder.contractorId,
+        labor: labor === undefined ? null : labor ?? jobOrder.labor,
         updatedByUser: req.username,
       };
 

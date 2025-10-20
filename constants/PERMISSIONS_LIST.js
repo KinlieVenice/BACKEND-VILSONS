@@ -60,6 +60,12 @@ const PERMISSIONS_LIST = {
   VIEW_CUSTOMERS: "view_customers",
   VIEW_EMPLOYEES: "view_employees",
   ACCEPT_JOB_ORDER: "accept_job_order",
+  VIEW_CONTRACTOR_DASHBOARD: "view_contractor_dashboard",
+  VIEW_CONTRACTOR_FINANCES: "view_contractor_finances",
+  VIEW_CUSTOMER_DASHBOARD: "view_customer_dashboard",
+  VIEW_CUSTOMER_TRUCKS: "view_customer_trucks",
+  VIEW_CUSTOMER_TRANSACTIONS: "view_customer_transactions",
+  CREATE_CUSTOMER_TRANSACTIONS: "create_customer_transactions",
 };
 
 module.exports = PERMISSIONS_LIST;
