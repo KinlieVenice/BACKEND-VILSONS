@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const assignedJobOrderController = require("../../controllers/contractor/assignedJobOrderController");
 const myJobOrderController = require("../../controllers/customer/myJobOrderController");
-const dashboardController = require("../../controllers/contractor/dashboardController");
+const contractorDashboardController = require("../../controllers/contractor/dashboardController");
+const customerDashboardController = require("../../controllers/customer/dashboardController");
 const financeController = require("../../controllers/contractor/financeController");
 const transactionController = require("../../controllers/customer/transactionController");
 const profileController = require("../../controllers/profileController");
@@ -21,6 +22,9 @@ router.route("/password")
 
 
 // customer
+router.route("/customer-dashboard")
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), customerDashboardController.getCustomerDashboard);
+
 router.route("/my-job-orders")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), myJobOrderController.getAllMyJobOrders);
 
@@ -34,8 +38,8 @@ router.route("/my-job-orders/:id")
 
 
 // contractor
-router.route("/dashboard")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), dashboardController.getContractorDashboard);
+router.route("/contractor-dashboard")
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), contractorDashboardController.getContractorDashboard);
 
 router.route("/assigned-job-orders")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), assignedJobOrderController.getAllAssignedJobOrders);
