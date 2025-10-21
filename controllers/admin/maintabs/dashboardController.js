@@ -294,5 +294,67 @@ const getCustomerBalance = async (req, res) => {
   }
 };
 
+const getRecentJobOrders = async (req, res) => {
+  try {
+    // Fetch all job orders
+    const jobOrders = await prisma.jobOrder.findMany({
+      select: {
+        id: true,
+        jobOrderCode: true,
+        labor: true,
+        contractorPercent: true,
+        status: true,
+        createdAt: true,
+        truck: {
+          select: { plate: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-module.exports = { getRevenue, getProfit, getExpenses, getCustomerBalance }
+    // Get 5 most recent job orders
+    const recentJobOrders = jobOrders.slice(0, 5).map((jo) => {
+      const labor = Number(jo.labor) || 0;
+      const percent = Number(jo.contractorPercent) || 0;
+
+      return {
+        id: jo.id,
+        jobOrderCode: jo.jobOrderCode,
+        plate: jo.truck?.plate || "N/A",
+        contractorPercent: percent,
+        contractorCommission: labor * percent, // contractor’s share
+        shopCommission: labor - labor * percent, // company’s remaining share
+        status: jo.status,
+        createdAt: jo.createdAt,
+      };
+    });
+
+    // Count job orders by status
+    const statusCounts = {
+      pending: 0,
+      ongoing: 0,
+      completed: 0,
+      forRelease: 0,
+      archived: 0,
+    };
+
+    for (const jo of jobOrders) {
+      if (statusCounts.hasOwnProperty(jo.status)) {
+        statusCounts[jo.status]++;
+      }
+    }
+
+    // Return both
+    return res.status(200).json({
+      recentJobOrders,
+      statusCounts,
+    });
+  } catch (err) {
+    console.error("Error fetching recent job orders:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+module.exports = { getRevenue, getProfit, getExpenses, getCustomerBalance, getRecentJobOrders }
