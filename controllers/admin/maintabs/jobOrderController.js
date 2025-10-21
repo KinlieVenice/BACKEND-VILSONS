@@ -991,55 +991,56 @@ const getJobOrder = async (req, res) => {
 const editJobOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
+
   if (!id) return res.status(400).json({ message: "ID is required" });
+  if (!status) return res.status(400).json({ message: "Status is required" });
 
   try {
     const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
+
     if (!jobOrder)
       return res
         .status(404)
         .json({ message: `Job order with ID: ${id} not found` });
 
     if (!jobOrder.contractorId)
-      return res.status(404).json({ message: "No contractor assigned yet" });
-
-    if (status === "pending")
-      return res
-        .status(404)
-        .json({ message: "Status can't be pending if contractor is assigned" });
+      return res.status(400).json({ message: "No contractor assigned yet" });
 
     const needsApproval = req.approval;
     let message;
 
     const jobOrderData = {
-      status,
-      updatedByUser: req.username,
-    };
+
+      status: status,
+      updatedByUser: req.username
+    }
 
     const result = await prisma.$transaction(async (tx) => {
-      message = needsApproval
-        ? "Job Order status awaiting approval"
-        : "Job order status successfully updated";
-
-      return needsApproval
-        ? await requestApproval(
-        'jobOrder', 
-        req.params.id, 
-        'edit', 
-        jobOrderData, 
-        req.username
-      )
-        : await tx.jobOrder.update({
-            where: { id: jobOrder.id },
-            data: jobOrderData,
-          });
+      if (needsApproval) {
+        message = "Job order status awaiting approval";
+        return await requestApproval(
+          "jobOrder",
+          id,
+          "edit",
+          jobOrderData,
+          req.username
+        );
+      } else {
+        message = "Job order status successfully updated";
+        return await tx.jobOrder.update({
+          where: { id: jobOrder.id },
+          data: jobOrderData,
+        });
+      }
     });
 
     return res.status(200).json({ message, data: result });
   } catch (err) {
+    console.log(err.message);
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 
 module.exports = {

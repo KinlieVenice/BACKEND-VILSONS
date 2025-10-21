@@ -26,7 +26,6 @@ router.route("/my-job-orders")
 router.route("/customer/transactions")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), transactionController.getAllTransactions);
 
-
 router.route("/my-job-orders/:id")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), myJobOrderController.getMyJobOrder);
 

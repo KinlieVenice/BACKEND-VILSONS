@@ -6,7 +6,7 @@ const getAllTransactions = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       // 1️⃣ Find customer by userId
       const customer = await tx.customer.findFirst({
-        where: { userId: "7a7ffb3e-a04a-4481-93ae-a354c085316e" },
+        where: { userId: req.id },
         include: {
           jobOrders: {
             select: { jobOrderCode: true },

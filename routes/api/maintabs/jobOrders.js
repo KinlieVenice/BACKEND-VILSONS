@@ -18,7 +18,7 @@ router.route("/:id")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_JOB_ORDERS), jobOrderController.getJobOrder);
 
 router.route("/:id/status")
-.patch(verifyPermission(PERMISSIONS_LIST.EDIT_JOB_ORDER_STATUS), jobOrderController.editJobOrderStatus)
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_JOB_ORDER_STATUS), jobOrderController.editJobOrderStatus)
 
 //PERM EDIT
 router.route("/:id/contractor/:accept")
