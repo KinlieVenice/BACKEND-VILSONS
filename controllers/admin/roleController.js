@@ -256,7 +256,6 @@ const getRolePermissions = async (req, res) => {
   }
 
   try {
-    // ✅ Fetch the current role
     const role = await prisma.role.findUnique({
       where: { id: roleId },
       include: {
@@ -268,10 +267,8 @@ const getRolePermissions = async (req, res) => {
       return res.status(404).json({ error: "Role not found" });
     }
 
-    // ✅ Use your utility to find the top-most base role name
     const mainBaseRoleName = await getMainBaseRole(prisma, role.baseRoleId);
 
-    // ✅ Get the actual base role record if it exists
     let basePermissions = [];
     if (mainBaseRoleName) {
       const baseRole = await prisma.role.findFirst({
@@ -285,57 +282,78 @@ const getRolePermissions = async (req, res) => {
 
     const rolePermissions = role.permissions;
 
-    // ✅ If no base role, just return role permissions directly
-    if (!mainBaseRoleName) {
-      const finalPermissions = rolePermissions.map((rp) => ({
-        permissionId: rp.permissionId,
-        permissionName: rp.permission.permissionName,
-        allowed: true,
-        approval: rp.approval,
-      }));
-
-      return res.json({
-        roleId,
-        baseRoleId: role.baseRoleId,
-        mainBaseRole: null,
-        permissions: finalPermissions,
-      });
-    }
-
-    // ✅ Only process merging logic if we have a base role
+    // ✅ Merge logic (same as before)
     const rolePermissionMap = new Map(
       rolePermissions.map((rp) => [rp.permissionId, rp])
     );
 
-    // ✅ Merge base and role permissions
-    const allPermissions = basePermissions.map((bp) => {
-      const override = rolePermissionMap.get(bp.permissionId);
-      return {
-        permissionId: bp.permissionId,
-        permissionName: bp.permission.permissionName,
-        allowed: Boolean(override),
-        approval: override ? override.approval : bp.approval,
-      };
-    });
+    let combinedPermissions = [];
 
-    // ✅ Add child-only permissions
-    const basePermissionIds = new Set(basePermissions.map((bp) => bp.permissionId));
-    const extraChildPermissions = rolePermissions
-      .filter((rp) => !basePermissionIds.has(rp.permissionId))
-      .map((rp) => ({
+    if (!mainBaseRoleName) {
+      combinedPermissions = rolePermissions.map((rp) => ({
+        module: rp.permission.module,
+        method: rp.permission.method,
         permissionId: rp.permissionId,
         permissionName: rp.permission.permissionName,
         allowed: true,
         approval: rp.approval,
       }));
+    } else {
+      const basePermissionIds = new Set(basePermissions.map((bp) => bp.permissionId));
 
-    const finalPermissions = [...allPermissions, ...extraChildPermissions];
+      const allPermissions = basePermissions.map((bp) => {
+        const override = rolePermissionMap.get(bp.permissionId);
+        return {
+          module: bp.permission.module,
+          method: bp.permission.method,
+          permissionId: bp.permissionId,
+          permissionName: bp.permission.permissionName,
+          allowed: Boolean(override),
+          approval: override ? override.approval : bp.approval,
+        };
+      });
+
+      const extraChildPermissions = rolePermissions
+        .filter((rp) => !basePermissionIds.has(rp.permissionId))
+        .map((rp) => ({
+          module: rp.permission.module,
+          method: rp.permission.method,
+          permissionId: rp.permissionId,
+          permissionName: rp.permission.permissionName,
+          allowed: true,
+          approval: rp.approval,
+        }));
+
+      combinedPermissions = [...allPermissions, ...extraChildPermissions];
+    }
+
+    // ✅ Group by module
+    const groupedPermissions = combinedPermissions.reduce((acc, perm) => {
+      if (!acc[perm.module]) acc[perm.module] = [];
+      acc[perm.module].push({
+        method: perm.method,
+        permissionId: perm.permissionId,
+        permissionName: perm.permissionName,
+        allowed: perm.allowed,
+        approval: perm.approval,
+      });
+      return acc;
+    }, {});
+
+    // ✅ Sort permissions inside each module by method order
+    const methodOrder = ["view", "create", "edit", "delete"];
+    Object.keys(groupedPermissions).forEach((moduleName) => {
+      groupedPermissions[moduleName].sort(
+        (a, b) => methodOrder.indexOf(a.method) - methodOrder.indexOf(b.method)
+      );
+    });
 
     return res.json({
       roleId,
-      baseRoleId: role.baseRoleId,
-      mainBaseRole: mainBaseRoleName,
-      permissions: finalPermissions,
+      baseRoleName: mainBaseRoleName,
+      roleName: role.roleName,
+      isCustom: role.isCustom,
+      permissions: groupedPermissions,
     });
   } catch (error) {
     console.error("Error fetching role permissions:", error);
