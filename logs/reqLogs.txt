@@ -29774,3 +29774,6 @@
 20251022	21:11:01	ff44f487-bdb0-4146-b476-334e570a5213	PUT	undefined	/api/approval-logs/approve/8a35f717-e103-4983-8fda-6560fdf09586
 20251022	21:13:06	5c87a9cc-532b-4826-a32d-cca2e7a632ee	PUT	undefined	/api/employee-pays/69feca23-bff1-47a7-baf3-830b726ec874
 20251022	21:13:21	6a722b82-520b-4f5a-ade6-cc008d39fc54	PUT	undefined	/api/approval-logs/approve/e706612e-6302-4273-9d17-6a0e6a2e57b0
+20251022	21:22:34	1ddffd6e-0dda-4ac6-a171-d809bae335fb	DELETE	undefined	/api/employee-pays/69feca23-bff1-47a7-baf3-830b726ec874
+20251022	21:22:51	399666e2-7e58-439b-b107-36b3400b32bf	PUT	undefined	/api/approval-logs/approve/14636938-b704-4548-bfdf-7852de68f56b
+20251022	21:24:26	5f7bba8d-3aef-4951-aef9-b5997037ed9d	DELETE	undefined	/api/employee-pays/a9ac54ea-2901-4d10-87a8-7633095d4ee1

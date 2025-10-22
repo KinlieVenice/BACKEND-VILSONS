@@ -350,11 +350,15 @@ const editEmployeePay = async (req, res) => {
 
 const deleteEmployeePay = async (req, res) => {
   if (!req?.params?.id)
-    return res.status(400).json({ message: "ID is required" });
+    return res.status(404).json({ message: "ID is required" });
 
   try {
+    // ✅ Global validation - runs regardless of approval needs
     const employeePay = await prisma.employeePay.findFirst({
       where: { id: req.params.id },
+      include: {
+        payComponents: true,
+      }
     });
 
     if (!employeePay)
@@ -362,21 +366,54 @@ const deleteEmployeePay = async (req, res) => {
         .status(404)
         .json({ message: `Employee pay with ID: ${req.params.id} not found` });
 
-    await prisma.$transaction(async (tx) => {
-      // Delete all related payComponents first
-      await tx.payComponent.deleteMany({
-        where: { employeePayId: employeePay.id },
-      });
+    const needsApproval = req.approval;
 
-      // Then delete the employeePay itself
-      await tx.employeePay.delete({
+    // ✅ If approval is needed, create approval request
+    if (needsApproval) {
+      const approvalPayload = {
+        employeePayId: req.params.id,
+        employeePayData: {
+          employeeId: employeePay.employeeId,
+          branchId: employeePay.branchId,
+        }
+      };
+
+      const approvalLog = await requestApproval(
+        'employeePay', 
+        req.params.id, 
+        'delete', 
+        approvalPayload, 
+        req.username
+      );
+
+      return res.status(202).json({
+        message: "Employee pay deletion awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+        },
+      });
+    }
+
+    // ✅ If no approval needed, proceed with deletion in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Delete pay components first (due to foreign key constraints)
+      await tx.payComponent.deleteMany({ where: { employeePayId: employeePay.id } });
+
+      // Delete the employee pay record
+      const deletedEmployeePay = await tx.employeePay.delete({
         where: { id: employeePay.id },
       });
+
+      return deletedEmployeePay;
     });
 
-    return res
-      .status(200)
-      .json({ message: "Employee pay and pay components deleted successfully" });
+    return res.status(200).json({ 
+      message: "Employee pay successfully deleted",
+      data: {
+        id: result.id,
+      }
+    });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: err.message });
