@@ -3,7 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const getMainBaseRole = require("../../utils/services/getMainBaseRole.js");
 
-const createRole = async (req, res) => {
+const createRoleOLD = async (req, res) => {
   try {
     const { name, baseRoleId } = req.body;
 
@@ -74,6 +74,132 @@ const createRole = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+const createRole = async (req, res) => {
+  try {
+    const { roleName, baseRoleId, permissions } = req.body;
+
+    if (!roleName || roleName.trim() === "") {
+      return res.status(400).json({ error: "Role roleName is required" });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Check if role already exists
+      const existingRole = await tx.role.findFirst({
+        where: { roleName: roleName.trim() },
+      });
+
+      if (existingRole) {
+        throw new Error("Role already exists");
+      }
+
+      // Step 1: Create the new role
+      const newRole = await tx.role.create({
+        data: {
+          roleName: roleName.trim(),
+          isCustom: Boolean(baseRoleId || permissions),
+          baseRoleId: baseRoleId,
+          createdByUser: req.username,
+        },
+      });
+
+      let finalPermissions = [];
+
+      // Step 2: Handle permissions - from base role, array, or grouped object
+      if (baseRoleId && (!permissions || (!Array.isArray(permissions) && typeof permissions !== "object"))) {
+        // Clone permissions from base role
+        const baseRole = await tx.role.findUnique({
+          where: { id: baseRoleId },
+          include: { permissions: true },
+        });
+
+        if (!baseRole) {
+          throw new Error("Base role not found");
+        }
+
+        if (baseRole.permissions.length > 0) {
+          const newRolePermissions = baseRole.permissions.map((rp) => ({
+            roleId: newRole.id,
+            permissionId: rp.permissionId,
+            approval: rp.approval,
+          }));
+
+          await tx.rolePermission.createMany({ data: newRolePermissions });
+
+          finalPermissions = await tx.rolePermission.findMany({
+            where: { roleId: newRole.id },
+            include: { permission: true },
+          });
+        }
+
+      } else if (permissions) {
+        // Normalize permissions whether it's an array or an object
+        let flatPermissions = [];
+
+        if (Array.isArray(permissions)) {
+          flatPermissions = permissions;
+        } else if (typeof permissions === "object") {
+          flatPermissions = Object.values(permissions).flat();
+        }
+
+        const toCreate = [];
+
+        for (const item of flatPermissions) {
+          const { permissionId, allowed, approval } = item;
+
+          // 🔹 Normalize to boolean
+          const isAllowed = allowed === true || allowed === "true" || allowed === 1;
+
+          if (isAllowed) {
+            toCreate.push({
+              roleId: newRole.id,
+              permissionId,
+              approval: Boolean(approval),
+            });
+          }
+        }
+
+        if (toCreate.length > 0) {
+          await tx.rolePermission.createMany({ data: toCreate });
+        }
+
+        finalPermissions = await tx.rolePermission.findMany({
+          where: { roleId: newRole.id },
+          include: { permission: true },
+        });
+      }
+
+      // Step 3: Return newly created role with permissions
+      return {
+        message:
+          baseRoleId && (!permissions || (!Array.isArray(permissions) && typeof permissions !== "object"))
+            ? "Role cloned successfully from base role"
+            : "New role created successfully with permissions",
+        role: {
+          ...newRole,
+          permissions: finalPermissions,
+        },
+        summary:
+          permissions && (Array.isArray(permissions) || typeof permissions === "object")
+            ? {
+                created: finalPermissions.length,
+                skipped: Array.isArray(permissions)
+                  ? permissions.filter((p) => p.allowed === false || p.allowed === "false").length
+                  : Object.values(permissions)
+                      .flat()
+                      .filter((p) => p.allowed === false || p.allowed === "false").length,
+              }
+            : undefined,
+      };
+    });
+
+    return res.status(201).json(result);
+  } catch (err) {
+    console.error("Error creating role:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 const editRolePermission = async (req, res) => {
   const { roleId } = req.params;
@@ -350,6 +476,7 @@ const getRolePermissions = async (req, res) => {
 
     return res.json({
       roleId,
+      baseRoleId: role.baseRoleId,
       baseRoleName: mainBaseRoleName,
       roleName: role.roleName,
       isCustom: role.isCustom,
