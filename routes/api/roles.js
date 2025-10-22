@@ -8,7 +8,7 @@ router.route("/")
 .post(roleController.createRole)
 .get(roleController.getAllRoles)
 
-router.route("/:roleId")
+router.route("/permissions/:roleId")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_ROLES_PERMISSIONS), roleController.editRolePermissions)
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ROLES_PERMISSIONS),roleController.getRolePermissions)
 

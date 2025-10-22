@@ -1,23 +1,17 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { requestApproval } = require("../../../utils/services/approvalService")
+
 
 const createEmployeePay = async (req, res) => {
   const { userId, payComponents = [], branchId } = req.body;
 
   try {
-    // if (payComponents.length > 0) {
-    //   const invalid = payComponents.some(
-    //     (pc) => !pc.componentId || !pc.amount
-    //   );
-    //   if (invalid) {
-    //     return res.status(400).json({ message: "Total salary cannot be 0" });
-    //   }
-    // }
-
     if (!payComponents || payComponents.length === 0) {
       return res.status(400).json({ message: "Total salary cannot be 0" });
     }
 
+    // ✅ Global validation - runs regardless of approval needs
     // Check if user is an employee
     const employee = await prisma.employee.findFirst({
       where: { userId },
@@ -26,6 +20,49 @@ const createEmployeePay = async (req, res) => {
       return res.status(400).json({ message: "User is not an employee" });
     }
 
+    // Validate branch exists
+    if (branchId) {
+      const branch = await prisma.branch.findUnique({ where: { id: branchId } });
+      if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
+    }
+
+    // Validate pay components
+    const invalidComponents = payComponents.some(
+      (pc) => !pc.componentId || !pc.amount
+    );
+    if (invalidComponents) {
+      return res.status(400).json({
+        message: "Each pay component must include non-empty name and non-negative amount",
+      });
+    }
+
+    const needsApproval = req.approval;
+
+    // ✅ If approval is needed, create approval request
+    if (needsApproval) {
+      const approvalPayload = {
+        employeeId: employee.id,
+        payComponents,
+        branchId,
+      };
+
+      const approvalLog = await requestApproval(
+        'employeePay', 
+        null, 
+        'create', 
+        approvalPayload, 
+        req.username
+      );
+
+      return res.status(202).json({
+        message: "Employee pay creation awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+        },
+      });
+    }
+
+    // ✅ If no approval needed, proceed with creation in transaction
     const result = await prisma.$transaction(async (tx) => {
       // 1️⃣ Create employeePay record
       const employeePay = await tx.employeePay.create({
@@ -37,7 +74,7 @@ const createEmployeePay = async (req, res) => {
         },
       });
 
-      // 3️⃣ Process payComponents (create missing ones if needed)
+      // 2️⃣ Process payComponents (create missing ones if needed)
       const userComponents = await Promise.all(
         payComponents.map(async (pc) => {
           const existing = await tx.component.findUnique({
@@ -49,7 +86,9 @@ const createEmployeePay = async (req, res) => {
               where: { componentName: pc.componentName },
             });
 
-            if (newComponent) return res.status(400).json({ message: "New component already exists" })
+            if (newComponent) {
+              throw new Error("New component already exists");
+            }
 
             newComponent = await tx.component.create({
               data: { componentName: pc.componentName },
@@ -62,7 +101,7 @@ const createEmployeePay = async (req, res) => {
         })
       );
 
-      // 2️⃣ Fetch all existing components
+      // 3️⃣ Fetch all existing components
       const allComponents = await tx.component.findMany();
 
       // 4️⃣ Merge userComponents with allComponents (fill missing with amount 0)
@@ -104,7 +143,9 @@ const createEmployeePay = async (req, res) => {
         0
       );
 
-      if (totalComponentCost === 0) return res.status(400).json({ message: "Total salary cannot be 0"});7
+      if (totalComponentCost === 0) {
+        throw new Error("Total salary cannot be 0");
+      }
 
       // 7️⃣ Re-fetch full record
       const employeePayWithComponents = await tx.employeePay.findUnique({
@@ -113,13 +154,23 @@ const createEmployeePay = async (req, res) => {
           payComponents: {
             include: { component: true },
           },
+          employee: {
+            include: {
+              user: { select: { username: true, fullName: true } },
+            },
+          },
+          branch: { select: { id: true, branchName: true } },
         },
       });
 
       return { ...employeePayWithComponents, totalComponentCost };
     });
 
-    return res.status(201).json(result);
+    return res.status(201).json({
+      message: "Employee pay successfully created",
+      data: result,
+    });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: err.message });
@@ -133,10 +184,7 @@ const editEmployeePay = async (req, res) => {
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    if (!payComponents || payComponents.length === 0) {
-      return res.status(400).json({ message: "Total salary cannot be 0" });
-    }
-
+    // ✅ Global validation - runs regardless of approval needs
     const employeePay = await prisma.employeePay.findFirst({
       where: { id: req.params.id },
       include: { payComponents: { include: { component: true } } },
@@ -145,6 +193,20 @@ const editEmployeePay = async (req, res) => {
       return res
         .status(404)
         .json({ message: `Employee pay with ID: ${req.params.id} not found` });
+
+    if (!payComponents || payComponents.length === 0) {
+      return res.status(400).json({ message: "Total salary cannot be 0" });
+    }
+
+    // Validate pay components
+    const invalidComponents = payComponents.some(
+      (pc) => !pc.componentId || !pc.amount
+    );
+    if (invalidComponents) {
+      return res.status(400).json({
+        message: "Each pay component must include non-empty name and non-negative amount",
+      });
+    }
 
     // 2️⃣ If updating employee link, validate userId
     let employee;
@@ -156,6 +218,42 @@ const editEmployeePay = async (req, res) => {
           .json({ message: `Employee with userId: ${userId} not found` });
     }
 
+    // Validate branch exists if provided
+    if (branchId) {
+      const branch = await prisma.branch.findUnique({ where: { id: branchId } });
+      if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
+    }
+
+    const needsApproval = true;
+
+    // ✅ If approval is needed, create approval request
+    if (needsApproval) {
+      const approvalPayload = {
+        employeePayId: req.params.id,
+        updateData: {
+          employeeId: userId ? employee.id : employeePay.employeeId,
+          branchId: branchId || employeePay.branchId,
+        },
+        payComponents: payComponents || [],
+      };
+
+      const approvalLog = await requestApproval(
+        'employeePay', 
+        req.params.id, 
+        'edit', 
+        approvalPayload, 
+        req.username
+      );
+
+      return res.status(202).json({
+        message: "Employee pay edit awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+        },
+      });
+    }
+
+    // ✅ If no approval needed, proceed with update in transaction
     const result = await prisma.$transaction(async (tx) => {
       // 3️⃣ Get all existing components from DB
       const allComponents = await tx.component.findMany();
@@ -216,7 +314,9 @@ const editEmployeePay = async (req, res) => {
         0
       );
 
-      if (totalComponentCost === 0) return res.status(400).json({ message: "Total salary cannot be 0"})
+      if (totalComponentCost === 0) {
+        throw new Error("Total salary cannot be 0");
+      }
 
       // 9️⃣ Re-fetch updated employeePay
       const updated = await tx.employeePay.findFirst({
@@ -225,13 +325,23 @@ const editEmployeePay = async (req, res) => {
           payComponents: {
             include: { component: true },
           },
+          employee: {
+            include: {
+              user: { select: { username: true, fullName: true } },
+            },
+          },
+          branch: { select: { id: true, branchName: true } },
         },
       });
 
       return { ...updated, totalComponentCost };
     });
 
-    return res.status(201).json({ data: result });
+    return res.status(200).json({
+      message: "Employee pay successfully updated",
+      data: result,
+    });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: err.message });

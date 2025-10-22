@@ -263,8 +263,6 @@ const handleUserApproval = async (request, updateUser, tx) => {
   return user;
 };
 
-
-
 const handleJobOrderApproval = async (request, updateUser, tx) => {
   const { payload, actionType: action, recordId, requestedByUser } = request;
 
@@ -630,6 +628,299 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
   return jobOrder;
 };
 
+const handleEmployeePayApproval = async (request, updateUser, tx) => {
+  const { payload, actionType: action, recordId, requestedByUser } = request;
+
+  let employeePay;
+  console.log(`[handleEmployeePayApproval] Action: ${action}, Record ID: ${recordId}`);
+
+  switch (action) {
+    case "create":
+      console.log("[create] Starting employee pay creation from approval");
+
+      const {
+        userId,
+        payComponents = [],
+        branchId,
+      } = payload;
+
+      console.log("[create] User ID:", userId);
+      console.log("[create] Pay components:", payComponents);
+      console.log("[create] Branch ID:", branchId);
+
+      // Check if user is an employee
+      const employee = await tx.employee.findFirst({
+        where: { userId },
+      });
+      if (!employee) {
+        throw new Error("User is not an employee");
+      }
+
+      // Validate branch exists
+      if (branchId) {
+        const branch = await tx.branch.findUnique({ where: { id: branchId } });
+        if (!branch) throw new Error("Invalid branch ID");
+      }
+
+      // 1️⃣ Create employeePay record
+      employeePay = await tx.employeePay.create({
+        data: {
+          employeeId: employee.id,
+          branchId,
+          createdByUser: requestedByUser,
+          updatedByUser: updateUser,
+        },
+      });
+
+      // 2️⃣ Process payComponents (create missing ones if needed)
+      const userComponents = await Promise.all(
+        payComponents.map(async (pc) => {
+          const existing = await tx.component.findUnique({
+            where: { id: pc.componentId },
+          });
+
+          if (!existing) {
+            let newComponent = await tx.component.findFirst({
+              where: { componentName: pc.componentName },
+            });
+
+            if (newComponent) {
+              throw new Error("New component already exists");
+            }
+
+            newComponent = await tx.component.create({
+              data: { componentName: pc.componentName },
+            });
+
+            return { ...pc, componentId: newComponent.id };
+          }
+
+          return pc;
+        })
+      );
+
+      // 3️⃣ Fetch all existing components
+      const allComponents = await tx.component.findMany();
+
+      // 4️⃣ Merge userComponents with allComponents (fill missing with amount 0)
+      const processedComponents = allComponents.map((component) => {
+        const match = userComponents.find(
+          (pc) =>
+            pc.componentId === component.id ||
+            pc.componentName === component.componentName
+        );
+
+        if (match) {
+          return {
+            componentId: component.id,
+            amount: Number(match.amount) || 0,
+          };
+        }
+
+        // component not submitted → default 0
+        return {
+          componentId: component.id,
+          amount: 0,
+        };
+      });
+
+      // 5️⃣ Create all payComponents
+      await tx.payComponent.createMany({
+        data: processedComponents.map((pc) => ({
+          employeePayId: employeePay.id,
+          componentId: pc.componentId,
+          amount: pc.amount,
+          createdByUser: requestedByUser,
+          updatedByUser: updateUser,
+        })),
+      });
+
+      // 6️⃣ Compute total
+      const totalComponentCost = processedComponents.reduce(
+        (sum, pc) => sum + Number(pc.amount),
+        0
+      );
+
+      if (totalComponentCost === 0) {
+        throw new Error("Total salary cannot be 0");
+      }
+
+      // 7️⃣ Re-fetch full record
+      const employeePayWithComponents = await tx.employeePay.findUnique({
+        where: { id: employeePay.id },
+        include: {
+          payComponents: {
+            include: { component: true },
+          },
+          employee: {
+            include: {
+              user: { select: { username: true, fullName: true } },
+            },
+          },
+          branch: { select: { id: true, branchName: true } },
+        },
+      });
+
+      employeePay = { ...employeePayWithComponents, totalComponentCost };
+
+      console.log("[create] Employee pay creation completed");
+      break;
+
+    case "edit":
+      console.log("[edit] Starting employee pay update from approval");
+
+      const {
+        updateData,
+        payComponents: editPayComponents = [],
+      } = payload;
+
+      // Find existing employee pay
+      const existingEmployeePay = await tx.employeePay.findFirst({
+        where: { id: recordId },
+        include: { 
+          payComponents: { include: { component: true } },
+          employee: true,
+        },
+      });
+      if (!existingEmployeePay) {
+        throw new Error("Employee pay not found for update");
+      }
+
+      // Validate employee if userId is provided
+      let editEmployee;
+      if (updateData.employeeId) {
+        editEmployee = await tx.employee.findFirst({ 
+          where: { id: updateData.employeeId } 
+        });
+        if (!editEmployee) {
+          throw new Error("Employee with specified userId not found");
+        }
+      }
+
+      // Validate branch if provided
+      if (updateData.branchId) {
+        const branch = await tx.branch.findUnique({ 
+          where: { id: updateData.branchId } 
+        });
+        if (!branch) throw new Error("Invalid branch ID");
+      }
+
+      // Process pay components
+      const allEditComponents = await tx.component.findMany();
+      const processedEditComponents = allEditComponents.map((component) => {
+        const match = editPayComponents.find(
+          (pc) =>
+            pc.componentId === component.id ||
+            pc.componentName === component.componentName
+        );
+
+        if (match) {
+          return {
+            componentId: component.id,
+            amount: Number(match.amount) || 0,
+          };
+        }
+
+        return {
+          componentId: component.id,
+          amount: 0,
+        };
+      });
+
+      // Remove old payComponents
+      await tx.payComponent.deleteMany({ 
+        where: { employeePayId: existingEmployeePay.id } 
+      });
+
+      // Create new payComponents
+      await tx.payComponent.createMany({
+        data: processedEditComponents.map((pc) => ({
+          employeePayId: existingEmployeePay.id,
+          componentId: pc.componentId,
+          amount: pc.amount,
+          createdByUser: requestedByUser,
+          updatedByUser: updateUser,
+        })),
+      });
+
+      // Update employeePay
+      await tx.employeePay.update({
+        where: { id: existingEmployeePay.id },
+        data: {
+          employeeId: updateData.userId ? editEmployee.id : existingEmployeePay.employeeId,
+          branchId: updateData.branchId || existingEmployeePay.branchId,
+          updatedByUser: updateUser,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Calculate total
+      const totalEditComponentCost = processedEditComponents.reduce(
+        (sum, pc) => sum + Number(pc.amount),
+        0
+      );
+
+      if (totalEditComponentCost === 0) {
+        throw new Error("Total salary cannot be 0");
+      }
+
+      // Re-fetch updated employeePay
+      const updatedEmployeePay = await tx.employeePay.findFirst({
+        where: { id: existingEmployeePay.id },
+        include: {
+          payComponents: {
+            include: { component: true },
+          },
+          employee: {
+            include: {
+              user: { select: { username: true, fullName: true } },
+            },
+          },
+          branch: { select: { id: true, branchName: true } },
+        },
+      });
+
+      employeePay = { ...updatedEmployeePay, totalComponentCost: totalEditComponentCost };
+
+      console.log("[edit] Employee pay update completed");
+      break;
+
+    case "delete":
+      console.log(`[delete] Attempting to delete employee pay: ${recordId}`);
+
+      const employeePayToDelete = await tx.employeePay.findUnique({
+        where: { id: recordId },
+        include: {
+          payComponents: true,
+        },
+      });
+
+      if (!employeePayToDelete) {
+        throw new Error("Employee pay not found for deletion");
+      }
+
+      // Delete pay components first (due to foreign key constraints)
+      await tx.payComponent.deleteMany({ 
+        where: { employeePayId: employeePayToDelete.id } 
+      });
+
+      // Delete the employee pay record
+      await tx.employeePay.delete({ 
+        where: { id: employeePayToDelete.id } 
+      });
+
+      employeePay = null;
+      console.log("[delete] Employee pay deletion completed");
+      break;
+
+    default:
+      throw new Error(`Unknown action type for employee pay: ${action}`);
+  }
+
+  console.log("[handleEmployeePayApproval] Finished action");
+  return employeePay;
+};
+
 const approveRequest = async (requestId, updateUser) => {
     const request = await prisma.approvalLog.findUnique({ where: { id: requestId }});
     if (!request) throw new Error('Approval request not found');
@@ -645,6 +936,12 @@ const approveRequest = async (requestId, updateUser) => {
         case "jobOrder":
             await prisma.$transaction(async (tx) => {
                 await handleJobOrderApproval(request, updateUser, tx);
+            });
+            break;
+
+        case "employeePay":
+            await prisma.$transaction(async (tx) => {
+                await handleEmployeePayApproval(request, updateUser, tx);
             });
             break;
 
@@ -690,4 +987,4 @@ const rejectRequest = async (requestId, approveUser, reason = null) => {
   });
 };
 
-module.exports = { requestApproval, approveRequest, rejectRequest }
+module.exports = { requestApproval, approveRequest, rejectRequest, handleEmployeePayApproval }

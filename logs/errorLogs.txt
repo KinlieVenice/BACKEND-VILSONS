@@ -1504,3 +1504,226 @@ C:\Users\Huawei\Desktop\projects\vilsons-backend\controllers\admin\truckControll
 
 Unknown field `truckOwnership` for include statement on model `Truck`. Available options are marked with ?.
 20251020	00:51:23	1a9acd45-1b10-48a5-9f29-c1f6fde24817	Error: Cannot set headers after they are sent to the client
+20251022	19:18:21	0eb563b4-b47f-4bee-a8bf-b51b98b14e1f	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:945:41
+
+  942 default:
+  943     switch (request.actionType) {
+  944         case 'create':
+→ 945         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:22:47	c22af105-7bbf-492b-8758-086a5f1faa57	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:948:41
+
+  945 default:
+  946     switch (request.actionType) {
+  947         case 'create':
+→ 948         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:22:55	1f62ccff-3865-4515-8bd9-03803d4b2705	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:948:41
+
+  945 default:
+  946     switch (request.actionType) {
+  947         case 'create':
+→ 948         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:23:15	93b157a0-3589-4a42-bc45-2723351c278c	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:948:41
+
+  945 default:
+  946     switch (request.actionType) {
+  947         case 'create':
+→ 948         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:26:41	69043134-3836-4765-9d5e-751d7e4efe1e	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:945:41
+
+  942 default:
+  943     switch (request.actionType) {
+  944         case 'create':
+→ 945         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:27:01	63fb1e73-4eac-4940-bdc7-a6c2d427d63c	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:948:41
+
+  945 default:
+  946     switch (request.actionType) {
+  947         case 'create':
+→ 948         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:30:15	907d9ccd-fc4a-4374-9748-f211c7a77ae2	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:948:41
+
+  945 default:
+  946     switch (request.actionType) {
+  947         case 'create':
+→ 948         await prisma[tableName].create({
+                data: {
+                  userId: "ce83d795-b662-45bc-9141-25e0adcb12d2",
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie",
+              +   employee: {
+              +     create: EmployeeCreateWithoutEmployeePayInput | EmployeeUncheckedCreateWithoutEmployeePayInput,
+              +     connectOrCreate: EmployeeCreateOrConnectWithoutEmployeePayInput,
+              +     connect: EmployeeWhereUniqueInput
+              +   }
+                }
+              })
+
+Argument `employee` is missing.
+20251022	19:34:10	888eb203-d51d-4fb5-89d8-3f20caa321e6	PrismaClientValidationError: 
+Invalid `prisma[tableName].create()` invocation in
+C:\Users\Huawei\Desktop\projects\vilsons-backend\utils\services\approvalService.js:945:41
+
+  942 default:
+  943     switch (request.actionType) {
+  944         case 'create':
+→ 945         await prisma[tableName].create({
+                data: {
+                  branchId: "a70c3153-7522-4832-b3e4-bdbbf849e319",
+                  employeeId: "1a7582ac-3379-4756-8412-72846f63b2c6",
+                  payComponents: [
+                    {
+                      amount: 8900,
+                      componentId: "280ff321-2289-43e3-8af9-96d0931e8e59"
+                    }
+                  ],
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                  createdByUser: "superkinlie",
+                  updatedByUser: "superkinlie"
+                }
+              })
+
+Argument `payComponents`: Invalid value provided. Expected PayComponentUncheckedCreateNestedManyWithoutEmployeePayInput, provided (Object).
+20251022	21:08:00	4c1b6184-aa85-473f-8053-fe2a82772fff	Error: Employee with specified userId not found
+20251022	21:10:47	0f0bd295-c9db-4c8a-a1e7-4f9fc9fb39e6	TypeError: Cannot read properties of undefined (reading 'id')
+20251022	21:11:01	581158a6-66ec-4bd2-8d30-51fda14fbde2	TypeError: Cannot read properties of undefined (reading 'id')
