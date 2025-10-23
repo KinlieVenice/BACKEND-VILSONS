@@ -200,6 +200,103 @@ const createRole = async (req, res) => {
   }
 };
 
+const editRolePermissions = async (req, res) => {
+  const { roleId } = req.params;
+  const { roleName, permissions } = req.body; // permissions = grouped object
+
+  if (!roleId) {
+    return res.status(400).json({ message: "Role ID is required" });
+  }
+
+  if (!permissions || typeof permissions !== "object") {
+    return res.status(400).json({ message: "Permissions must be an object" });
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1️⃣ Update role name (if provided)
+      if (roleName) {
+        await tx.role.update({
+          where: { id: roleId },
+          data: { roleName },
+        });
+      }
+
+      // 2️⃣ Flatten grouped permissions into one array
+      const allPermissions = Object.values(permissions).flat();
+
+      // 3️⃣ Get current permissions of this role
+      const currentRolePermissions = await tx.rolePermission.findMany({
+        where: { roleId },
+        select: { id: true, permissionId: true, approval: true },
+      });
+
+      const currentMap = new Map(
+        currentRolePermissions.map((rp) => [rp.permissionId, rp])
+      );
+
+      // 4️⃣ Prepare what to create, update, delete
+      const toCreate = [];
+      const toUpdate = [];
+      const toDelete = [];
+
+      for (const item of allPermissions) {
+        const { permissionId, allowed, approval } = item;
+        const existing = currentMap.get(permissionId);
+
+        // Normalize allowed
+        const isAllowed =
+          allowed === true || allowed === "true" || allowed === 1;
+
+        if (isAllowed) {
+          if (!existing) {
+            toCreate.push({
+              roleId,
+              permissionId,
+              approval: Boolean(approval),
+            });
+          } else if (existing.approval !== Boolean(approval)) {
+            toUpdate.push({ id: existing.id, approval: Boolean(approval) });
+          }
+        } else {
+          if (existing) {
+            toDelete.push(existing.id);
+          }
+        }
+      }
+
+      // 5️⃣ Execute DB changes
+      if (toCreate.length > 0) {
+        await tx.rolePermission.createMany({ data: toCreate });
+      }
+
+      for (const upd of toUpdate) {
+        await tx.rolePermission.update({
+          where: { id: upd.id },
+          data: { approval: upd.approval },
+        });
+      }
+
+      if (toDelete.length > 0) {
+        await tx.rolePermission.deleteMany({
+          where: { id: { in: toDelete } },
+        });
+      }
+    });
+
+    return res.status(200).json({
+      message: "Role name and permissions updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating role and permissions:", error);
+    return res.status(500).json({
+      message: "Error updating role and permissions",
+      error: error.message,
+    });
+  }
+};
+
+
 
 const editRolePermission = async (req, res) => {
   const { roleId } = req.params;
@@ -288,7 +385,7 @@ const editRolePermission = async (req, res) => {
   }
 };
 
-const editRolePermissions = async (req, res) => {
+const editRolePermissionsOld = async (req, res) => {
   const { roleId } = req.params;
   const updates = req.body; // full array from frontend
 

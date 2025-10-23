@@ -8,8 +8,10 @@ router.route("/")
 .post(roleController.createRole)
 .get(roleController.getAllRoles)
 
-router.route("/permissions/:roleId")
+router.route("/:roleId")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_ROLES_PERMISSIONS), roleController.editRolePermissions)
+
+router.route("/permissions/:roleId")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ROLES_PERMISSIONS),roleController.getRolePermissions)
 
 module.exports = router;
