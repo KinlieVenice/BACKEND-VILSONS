@@ -2,6 +2,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const getMainBaseRole = require("../../utils/services/getMainBaseRole.js");
+const relationsChecker = require("../../utils/services/relationsChecker.js")
 
 const createRoleOLD = async (req, res) => {
   try {
@@ -216,6 +217,15 @@ const editRolePermissions = async (req, res) => {
     await prisma.$transaction(async (tx) => {
       // 1️⃣ Update role name (if provided)
       if (roleName) {
+        const role = await tx.role.findFirst({
+           where: {
+            roleName,
+            NOT: { id: roleId }, 
+          },
+        })
+
+        if (role) return res.status(400).json({ message: "Role name already exists"})
+
         await tx.role.update({
           where: { id: roleId },
           data: { roleName },
@@ -287,16 +297,11 @@ const editRolePermissions = async (req, res) => {
     return res.status(200).json({
       message: "Role name and permissions updated successfully",
     });
-  } catch (error) {
-    console.error("Error updating role and permissions:", error);
-    return res.status(500).json({
-      message: "Error updating role and permissions",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error("Error updating role and permissions:", err);
+    return res.status(500).json({ message: err.message });
   }
 };
-
-
 
 const editRolePermission = async (req, res) => {
   const { roleId } = req.params;
@@ -471,6 +476,49 @@ const editRolePermissionsOld = async (req, res) => {
   }
 };
 
+const deleteRole = async (req, res) => {
+  const { roleId } = req.params;
+
+  if (!roleId) return res.status(400).json({ message: "Role ID is required" });
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const role = await tx.role.findFirst({
+        where: { id: roleId },
+        include: {
+          permissions: true,
+          users: true,
+        }
+      })
+
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+
+      // 🔍 Check relations, but ignore roles/branches/edits
+      const excludedKeys = ["permissions"];
+      const hasRelations = relationsChecker(role, excludedKeys);
+
+      if (hasRelations) {
+        return res.status(400).json({ message: "Cannot be deleted. Users are assigned this role."});
+      } else {
+        await tx.rolePermission.deleteMany({
+          where: { roleId }
+        })
+        await tx.role.deleteMany({
+          where: { id: roleId }
+        })
+      }
+      
+    })
+
+    return res.status(200).json({ message: "Role successfully deleted" })
+  } catch (err) {
+    return res.status(500).json({ message: err.message})
+  }
+}
+
+
 const getRolePermissions = async (req, res) => {
   const { roleId } = req.params;
 
@@ -595,5 +643,5 @@ const getAllRoles = async (req, res) => {
   }
 }
 
-module.exports = { createRole, editRolePermission, editRolePermissions, getRolePermissions, getAllRoles };
+module.exports = { createRole, editRolePermissions, deleteRole, getRolePermissions, getAllRoles };
 

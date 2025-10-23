@@ -1727,3 +1727,11 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251022	21:08:00	4c1b6184-aa85-473f-8053-fe2a82772fff	Error: Employee with specified userId not found
 20251022	21:10:47	0f0bd295-c9db-4c8a-a1e7-4f9fc9fb39e6	TypeError: Cannot read properties of undefined (reading 'id')
 20251022	21:11:01	581158a6-66ec-4bd2-8d30-51fda14fbde2	TypeError: Cannot read properties of undefined (reading 'id')
+20251023	23:15:59	6fcb8f8f-643f-45c8-8378-99c5e25dcaec	Error: Cannot set headers after they are sent to the client
+20251023	23:37:55	8f21c2c6-834d-4c66-a59c-1082d2786402	Error: Cannot set headers after they are sent to the client
+20251023	23:46:37	2062254e-9c01-4c6c-8063-e15350f0a66b	Error: Cannot set headers after they are sent to the client
+20251023	23:48:02	98c4ccbb-1671-4342-a20c-e745c1a6835c	Error: Cannot set headers after they are sent to the client
+20251023	23:48:15	0d5c7557-fbd0-4c8f-8343-e93612a02d6b	Error: Cannot set headers after they are sent to the client
+20251023	23:49:04	97a13494-ee02-4fab-b658-ebd09f2286fc	Error: Cannot set headers after they are sent to the client
+20251023	23:49:06	48902246-d331-4661-892b-9d04cb56b336	Error: Cannot set headers after they are sent to the client
+20251023	23:49:16	6eeaf6e0-ce97-4958-a825-508ca9fd20e6	Error: Cannot set headers after they are sent to the client
