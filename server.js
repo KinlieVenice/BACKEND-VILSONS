@@ -14,6 +14,7 @@ const corsMiddleware = require("./middleware/cors");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const verifyJWT = require('./middleware/verifyJWT');
+const { limiter, authLimiter } = require('./middleware/rateLimitter');
 const sanitizeInput = require('./middleware/sanitizeInput');
 
 // CORS setup (temporary open version for development)
@@ -32,9 +33,11 @@ app.use(express.json());
 
 app.use(cookieParser());
 
+app.use(limiter);
+
 app.use(sanitizeInput);
 
-app.use("/auth", require("./routes/auth"));
+app.use('/auth', authLimiter, require('./routes/auth'));
 app.use("/refresh", require("./routes/refresh"));
 app.use("/logout", require("./routes/logout"));
 

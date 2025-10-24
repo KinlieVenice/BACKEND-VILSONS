@@ -500,7 +500,7 @@ const deleteRole = async (req, res) => {
       const hasRelations = relationsChecker(role, excludedKeys);
 
       if (hasRelations) {
-        return res.status(400).json({ message: "Cannot be deleted. Users are assigned this role."});
+        return res.status(400).json({ message: "Cannot delete this role. Please unassign this role from all users before deleting it."});
       } else {
         await tx.rolePermission.deleteMany({
           where: { roleId }

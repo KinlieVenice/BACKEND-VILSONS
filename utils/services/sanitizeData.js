@@ -56,5 +56,3 @@ const sanitizeInput = (req, res, next) => {
 };
 
 module.exports = sanitizeInput;
-
-  module.exports = sanitizeAndValidate;
