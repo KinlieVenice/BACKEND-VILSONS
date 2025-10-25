@@ -1743,3 +1743,7 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251023	23:56:16	2b4ba2c0-fdf6-4112-9faf-758e3689645c	Error: Cannot set headers after they are sent to the client
 20251023	23:57:53	4778aa14-ec31-46f1-bebb-c7e396ed90ca	Error: Cannot set headers after they are sent to the client
 20251024	00:09:33	ac092aa2-705a-40e6-962c-6fe9d5461764	Error: Cannot set headers after they are sent to the client
+20251025	12:23:51	e9e0e262-7920-4f65-8527-4ae7a4ef26dd	TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+20251025	13:00:51	18a76814-2773-43db-9496-fbb5b57fdbd4	ReferenceError: getMainBaseRole is not defined
+20251025	15:49:50	a4d3b345-2ace-4fab-8d27-cd1db4dc8288	TypeError: roles.map is not a function
+20251025	15:51:05	8b865e03-f150-4919-b07f-5a42f465ce24	TypeError: roles.map is not a function

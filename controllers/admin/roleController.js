@@ -627,9 +627,9 @@ const getRolePermissions = async (req, res) => {
       isCustom: role.isCustom,
       permissions: groupedPermissions,
     });
-  } catch (error) {
-    console.error("Error fetching role permissions:", error);
-    return res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("Error fetching role permissions:", err);
+    return res.status(500).json({ message: err.message });
   }
 };
 
@@ -637,11 +637,19 @@ const getAllRoles = async (req, res) => {
   try {
     const roles = await prisma.role.findMany();
 
-    return res.status(200).json({ data: { roles } })
+    // Add baseRoleName for each role
+    const rolesWithBaseName = await Promise.all(
+      roles.map(async (role) => {
+        const baseRoleName = await getMainBaseRole(prisma, role.baseRoleId);
+        return { ...role, baseRoleName };
+      })
+    );
+
+    return res.status(200).json({ data: { roles: rolesWithBaseName } });
   } catch (err) {
-    return res.status(500).json({ message: err.message })
+    return res.status(500).json({ message: err.message });
   }
-}
+};
 
 module.exports = { createRole, editRolePermissions, deleteRole, getRolePermissions, getAllRoles };
 

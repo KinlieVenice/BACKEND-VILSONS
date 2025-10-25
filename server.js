@@ -14,7 +14,7 @@ const corsMiddleware = require("./middleware/cors");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 const verifyJWT = require('./middleware/verifyJWT');
-const { limiter, authLimiter } = require('./middleware/rateLimitter');
+const { limiter, authLimiter } = require('./middleware/rateLimiter');
 const sanitizeInput = require('./middleware/sanitizeInput');
 
 // CORS setup (temporary open version for development)

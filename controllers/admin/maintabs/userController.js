@@ -1,8 +1,13 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const path = require("path");
 const { getDateRangeFilter } = require("../../../utils/filters/dateRangeFilter");
 const getMainBaseRole = require("../../../utils/services/getMainBaseRole.js");
+const checkCustomerRole = require("../../../utils/services/checkCustomerRole.js");
+const parseArrayFields = require("../../../utils/services/parseArrayFields.js");
+const deleteFile = require("../../../utils/services/imageDeleter.js");
 const { requestApproval } = require("../../../utils/services/approvalService");
 const { branchFilter } = require("../../../utils/filters/branchFilter");
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
@@ -12,6 +17,7 @@ const relationsChecker = require("../../../utils/services/relationsChecker");
 
 // GET /
 const createUser = async (req, res) => {
+  const parsedBody = parseArrayFields(req.body, ["roles", "branches"]);
   const {
     name,
     username,
@@ -21,16 +27,31 @@ const createUser = async (req, res) => {
     description,
     roles,
     branches,
-  } = req.body;
+  } = parsedBody;
+  const image = req.file ? req.file.filename : null;
 
-  if (!name || !username || !phone || !email || !roles) {
+  if (!name || !username || !phone || !roles) {
     return res.status(400).json({
       message: "Name, username, email, phone, branches, and roles are required",
     });
   }
 
+  const hasCustomerRole = await checkCustomerRole(prisma, roles);
+
+  if (!hasCustomerRole && (!branches || branches.length === 0)) {
+    return res
+      .status(400)
+      .json({ message: "Branches are required for non-customer users" });
+  }
+
   const existingUser = await prisma.user.findFirst({
-    where: { OR: [{ username }, { email }] },
+    where: {
+      status: "active",
+      OR: [
+        { username },
+        ...(email ? [{ email }] : []),
+      ],
+    },
   });
 
   const pendingUsername = await checkPendingApproval(prisma, 'user', ['username'], username);
@@ -65,12 +86,13 @@ const createUser = async (req, res) => {
       fullName: name,
       username,
       phone,
-      email,
+      ...(email ? { email } : {}),
       hashPwd,
       ...(description ? { description } : {}),
       createdByUser: req.username || null,
       updatedByUser: req.username || null,
       ...(needsApproval ? { roles, branches } : {}),
+      image
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -130,7 +152,9 @@ const createUser = async (req, res) => {
 
 // PUT /:id
 const editUser = async (req, res) => {
-  const { name, phone, email, description, roles, branches } = req.body;
+  const parsedBody = parseArrayFields(req.body, ["roles", "branches"]);
+  const { name, phone, email, description, roles, branches } = parsedBody;
+  const newImage = req.file ? req.file.filename : null;
 
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
@@ -147,9 +171,18 @@ const editUser = async (req, res) => {
         ? "User edit awaiting approval"
         : "User edited successfully";
 
+    if (roles) {
+      const hasCustomerRole = await checkCustomerRole(prisma, roles);
+
+      if (!hasCustomerRole && (!branches || branches.length === 0)) {
+        return res
+          .status(400)
+          .json({ message: "Branches are required for non-customer users" });
+      }
+    }
 
     if (email && email !== user.email) {
-      const existingUser = await prisma.user.findFirst({ where: { email, id: { not: req.params.id } } });
+      const existingUser = await prisma.user.findFirst({ where: { email, status:  "active", id: { not: req.params.id } } });
       const pendingUser = await checkPendingApproval(prisma, 'user', ['email'], email, req.params.id);
       const pendingJobOrderUser = await checkPendingApproval(prisma, 'jobOrder', ['customerData', 'email'], email, req.params.id);
 
@@ -160,7 +193,19 @@ const editUser = async (req, res) => {
       }
     }
 
-    
+    let image = user.image;
+
+    if (newImage) {
+      if (user.image) {
+        deleteFile(`images/users/${user.image}`);
+      }
+      image = newImage;
+    }
+    // If frontend sent image: null or empty string → remove old image
+    else if ((req.body.image === null || req.body.image === "") && user.image) {
+      deleteFile(`images/users/${user.image}`);
+      image = null;
+    }
 
     const updatedData = {
       fullName: name ?? user.fullName,
@@ -169,6 +214,7 @@ const editUser = async (req, res) => {
       email: email ?? user.email,
       hashPwd: user.hashPwd,
       description: description ?? user.description,
+      image,
       updatedByUser: req.username,
       ...(needsApproval ? { roles, branches } : {}),
     };
@@ -276,7 +322,7 @@ const editProfile = async (req, res) => {
 
     if (email && email !== user.email) {
       existingUser = await prisma.user.findFirst({
-        where: { email, id: { not: req.id } },
+        where: { email, id: { not: req.id }, status: "active", },
       });
       pendingUser = await checkPendingApproval(prisma, 'user', ['email'], email);
     }
@@ -449,7 +495,6 @@ const editUserPassword = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 // DELETE /:id
 const deleteUser = async (req, res) => {
@@ -624,6 +669,7 @@ const getAllUsers = async (req, res) => {
         include: {
           roles: { include: { role: true } },
           branches: { include: { branch: true } },
+          contractor: { select: { commission: true } },
         },
       });
 
@@ -632,7 +678,7 @@ const getAllUsers = async (req, res) => {
 
       // Exclude sensitive fields
       const formattedUsers = users.map((user) => {
-        const { hashPwd, refreshToken, roles, branches, ...safeUser } = user;
+        const { hashPwd, refreshToken, roles, branches, contractor, ...safeUser } = user;
 
         return {
           ...safeUser,
@@ -644,6 +690,7 @@ const getAllUsers = async (req, res) => {
             id: b.branch.id,
             branchName: b.branch.branchName,
           })),
+          commission: contractor?.commission || undefined,
         };
       });
 

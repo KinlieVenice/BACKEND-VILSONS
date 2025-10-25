@@ -22,12 +22,13 @@ model User {
   fullName        String  @db.VarChar(100)
   username    String  @unique @db.VarChar(100)
   phone       String @db.VarChar(13)
-  email       String  @unique @db.VarChar(100)
+  email       String?  @unique @db.VarChar(100)
   hashPwd     String  @db.VarChar(255)
   description String?
+  image String?
   refreshToken String?
 
-  status AccountStatus?
+  status AccountStatus? @default(active)
 
   createdAt   DateTime @default(now())
   createdByUser String?
@@ -151,6 +152,7 @@ model Truck {
   plate       String   @db.VarChar(10) @unique
   make        String   @db.VarChar(20) 
   model       String   @db.VarChar(20)
+  image String?
   createdAt   DateTime @default(now())
   createdByUser String
   updatedAt   DateTime @updatedAt
@@ -356,7 +358,7 @@ model JobOrder {
   labor       Decimal?     @db.Decimal(13, 2)
   contractorPercent Decimal? @db.Decimal(13, 2)
   completedAt DateTime?
-
+  
   transactions Transaction[]
   materials    Material[] 
 
