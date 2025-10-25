@@ -72,7 +72,7 @@ const createUser = async (req, res) => {
 
     return res
       .status(400)
-      .json({ error: `${message.join(" and ")} already exist` });
+      .json({ message: `${message.join(" and ")} already exist` });
   }
 
   try {
@@ -85,7 +85,7 @@ const createUser = async (req, res) => {
     const userData = {
       fullName: name,
       username,
-      phone,
+      phone: phone.toString(),
       ...(email ? { email } : {}),
       hashPwd,
       ...(description ? { description } : {}),
@@ -145,8 +145,9 @@ const createUser = async (req, res) => {
       message,
       data: needsApproval ? { approvalId: result.user.id, username: result.user.payload.username, fullName: result.user.payload.fullName } : { userId: result.userDetails.id, username: result.userDetails.username,  fullName: result.userDetails.fullName } ,
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.log(err.message)
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -170,7 +171,7 @@ const editUser = async (req, res) => {
     let message = needsApproval
         ? "User edit awaiting approval"
         : "User edited successfully";
-
+    
     if (roles) {
       const hasCustomerRole = await checkCustomerRole(prisma, roles);
 
@@ -304,14 +305,16 @@ const editUser = async (req, res) => {
       message,
       data: needsApproval ? result.user : safeUser,
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.log(err.message)
+    return res.status(500).json({ error: err.message });
   }
 };
 
 // PUT me/
 const editProfile = async (req, res) => {
-  const { name, phone, email, description } = req.body;
+  const { name, phone, email, description} = req.body;
+  const newImage = req.file ? req.file.filename : null;
 
   try {
     let message;
@@ -333,11 +336,26 @@ const editProfile = async (req, res) => {
         .json({ message: "Email already in use or pending approval" });
     }
 
+    let image = user.image;
+
+    if (newImage) {
+      if (user.image) {
+        deleteFile(`images/users/${user.image}`);
+      }
+      image = newImage;
+    }
+    // If frontend sent image: null or empty string → remove old image
+    else if ((req.body.image === null || req.body.image === "") && user.image) {
+      deleteFile(`images/users/${user.image}`);
+      image = null;
+    }
+
     const updatedData = {
       fullName: name ?? user.fullName,
       username: user.username,
-      phone: phone ?? user.phone,
+      phone: phone.toString() ?? user.phone,
       email: email ?? user.email,
+      image: image ?? user.image,
       hashPwd: user.hashPwd,
       description: description ?? user.description,
       updatedByUser: req.username,
@@ -360,8 +378,8 @@ const editProfile = async (req, res) => {
         ...(({ id, hashPwd, refreshToken, ...safeUser }) => safeUser)(result),
       },
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -416,14 +434,14 @@ const editProfilePassword = async (req, res) => {
     return res.status(201).json({
       message,
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
 // PUT /users/:id/password
 const editUserPassword = async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const { newPassword } = req.body;
 
   if (!req?.params?.id) {
     return res.status(400).json({ message: "ID is required" });
@@ -434,11 +452,6 @@ const editUserPassword = async (req, res) => {
     return res
       .status(400)
       .json({ message: `User with ID ${req.params.id} doesn't exist` });
-  }
-
-  const isMatch = await bcrypt.compare(oldPassword, user.hashPwd);
-  if (!isMatch) {
-    return res.status(400).json({ message: "Invalid old password" });
   }
 
   const strongPasswordRegex =
@@ -453,15 +466,8 @@ const editUserPassword = async (req, res) => {
 
   const hashPwd = await bcrypt.hash(newPassword, 10);
 
-  const isUnchanged = await bcrypt.compare(oldPassword, hashPwd);
-  if (isUnchanged) {
-    return res
-      .status(400)
-      .json({ message: "New and old password cannot be the same" });
-  }
-
   try {
-    const needsApproval = true;
+    const needsApproval = req.approval;
     let message;
 
     const updatedData = {
@@ -491,8 +497,8 @@ const editUserPassword = async (req, res) => {
     return res.status(201).json({
       message,
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -561,7 +567,7 @@ const deleteUser = async (req, res) => {
     const hasRelations = relationsChecker(user, excludedKeys);
     console.log(hasRelations)
 
-    let message = hasRelations ? "User marked as inactive (has related records)" : "User and related roles/branches/edits deleted successfully"
+    let message = hasRelations ? "User marked as inactive (has related records)" : "User deleted successfully"
 
     await prisma.$transaction(async (tx) => {
 
@@ -604,7 +610,7 @@ const deleteUser = async (req, res) => {
 
     return res.status(200).json({ message });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -666,6 +672,9 @@ const getAllUsers = async (req, res) => {
         where,
         ...(page && limit ? { skip: (page - 1) * limit } : {}),
         ...(limit ? { take: limit } : {}),
+         orderBy: {
+          createdAt: 'desc',
+        },
         include: {
           roles: { include: { role: true } },
           branches: { include: { branch: true } },
@@ -690,7 +699,7 @@ const getAllUsers = async (req, res) => {
             id: b.branch.id,
             branchName: b.branch.branchName,
           })),
-          commission: contractor?.commission || undefined,
+          commission: Number(contractor?.commission) || undefined,
         };
       });
 
@@ -702,7 +711,7 @@ const getAllUsers = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -738,7 +747,7 @@ const getUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -771,7 +780,7 @@ const getMyProfile = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 

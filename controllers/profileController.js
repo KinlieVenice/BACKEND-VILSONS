@@ -2,11 +2,13 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const checkPendingApproval = require("../utils/services/checkPendingApproval")
+const deleteFile = require("../utils/services/imageDeleter")
 
 
 // PUT me/
 const editProfile = async (req, res) => {
   const { name, phone, email, description } = req.body;
+  const newImage = req.file ? req.file.filename : null;
 
   try {
     let message;
@@ -28,14 +30,29 @@ const editProfile = async (req, res) => {
         .json({ message: "Email already in use or pending approval" });
     }
 
+    let image = user.image;
+
+    if (newImage) {
+      if (user.image) {
+        deleteFile(`images/users/${user.image}`);
+      }
+      image = newImage;
+    }
+    // If frontend sent image: null or empty string → remove old image
+    else if ((req.body.image === null || req.body.image === "") && user.image) {
+      deleteFile(`images/users/${user.image}`);
+      image = null;
+    }
+
     const updatedData = {
       fullName: name ?? user.fullName,
       username: user.username,
-      phone: phone ?? user.phone,
+      phone: phone.toString() ?? user.phone,
       email: email ?? user.email,
       hashPwd: user.hashPwd,
       description: description ?? user.description,
       updatedByUser: req.username,
+      image,
     };
 
     const result = await prisma.$transaction(async (tx) => {

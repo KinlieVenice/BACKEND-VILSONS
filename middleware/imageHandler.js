@@ -3,7 +3,14 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 
-const createUploader = (folderName = "general") => {
+/**
+ * Create a Multer uploader.
+ * 
+ * @param {string} folderName - Folder where files are stored (default: "general")
+ * @param {boolean} multiple - Whether to allow multiple files (default: false)
+ * @param {number} maxCount - Max number of files for multiple uploads
+ */
+const createUploader = (folderName = "general", multiple = false, maxCount = 10) => {
   const uploadDir = path.join(__dirname, `../images/${folderName}`);
 
   if (!fs.existsSync(uploadDir)) {
@@ -26,7 +33,18 @@ const createUploader = (folderName = "general") => {
       : cb(new Error("Only image files are allowed"), false);
   };
 
-  return multer({ storage, fileFilter });
+  const uploader = multer({ storage, fileFilter });
+
+  if (multiple) {
+    // For multiple files, return the fields array for before/after images
+    return uploader.fields([
+      { name: "beforeImages", maxCount },
+      { name: "afterImages", maxCount },
+    ]);
+  } else {
+    // For single file, expect key "image"
+    return uploader.single("image");
+  }
 };
 
 module.exports = createUploader;

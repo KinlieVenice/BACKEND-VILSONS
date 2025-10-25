@@ -233,6 +233,7 @@ const getContractor = async (req, res) => {
             email: contractor.user.email,
             phone: contractor.user.phone,
             commission: contractor.commission,
+            image: contractor.user.image,
             roles: contractor.user.roles.map((r) => ({
               roleId: r.role.id,
               roleName: r.role.roleName,

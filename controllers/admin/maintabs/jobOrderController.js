@@ -8,12 +8,16 @@ const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../../../constants/ROLES_LIST");
 const roleIdFinder = require("../../../utils/finders/roleIdFinder");
 const { requestApproval } = require("../../../utils/services/approvalService")
+const deleteFile = require("../../../utils/services/imageDeleter")
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
+const parseArrayFields = require("../../../utils/services/parseArrayFields.js");
+
 
 
 
 // "POST /"
 const createJobOrder = async (req, res) => {
+  const parsedBody = parseArrayFields(req.body, ["materials", "images"]);
   const {
     customerId,
     name,
@@ -28,7 +32,16 @@ const createJobOrder = async (req, res) => {
     description,
     materials,
     labor,
-  } = req.body;
+    images,
+  } = parsedBody; 
+
+  const beforeImages = req.files?.beforeImages?.map(f => f.filename) || []; 
+  const afterImages = req.files?.afterImages?.map(f => f.filename) || [];
+
+  const imageData = [
+    ...beforeImages.map(filename => ({ type: "before", filename })),
+    ...afterImages.map(filename => ({ type: "after", filename })),
+  ];
 
   let { phone } = req.body;
 
@@ -144,6 +157,7 @@ const createJobOrder = async (req, res) => {
           ...(contractorId && { contractorId }),
           ...(labor && { labor }),
           jobOrderCode: null,
+          images,
         },
         materials: materials || [],
       };
@@ -361,6 +375,9 @@ const createJobOrder = async (req, res) => {
         ...(labor && { labor }),
         createdByUser: req.username,
         updatedByUser: req.username,
+        images: {
+          create: imageData,
+        },
       };
 
       console.log('Labor value from request:', labor);
@@ -436,14 +453,16 @@ const createJobOrder = async (req, res) => {
 
 // "PUT /:id"
 const editJobOrder = async (req, res) => {
+  const parsedBody = parseArrayFields(req.body, ["materials", "images"]);
   const {
-
     branchId,
     contractorId,
     description,
     materials,
     labor,
-  } = req.body;
+  } = parsedBody;
+  const truckImage = req.file ? req.file.filename : null;
+  const customerImage = req.file ? req.file.filename : null;
 
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
@@ -452,6 +471,9 @@ const editJobOrder = async (req, res) => {
     // ✅ Global validation - runs regardless of approval needs
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
+      include: {
+        images: true
+      }
     });
     if (!jobOrder)
       return res
@@ -485,6 +507,15 @@ const editJobOrder = async (req, res) => {
     }
 
     const needsApproval = req.approval;
+
+    // ✅ Handle uploaded images
+    const beforeImages = req.files?.beforeImages?.map((f) => f.filename) || [];
+    const afterImages = req.files?.afterImages?.map((f) => f.filename) || [];
+
+    const imageData = [
+    ...beforeImages.map(filename => ({ type: "before", filename, jobOrderId: jobOrder.id })),
+    ...afterImages.map(filename => ({ type: "after", filename, jobOrderId: jobOrder.id })),
+    ];
 
     // ✅ If approval is needed, create approval request
     if (needsApproval) {
@@ -526,6 +557,11 @@ const editJobOrder = async (req, res) => {
         contractorCommission = 0,
         shopCommission = 0,
         totalMaterialCost = 0;
+
+    if (imageData.length > 0) {
+      await prisma.jobOrderImage.createMany({ data: imageData });
+      console.log(`📸 Added ${imageData.length} new job order images`);
+    }
 
       // Calculate commissions if contractor and labor provided
       if (contractorId && labor) {

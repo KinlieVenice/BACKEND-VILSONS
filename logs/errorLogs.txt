@@ -1747,3 +1747,13 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251025	13:00:51	18a76814-2773-43db-9496-fbb5b57fdbd4	ReferenceError: getMainBaseRole is not defined
 20251025	15:49:50	a4d3b345-2ace-4fab-8d27-cd1db4dc8288	TypeError: roles.map is not a function
 20251025	15:51:05	8b865e03-f150-4919-b07f-5a42f465ce24	TypeError: roles.map is not a function
+20251025	20:39:51	b552fa42-049a-4187-8a2d-352a09d14579	TypeError: Cannot destructure property 'name' of 'req.body' as it is undefined.
+20251025	20:40:36	a68b73b1-5f5d-49b3-87e3-fe5309a9286f	TypeError: Cannot destructure property 'name' of 'req.body' as it is undefined.
+20251025	20:59:28	120de91d-e931-488e-a888-a9f99f6862b1	MulterError: Unexpected field
+20251025	22:12:38	4d990866-05dc-4a5f-9a7c-6281fd1767e4	ReferenceError: parseArrayFields is not defined
+20251025	22:29:30	f06509cd-4ad7-4067-992c-43674e391e76	ReferenceError: beforeImages is not defined
+20251025	22:38:52	fcbe4b59-4507-4350-a3db-05ba00618665	Error: Invalid JSON array format for field "roles".
+20251026	01:13:24	4b5677c8-20b6-4666-8a24-1b4cbe3f0742	Error: Invalid JSON array format for field "materials".
+20251026	01:14:42	e078ebb8-437a-46c7-b849-1258e3363288	Error: Invalid JSON array format for field "materials".
+20251026	01:15:51	dc1d4e9c-8754-4f97-b3a2-2f35cb470332	Error: Invalid JSON array format for field "materials".
+20251026	01:17:36	cd5518c5-2863-40f3-b01c-f16602224930	Error: Invalid JSON array format for field "materials".

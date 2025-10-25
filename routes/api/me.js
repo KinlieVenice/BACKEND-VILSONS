@@ -9,12 +9,14 @@ const transactionController = require("../../controllers/customer/transactionCon
 const profileController = require("../../controllers/profileController");
 const verifyPermission = require("../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../constants/PERMISSIONS_LIST");
+const createUploader = require("../../middleware/imageHandler");
+const uploadImage = createUploader("users");
 
 
 //FIX ALL PERM HERE
 
 router.route("/")
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), profileController.editProfile)
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), uploadImage, profileController.editProfile)
 .get(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), profileController.getMyProfile)
 
 router.route("/password")

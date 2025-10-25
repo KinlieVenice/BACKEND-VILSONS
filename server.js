@@ -17,6 +17,8 @@ const verifyJWT = require('./middleware/verifyJWT');
 const { limiter, authLimiter } = require('./middleware/rateLimiter');
 const sanitizeInput = require('./middleware/sanitizeInput');
 
+const imageRoutes = require("./routes/imagesRoute");
+
 // CORS setup (temporary open version for development)
 app.use(corsMiddleware); // apply global CORS middleware
 
@@ -35,6 +37,8 @@ app.use(cookieParser());
 
 app.use(limiter);
 
+
+
 app.use(sanitizeInput);
 
 app.use('/auth', authLimiter, require('./routes/auth'));
@@ -42,15 +46,17 @@ app.use("/refresh", require("./routes/refresh"));
 app.use("/logout", require("./routes/logout"));
 
 app.use(express.static(path.join(__dirname, "views")));
-
+app.use("/images", imageRoutes);
 app.use(verifyJWT);
+
+
+
 app.use("/api/users", require("./routes/api/maintabs/users"));
 app.use("/api/dashboard", require("./routes/api/maintabs/dashboard"));
 app.use("/api/trucks", require("./routes/api/maintabs/trucks"));
 app.use("/api/job-orders", require("./routes/api/maintabs/jobOrders"));
 app.use("/api/approval-logs", require("./routes/api/maintabs/approvalLogs"));
 app.use("/api/other-incomes", require("./routes/api/maintabs/otherincomes"));
-
 
 app.use("/api/branches", require("./routes/api/branches"));
 app.use("/api/roles", require("./routes/api/roles"));

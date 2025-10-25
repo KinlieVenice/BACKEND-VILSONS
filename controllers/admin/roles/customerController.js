@@ -116,6 +116,7 @@ const getCustomerOldest = async (req, res) => {
             username: customer.user.username,
             email: customer.user.email,
             phone: customer.user.phone,
+            image: customer.user.image,
             createdAt: customer.user.createdAt,
             roles: customer.user.roles.map(r => ({
               roleId: r.role.id,

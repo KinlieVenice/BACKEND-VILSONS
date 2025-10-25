@@ -2,8 +2,8 @@ const jobOwnerFinder = require("../../../utils/finders/jobOwnerFinder");
 const { getDateRangeFilter } = require("../../../utils/filters/dateRangeFilter");
 const { requestApproval } = require("../../../utils/services/approvalService")
 const relationsChecker = require("../../../utils/services/relationsChecker");
-
-
+const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
+const deleteFile = require("../../../utils/services/imageDeleter.js");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -17,6 +17,8 @@ const prisma = new PrismaClient();
 
 const createTruck = async (req, res) => {
   const { plate, make, model } = req.body;
+  const image = req.file ? req.file.filename : null;
+
   if (!plate || !make || !model)
     return res
       .status(400)
@@ -43,6 +45,7 @@ const createTruck = async (req, res) => {
       plate,
       make,
       model,
+      image,
       createdByUser: req.username,
       updatedByUser: req.username,
     };
@@ -69,6 +72,8 @@ const createTruck = async (req, res) => {
 
 const editTruck = async (req, res) => {
   const { plate, make, model } = req.body;
+  const newImage = req.file ? req.file.filename : null;
+
 
   try {
     if (!req?.params?.id)
@@ -99,10 +104,26 @@ const editTruck = async (req, res) => {
     }
     const needsApproval = req.approval;
     let message;
+
+    let image = truck.image;
+
+    if (newImage) {
+      if (truck.image) {
+        deleteFile(`images/trucks/${truck.image}`);
+      }
+      image = newImage;
+    }
+    // If frontend sent image: null or empty string → remove old image
+    else if ((req.body.image === null || req.body.image === "") && truck.image) {
+      deleteFile(`images/trucks/${truck.image}`);
+      image = null;
+    }
+
     const truckData = {
       plate: plate ?? truck.plate,
       make: make ?? truck.make,
       model: model ?? truck.model,
+      image,
       updatedByUser: req.username,
     };
 
@@ -306,6 +327,7 @@ const getAllTrucks = async (req, res) => {
         plate: truck.plate,
         make: truck.make,
         model: truck.model,
+        image: truck.image,
         customerId: truck.owners[0]?.customer?.id || null,
         customerUserId: truck.owners[0]?.customer?.user?.id || null,
         customerFullName: truck.owners[0]?.customer?.user?.fullName || null, // irst active owner only
@@ -399,7 +421,7 @@ const getTruck = async (req, res) => {
         : [];
 
     // ✅ Group job orders by status
-    const activeStatuses = ["pending", "ongoing", "completed", "for release"];
+    const activeStatuses = ["pending", "ongoing", "completed", "forRelease"];
 
     const activeJobOrders = jobOrders.filter((jo) =>
       activeStatuses.includes(jo.status)

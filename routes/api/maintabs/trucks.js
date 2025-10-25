@@ -3,9 +3,11 @@ const router = express.Router();
 const truckController = require("../../../controllers/admin/maintabs/truckController");
 const verifyPermission = require("../../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
+const createUploader = require("../../../middleware/imageHandler");
+const uploadImage = createUploader("trucks");
 
 router.route("/")
-  .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCK),truckController.createTruck)
+  .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCK), uploadImage, truckController.createTruck)
   .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getAllTrucks);
 
 router.route("/ownership")
@@ -13,7 +15,7 @@ router.route("/ownership")
 
 router.route("/:id")
   .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCK),truckController.deleteTruck)
-  .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK),truckController.editTruck)
+  .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK), uploadImage, truckController.editTruck)
   .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getTruck);
 
 

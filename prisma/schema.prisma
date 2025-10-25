@@ -355,10 +355,11 @@ model JobOrder {
 
   status      OrderStatus @default(pending)
   description String
+  images        JobOrderImage[]
   labor       Decimal?     @db.Decimal(13, 2)
   contractorPercent Decimal? @db.Decimal(13, 2)
   completedAt DateTime?
-  
+
   transactions Transaction[]
   materials    Material[] 
 
@@ -375,6 +376,16 @@ model JobOrder {
   updatedBy  User       @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
   @@map("joborder")
 
+}
+
+model JobOrderImage {
+  id         String   @id @default(uuid())
+  jobOrderId String
+  type       ImageType   // "before" or "after"
+  filename   String
+
+  jobOrder   JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  @@map("joborderimage")
 }
 
 model Overhead {
@@ -512,6 +523,10 @@ enum RequestType {
   create
 }
 
+enum ImageType {
+  before
+  after
+}
 enum PaymentType {
   regular
   advance
