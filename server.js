@@ -28,10 +28,10 @@ app.use(logger);
 // urlencoded date
 app.use(express.urlencoded({ extended: false }));
 
-// app.post("/api/online-transactions/webhook", bodyParser.raw({ type: "application/json" }), webhookHandler);
-
 // json middleware for auto parse
 app.use(express.json());
+
+app.set("trust proxy", 1);
 
 app.use(cookieParser());
 

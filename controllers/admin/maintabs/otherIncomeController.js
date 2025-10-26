@@ -159,6 +159,7 @@ const getAllOtherIncomes = async (req, res) => {
           select: { id: true, branchName: true, address: true },
         },
       },
+      orderBy: { createdAt: "desc" },
     });
 
     const totalAmount = otherIncome.reduce((sum, inc) => sum + Number(inc.amount), 0);

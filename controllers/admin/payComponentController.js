@@ -20,4 +20,4 @@ const getPayComponent = async (req, res) => {
     }
 }
 
-module.exports = { getPayComponents }
+module.exports = { getPayComponent }

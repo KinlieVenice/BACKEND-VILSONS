@@ -204,6 +204,7 @@ const getAllBranches = async (req, res) => {
       where,
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
+      orderBy: { createdAt: "desc" },
     });
 
     totalItems = await prisma.branch.count({ where });

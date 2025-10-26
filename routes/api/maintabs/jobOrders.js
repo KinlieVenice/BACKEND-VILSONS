@@ -4,7 +4,7 @@ const jobOrderController = require("../../../controllers/admin/maintabs/jobOrder
 const verifyPermission = require("../../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
 const createUploader = require("../../../middleware/imageHandler");
-const uploadImages = createUploader("jobOrders", true, 10);
+const uploadImages = createUploader("job-orders", true);
 
 
 router.route("/")

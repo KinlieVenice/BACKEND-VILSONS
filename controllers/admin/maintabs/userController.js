@@ -167,7 +167,7 @@ const editUser = async (req, res) => {
       .json({ message: `User with ${req.params.id} doesn't exist` });
 
   try {
-    let needsApproval = req.approval;
+    let needsApproval = true;
     let message = needsApproval
         ? "User edit awaiting approval"
         : "User edited successfully";
@@ -194,18 +194,20 @@ const editUser = async (req, res) => {
       }
     }
 
-    let image = user.image;
+    let image = newImage ? newImage : user.image;
 
-    if (newImage) {
-      if (user.image) {
-        deleteFile(`images/users/${user.image}`);
+    if (!needsApproval) {
+      if (newImage) {
+        if (user.image) {
+          deleteFile(`images/users/${user.image}`);
+        }
+        image = newImage;
       }
-      image = newImage;
-    }
-    // If frontend sent image: null or empty string → remove old image
-    else if ((req.body.image === null || req.body.image === "") && user.image) {
-      deleteFile(`images/users/${user.image}`);
-      image = null;
+      // If frontend sent image: null or empty string → remove old image
+      else if ((req.body.image === null || req.body.image === "") && user.image) {
+        deleteFile(`images/users/${user.image}`);
+        image = null;
+      }
     }
 
     const updatedData = {

@@ -1,17 +1,16 @@
-/**
- * Safely parse specific fields in req.body that may be JSON strings (from multipart/form-data).
- * 
- * @param {Object} body - The request body (e.g. req.body)
- * @param {Array<string>} fields - List of field names to parse
- * @returns {Object} - The same body object with parsed arrays
- */
 function parseArrayFields(body, fields = []) {
-  const parsedBody = { ...body };
+  const parsedBody = {};
+
+  for (const [key, value] of Object.entries(body)) {
+    if (["undefined", "null", ""].includes(value)) {
+      parsedBody[key] = null; // Normalize garbage string values
+    } else {
+      parsedBody[key] = value;
+    }
+  }
 
   for (const field of fields) {
     if (!parsedBody[field]) continue;
-
-    // Skip if it's already an array
     if (Array.isArray(parsedBody[field])) continue;
 
     try {
@@ -23,5 +22,6 @@ function parseArrayFields(body, fields = []) {
 
   return parsedBody;
 }
+
 
 module.exports = parseArrayFields;

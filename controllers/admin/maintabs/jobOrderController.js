@@ -485,14 +485,15 @@ const editJobOrder = async (req, res) => {
       const branch = await prisma.branch.findUnique({ where: { id: branchId } });
       if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
     }
-
     // Validate contractor if provided
-    if (contractorId) {
+    if (contractorId && contractorId !== "undefined" && contractorId !== "null") {
       const contractor = await prisma.contractor.findUnique({
         where: { id: contractorId },
       });
       if (!contractor) return res.status(400).json({ message: "Invalid contractor ID" });
     }
+
+
 
     // Validate materials if provided
     if (materials && materials.length > 0) {
@@ -527,8 +528,9 @@ const editJobOrder = async (req, res) => {
           truckId: jobOrder.truckId,
           branchId: branchId ?? jobOrder.branchId,
           description: description ?? jobOrder.description,
-          contractorId: contractorId === undefined ? null : contractorId ?? jobOrder.contractorId,
-          labor: labor === undefined ? null : labor ?? jobOrder.labor,
+          contractorId: contractorId && contractorId !== "undefined" && contractorId !== "null" ? contractorId : null,
+          labor: labor && labor !== "undefined" && labor !== "null" ? labor : null,
+          images: imageData
         },
         materials: materials || [],
       };
@@ -578,8 +580,8 @@ const editJobOrder = async (req, res) => {
         truckId: jobOrder.truckId,
         branchId: branchId ?? jobOrder.branchId,
         description: description ?? jobOrder.description,
-        contractorId: contractorId === undefined ? null : contractorId ?? jobOrder.contractorId,
-        labor: labor === undefined ? null : labor ?? jobOrder.labor,
+        contractorId: contractorId && contractorId !== "undefined" && contractorId !== "null" ? contractorId : null,
+        labor: labor && labor !== "undefined" && labor !== "null" ? labor : null,
         updatedByUser: req.username,
       };
 
@@ -648,6 +650,7 @@ const editJobOrder = async (req, res) => {
     });
 
   } catch (err) {
+    console.log(err.message)
     return res.status(500).json({ message: err.message });
   }
 };
@@ -942,13 +945,14 @@ const getJobOrder = async (req, res) => {
     const jobOrderInclude = {
       truck: true,
       customer: {
-        include: { user: { select: { id: true, username: true, fullName: true } } },
+        include: { user: true },
       },
       contractor: {
-        include: { user: { select: { id: true, username: true, fullName: true } } },
+        include: { user: true },
       },
       branch: { select: { id: true, branchName: true } },
       materials: { select: { id: true, materialName: true, quantity: true, price: true } },
+      images: true,
     };
 
     const jobOrder = await prisma.jobOrder.findUnique({
@@ -983,6 +987,15 @@ const getJobOrder = async (req, res) => {
       );
     }
 
+    const processedMaterials = (jobOrder.materials || []).map((m) => {
+      const total = Number(m.price) * Number(m.quantity);
+      totalMaterialCost += total;
+      return {
+        ...m,
+        total,
+      };
+    });
+
     const totalBill =
         Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
 
@@ -999,10 +1012,14 @@ const getJobOrder = async (req, res) => {
         contractorUserId: jobOrder.contractor?.user?.id  || null,
         contractorName: jobOrder.contractor?.user?.fullName  || null,
         contractorUsername: jobOrder.contractor?.user?.username  || null,
+        contractorEmail: jobOrder.contractor?.user?.email,
+        contractorPhone: jobOrder.contractor?.user?.phone,
         customerId: jobOrder.customer?.id,
         customerUserId: jobOrder.customer?.user?.id,
         customerName: jobOrder.customer?.user?.fullName,
         customerUsername: jobOrder.customer?.user?.username,
+        customerEmail: jobOrder.customer?.user?.email,
+        customerPhone: jobOrder.customer?.user?.phone,
         branchId: jobOrder.branch?.id  || null,
         branchName: jobOrder.branch?.branchName  || null,
         labor: Number(jobOrder.labor),
@@ -1015,8 +1032,15 @@ const getJobOrder = async (req, res) => {
         updatedBy: jobOrder.updatedByUser,
         contractorCommission,
         shopCommission,
+        totalLabor: contractorCommission + shopCommission,
         totalMaterialCost,
-        materials: jobOrder.materials,
+        materials: processedMaterials,
+        images: jobOrder.images.reduce((acc, image) => {
+          const type = image.type || "unknown";
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(image);
+          return acc;
+        }, {}),
       },
     });
   } catch (err) {

@@ -105,18 +105,20 @@ const editTruck = async (req, res) => {
     const needsApproval = req.approval;
     let message;
 
-    let image = truck.image;
+    if (!needsApproval) {
+      let image = truck.image;
 
-    if (newImage) {
-      if (truck.image) {
-        deleteFile(`images/trucks/${truck.image}`);
+      if (newImage) {
+        if (truck.image) {
+          deleteFile(`images/trucks/${truck.image}`);
+        }
+        image = newImage;
       }
-      image = newImage;
-    }
-    // If frontend sent image: null or empty string → remove old image
-    else if ((req.body.image === null || req.body.image === "") && truck.image) {
-      deleteFile(`images/trucks/${truck.image}`);
-      image = null;
+      // If frontend sent image: null or empty string → remove old image
+      else if ((req.body.image === null || req.body.image === "") && truck.image) {
+        deleteFile(`images/trucks/${truck.image}`);
+        image = null;
+      }
     }
 
     const truckData = {
@@ -319,6 +321,9 @@ const getAllTrucks = async (req, res) => {
               },
             },
           },
+        },
+        orderBy: {
+          createdAt: "desc"
         },
       });
 

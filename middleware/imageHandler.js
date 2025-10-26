@@ -38,8 +38,8 @@ const createUploader = (folderName = "general", multiple = false, maxCount = 10)
   if (multiple) {
     // For multiple files, return the fields array for before/after images
     return uploader.fields([
-      { name: "beforeImages", maxCount },
-      { name: "afterImages", maxCount },
+      { name: "beforeImages", maxCount: 1000 },
+      { name: "afterImages", maxCount: 1000 },
     ]);
   } else {
     // For single file, expect key "image"

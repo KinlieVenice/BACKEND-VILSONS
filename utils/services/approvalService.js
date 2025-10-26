@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const relationsChecker = require("../services/relationsChecker");
 const getMainBaseRole = require("./getMainBaseRole"); // make sure this exists
 const generateJobOrderCode = require("./generateJobOrderCode");
+const deleteFile = require("./imageDeleter")
 
 const requestApproval = async (tableName, recordId, actionType, payload, reqUser) => {
     return prisma.approvalLog.create({
@@ -19,7 +20,7 @@ const requestApproval = async (tableName, recordId, actionType, payload, reqUser
 const handleUserApproval = async (request, updateUser, tx) => {
   const { payload, actionType: action, recordId, requestedByUser } = request;
 
-  let user;
+  let user = await prisma.user.findFirst({ where: { id: recordId }})
   console.log(`[handleUserApproval] Action: ${action}, Record ID: ${recordId}`);
 
   switch (action) {
@@ -102,6 +103,12 @@ const handleUserApproval = async (request, updateUser, tx) => {
       console.log("[edit] Roles:", editRoles);
       console.log("[edit] Branches:", editBranches);
       console.log("[edit] User payload:", editPayload);
+
+      if (payload.image) {
+        if (user.image) {
+          deleteFile(`images/users/${user.image}`);
+        }
+      }
 
       // Update user
       user = await tx.user.update({
