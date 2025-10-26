@@ -285,12 +285,14 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
         truckData,
         jobOrderData,
         materials = [],
+        images = []
       } = payload;
 
       console.log("[create] Customer data:", customerData);
       console.log("[create] Truck data:", truckData);
       console.log("[create] Job order data:", jobOrderData);
       console.log("[create] Materials:", materials);
+      console.log("[create] Images:", images);
 
       let customer = null;
       let activeTruckId = truckData.truckId;
@@ -535,6 +537,16 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
         );
       }
 
+      if (images && images.length > 0) {
+        await tx.jobOrderImage.createMany({
+          data: images.map((m) => ({
+            jobOrderId: jobOrder.id,
+            filename: m.filename,
+            type: m.type
+          })),
+        });
+      }
+
       // Return consistent structure
       return {
         jobOrder,
@@ -550,6 +562,7 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
       const {
         updateData,
         materials: editMaterials = [],
+        images: editImages = [],
       } = payload;
 
       // Update job order - spread the updateData directly
@@ -585,6 +598,20 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
             materialName: m.name,
             quantity: m.quantity,
             price: m.price,
+          })),
+        });
+
+        console.log(`[edit] Updated ${editMaterials.length} material entries`);
+      }
+
+      if (editImages.length > 0) {
+        console.log("[edit] Updating material entries");
+        
+        await tx.jobOrderImage.createMany({
+          data: editImages.map((m) => ({
+            jobOrderId: recordId,
+            type: m.type,
+            filename: m.filename
           })),
         });
 

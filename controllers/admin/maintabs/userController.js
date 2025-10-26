@@ -105,8 +105,31 @@ const createUser = async (req, res) => {
           admin: () => tx.admin.create({ data: { userId: user.id } }),
           customer: () => tx.customer.create({ data: { userId: user.id } }),
           employee: () => tx.employee.create({ data: { userId: user.id } }),
-          contractor: () => tx.contractor.create({ data: { userId: user.id, commission: req.body.commission } }),
+          contractor: () => {
+            const commission = Number(req.body.commission);
+
+            if (!commission) {
+              return res.status(400).json({ message: "Commission is required"})
+            }
+
+            if (isNaN(commission)) {
+              return res.status(400).json({ message: "Commission must be a valid number"})
+            }
+
+            if (commission > 1) {
+              return res.status(400).json({ message: "Commission cannot be higher than 1 (100%)"})
+            }
+
+            if (commission < 0) {
+              return res.status(400).json({ message: "Commission cannot be negative"})
+            }
+
+            return tx.contractor.create({
+              data: { userId: user.id, commission },
+            });
+          },
         };
+
 
         // Fetch role IDs for this user
         const roleNamesToCreateTables = await Promise.all(
@@ -167,7 +190,7 @@ const editUser = async (req, res) => {
       .json({ message: `User with ${req.params.id} doesn't exist` });
 
   try {
-    let needsApproval = true;
+    let needsApproval = req.approval;
     let message = needsApproval
         ? "User edit awaiting approval"
         : "User edited successfully";
@@ -259,8 +282,29 @@ const editUser = async (req, res) => {
           admin: () => tx.admin.create({ data: { userId: user.id } }),
           customer: () => tx.customer.create({ data: { userId: user.id } }),
           employee: () => tx.employee.create({ data: { userId: user.id } }),
-          contractor: () =>
-            tx.contractor.create({ data: { userId: user.id, commission: req.body.commission } }),
+          contractor: () => {
+            const commission = Number(req.body.commission);
+
+            if (!commission) {
+              return res.status(400).json({ message: "Commission is required"})
+            }
+            
+            if (isNaN(commission)) {
+              return res.status(400).json({ message: "Commission must be a valid number"})
+            }
+
+            if (commission > 1) {
+              return res.status(400).json({ message: "Commission cannot be higher than 1 (100%)"})
+            }
+
+            if (commission < 0) {
+              return res.status(400).json({ message: "Commission cannot be negative"})
+            }
+
+            return tx.contractor.create({
+              data: { userId: user.id, commission },
+            });
+          },
         };
 
         // Determine main roles from roleIds recursively
@@ -346,11 +390,6 @@ const editProfile = async (req, res) => {
       }
       image = newImage;
     }
-    // If frontend sent image: null or empty string → remove old image
-    else if ((req.body.image === null || req.body.image === "") && user.image) {
-      deleteFile(`images/users/${user.image}`);
-      image = null;
-    }
 
     const updatedData = {
       fullName: name ?? user.fullName,
@@ -361,6 +400,7 @@ const editProfile = async (req, res) => {
       hashPwd: user.hashPwd,
       description: description ?? user.description,
       updatedByUser: req.username,
+      image
     };
 
     const result = await prisma.$transaction(async (tx) => {

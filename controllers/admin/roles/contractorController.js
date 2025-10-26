@@ -231,9 +231,13 @@ const getContractor = async (req, res) => {
             fullName: contractor.user.fullName,
             username: contractor.user.username,
             email: contractor.user.email,
-            phone: contractor.user.phone,
+            createdAt: contractor.user.email,
+            createdByUser: contractor.user.createdByUser,
+            updatedAt: contractor.user.updatedAt,
+            updatedByUser: contractor.user.updatedByUser,
             commission: contractor.commission,
             image: contractor.user.image,
+            phone: contractor.user.phone,
             roles: contractor.user.roles.map((r) => ({
               roleId: r.role.id,
               roleName: r.role.roleName,
@@ -270,6 +274,7 @@ const getAllContractors = async (req, res) => {
 
   const where = {
       user: {
+        status: "active",
         branches: {
           some: { branchId: { in: branchIds } },
         },

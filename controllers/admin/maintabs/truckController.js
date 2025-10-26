@@ -105,20 +105,13 @@ const editTruck = async (req, res) => {
     const needsApproval = req.approval;
     let message;
 
-    if (!needsApproval) {
-      let image = truck.image;
+    let image = newImage ? newImage : truck.image;
 
-      if (newImage) {
+    if (!needsApproval && newImage) {
         if (truck.image) {
           deleteFile(`images/trucks/${truck.image}`);
         }
         image = newImage;
-      }
-      // If frontend sent image: null or empty string → remove old image
-      else if ((req.body.image === null || req.body.image === "") && truck.image) {
-        deleteFile(`images/trucks/${truck.image}`);
-        image = null;
-      }
     }
 
     const truckData = {

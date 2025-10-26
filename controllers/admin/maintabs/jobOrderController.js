@@ -143,7 +143,7 @@ const createJobOrder = async (req, res) => {
       }
     }
 
-    const needsApproval = req.approval;
+    const needsApproval = true;
     const newCode = await generateJobOrderCode(prisma);
 
     // ✅ If approval is needed, create approval request
@@ -157,9 +157,9 @@ const createJobOrder = async (req, res) => {
           ...(contractorId && { contractorId }),
           ...(labor && { labor }),
           jobOrderCode: null,
-          images,
         },
         materials: materials || [],
+        images: imageData || [],
       };
 
       const approvalLog = await requestApproval('jobOrder', null, 'create', approvalPayload, req.username)
@@ -460,9 +460,8 @@ const editJobOrder = async (req, res) => {
     description,
     materials,
     labor,
+    images,
   } = parsedBody;
-  const truckImage = req.file ? req.file.filename : null;
-  const customerImage = req.file ? req.file.filename : null;
 
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });

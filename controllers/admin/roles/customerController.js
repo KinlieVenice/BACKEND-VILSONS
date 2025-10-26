@@ -118,6 +118,9 @@ const getCustomerOldest = async (req, res) => {
             phone: customer.user.phone,
             image: customer.user.image,
             createdAt: customer.user.createdAt,
+            createdByUser: customer.user.createdByUser,
+            updatedAt: customer.user.updatedAt,
+            updatedByUser: customer.user.updatedByUser,
             roles: customer.user.roles.map(r => ({
               roleId: r.role.id,
               roleName: r.role.roleName
@@ -428,6 +431,9 @@ const getCustomer = async (req, res) => {
             email: customer.user.email,
             phone: customer.user.phone,
             createdAt: customer.user.createdAt,
+            createdByUser: customer.user.createdByUser,
+            updatedAt: customer.user.updatedAt,
+            updatedByUser: customer.user.updatedByUser,
             roles: customer.user.roles.map((r) => ({
               roleId: r.role.id,
               roleName: r.role.roleName,
@@ -469,6 +475,7 @@ const getAllCustomers = async (req, res) => {
 
   const where = {
       user: {
+        status: "active",
         ...(search
           ? {
               OR: [

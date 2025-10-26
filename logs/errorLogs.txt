@@ -1762,3 +1762,4 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251026	21:25:05	e8d658f1-416c-45a0-a730-f64d37c7bf1e	ReferenceError: image is not defined
 20251026	22:05:41	36eef879-a8cb-42c7-bed8-0557a2dd4683	Error: Approval request not found
 20251026	22:06:27	c5cb7841-9b49-4f6c-a643-7d67e4ad7cdf	TypeError: Cannot read properties of undefined (reading 'image')
+20251026	23:11:07	e65a1fcf-fc22-49b0-b4af-8de8d3257905	Error: Cannot set headers after they are sent to the client
