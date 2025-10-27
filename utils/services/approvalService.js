@@ -365,6 +365,7 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
               plate: truckData.plate,
               model: truckData.model,
               make: truckData.make,
+              image: truckData.image,
               createdByUser: requestedByUser,
               updatedByUser: updateUser,
             },
@@ -392,6 +393,7 @@ const handleJobOrderApproval = async (request, updateUser, tx) => {
             fullName: customerData.name,
             hashPwd: await bcrypt.hash(process.env.DEFAULT_PASSWORD, 10),
             email: customerData.email,
+            image: customerData.image,
             phone: customerData.phone.toString(),
             username: customerData.username,
             roles: {

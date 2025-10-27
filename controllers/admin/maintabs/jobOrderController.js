@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../../../constants/ROLES_LIST");
 const roleIdFinder = require("../../../utils/finders/roleIdFinder");
 const { requestApproval } = require("../../../utils/services/approvalService")
+const {logActivity} = require("../../../utils/services/activityService.js")
 const deleteFile = require("../../../utils/services/imageDeleter")
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
 const parseArrayFields = require("../../../utils/services/parseArrayFields.js");
@@ -27,6 +28,7 @@ const createJobOrder = async (req, res) => {
     plate,
     model,
     make,
+    image,
     branchId,
     contractorId,
     description,
@@ -38,6 +40,9 @@ const createJobOrder = async (req, res) => {
   const beforeImages = req.files?.beforeImages?.map(f => f.filename) || []; 
   const afterImages = req.files?.afterImages?.map(f => f.filename) || [];
 
+  const truckImage = req.files?.truckImage?.[0]?.filename || null;
+  const customerImage = req.files?.customerImage?.[0]?.filename || null;
+
   const imageData = [
     ...beforeImages.map(filename => ({ type: "before", filename })),
     ...afterImages.map(filename => ({ type: "after", filename })),
@@ -45,14 +50,23 @@ const createJobOrder = async (req, res) => {
 
   let { phone } = req.body;
 
+  // Debug logging
+  console.log('Raw customerId from request:', req.body.customerId);
+  console.log('Parsed customerId:', customerId);
+  console.log('Type of customerId:', typeof customerId);
+  
+  // Check if customerId is actually a valid ID (not empty string)
+  const hasValidCustomerId = customerId && customerId.trim() !== '';
+  
+  // Enhanced validation
   if (
     !description ||
     !branchId ||
     (!truckId && (!plate || !model || !make)) ||
-    (!customerId && (!name || !email || !phone || !username))
+    (!hasValidCustomerId && (!name || !phone || !username))
   ) {
     return res.status(400).json({
-      message: "Customer, branch, description, truck, and customer required.",
+      message: "Customer, branch, description, and truck required.",
     });
   }
 
@@ -65,8 +79,8 @@ const createJobOrder = async (req, res) => {
       phone = phone.toString();
     }
 
-    // Validate customer exists if customerId is provided
-    if (customerId) {
+    // Validate customer exists if valid customerId is provided
+    if (hasValidCustomerId) {
       const customer = await prisma.customer.findUnique({
         where: { id: customerId },
       });
@@ -74,7 +88,7 @@ const createJobOrder = async (req, res) => {
     }
 
     // Validate new customer data
-    if (name && email && phone && username) {
+    if (name && phone && username) {
       const existingUser = await prisma.user.findFirst({
         where: { OR: [{ username }, { email }] },
       });
@@ -143,14 +157,470 @@ const createJobOrder = async (req, res) => {
       }
     }
 
-    const needsApproval = true;
+    const needsApproval = req.approval;
     const newCode = await generateJobOrderCode(prisma);
 
     // ✅ If approval is needed, create approval request
     if (needsApproval) {
       const approvalPayload = {
-        customerData: customerId ? { customerId } : { name, email, phone, username },
-        truckData: truckId ? { truckId } : { plate, model, make },
+        customerData: hasValidCustomerId ? { customerId } : { name, email, phone, username, image: customerImage },
+        truckData: truckId ? { truckId } : { plate, model, make, image: truckImage },
+        jobOrderData: {
+          branchId,
+          description,
+          ...(contractorId && { contractorId }),
+          ...(labor && { labor }),
+          jobOrderCode: null,
+        },
+        materials: materials || [],
+        images: imageData || [],
+      };
+
+      const approvalLog = await requestApproval('jobOrder', null, 'create', approvalPayload, req.username)
+
+      return res.status(202).json({
+        message: "Job order creation awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+        },
+      });
+    }
+
+    // ✅ If no approval needed, proceed with creation in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      let customer = null;
+      let activeTruckId = truckId;
+
+      // 1️⃣ Handle existing customer
+      if (hasValidCustomerId) {
+        customer = await tx.customer.findUnique({
+          where: { id: customerId },
+        });
+
+        if (!customer) {
+          throw new Error("Invalid customer ID");
+        }
+
+        // Handle truck assignment/transfer for existing customer
+        if (truckId) {
+          // Check current ownership
+          const currentOwnership = await tx.truckOwnership.findFirst({
+            where: { 
+              truckId: truckId,
+              endDate: null 
+            },
+          });
+
+          if (currentOwnership) {
+            if (currentOwnership.customerId !== customerId) {
+              // Transfer ownership - end previous ownership and create new one
+              await tx.truckOwnership.updateMany({
+                where: { 
+                  truckId: truckId,
+                  endDate: null 
+                },
+                data: { 
+                  endDate: new Date() 
+                },
+              });
+
+              await tx.truckOwnership.create({
+                data: {
+                  truckId: truckId,
+                  customerId: customerId,
+                  startDate: new Date(),
+                  transferredByUser: req.username,
+                },
+              });
+            }
+            // If already owned by this customer, no action needed
+          } else {
+            // Truck has no current owner - assign ownership
+            await tx.truckOwnership.create({
+              data: {
+                truckId: truckId,
+                customerId: customerId,
+                startDate: new Date(),
+                transferredByUser: req.username,
+              },
+            });
+          }
+          
+          activeTruckId = truckId;
+        }
+
+        // If no truckId, but new truck details provided, create new truck for them
+        if (!truckId && plate && model && make) {
+          const existingTruck = await tx.truck.findUnique({ where: { plate } });
+          if (existingTruck) {
+            throw new Error("A truck with this plate number already exists. Transfer ownership first.");
+          }
+
+          const createdTruck = await tx.truck.create({
+            data: {
+              plate,
+              model,
+              make,
+              image: truckImage,
+              createdByUser: req.username,
+              updatedByUser: req.username,
+            },
+          });
+
+          await tx.truckOwnership.create({
+            data: {
+              truckId: createdTruck.id,
+              customerId: customer.id,
+              startDate: new Date(),
+              transferredByUser: req.username,
+            },
+          });
+
+          activeTruckId = createdTruck.id;
+        } 
+      }
+      // 2️⃣ Handle new customer
+      else if (name && phone && username) {
+        console.log('Creating new customer with:', { name, email, phone, username });
+        
+        const roleId = await roleIdFinder(ROLES_LIST.CUSTOMER);
+
+        const newUser = await tx.user.create({
+          data: {
+            fullName: name,
+            hashPwd: await bcrypt.hash(process.env.DEFAULT_PASSWORD, 10),
+            email: email || null,
+            phone,
+            username,
+            image: customerImage,
+            roles: {
+              create: [
+                {
+                  role: { connect: { id: roleId } },
+                },
+              ],
+            },
+            createdByUser: req.username,
+            updatedByUser: req.username
+          },
+        });
+
+        customer = await tx.customer.create({
+          data: { userId: newUser.id },
+        });
+
+        console.log('Created customer:', customer.id);
+
+        let finalTruck;
+
+        if (plate && model && make) {
+          // Create new truck for new customer
+          finalTruck = await tx.truck.create({
+            data: {
+              plate,
+              model,
+              make,
+              image: truckImage,
+              createdByUser: req.username,
+              updatedByUser: req.username,
+              owners: {
+                create: {
+                  customerId: customer.id,
+                  startDate: new Date(),
+                  transferredByUser: req.username,
+                },
+              },
+            },
+          });
+        } else if (truckId) {
+          // Validate truck exists in transaction context
+          const existingTruck = await tx.truck.findUnique({
+            where: { id: truckId },
+          });
+          if (!existingTruck) {
+            throw new Error("Truck not found");
+          }
+
+          // For new customer with existing truck - transfer ownership
+          await tx.truckOwnership.updateMany({
+            where: { 
+              truckId: truckId,
+              endDate: null 
+            },
+            data: { 
+              endDate: new Date() 
+            },
+          });
+
+          await tx.truckOwnership.create({
+            data: {
+              truckId: truckId,
+              customerId: customer.id,
+              startDate: new Date(),
+              transferredByUser: req.username,
+            },
+          });
+
+          finalTruck = existingTruck;
+        } else {
+          throw new Error("Either truckId or plate details are required for new customer");
+        }
+
+        customer = customer;
+        activeTruckId = finalTruck.id;
+      } else {
+        throw new Error("Customer information is incomplete");
+      }
+
+      // Ensure customer was created/found
+      if (!customer) {
+        throw new Error("Failed to resolve customer");
+      }
+
+      // Calculate commissions
+      let contractor = null;
+      let contractorPercent = 0,
+        contractorCommission = 0,
+        shopCommission = 0,
+        totalMaterialCost = 0;
+
+      if (contractorId) {
+        contractor = await tx.contractor.findUnique({
+          where: { id: contractorId },
+        });
+
+        if (labor) {
+          contractorPercent = contractor.commission;
+          contractorCommission = labor * contractorPercent;
+          shopCommission = labor - contractorCommission;
+        }
+      }
+
+      const jobOrderData = {
+        customerId: customer.id,
+        branchId,
+        truckId: activeTruckId,
+        description,
+        ...(contractorId && { contractorId }),
+        ...(labor && { labor }),
+        createdByUser: req.username,
+        updatedByUser: req.username,
+        images: {
+          create: imageData,
+        },
+      };
+
+      console.log('Labor value from request:', labor);
+      console.log('Labor type:', typeof labor);
+
+      // Create job order
+      const jobOrder = await tx.jobOrder.create({
+        data: {
+          ...jobOrderData,
+          jobOrderCode: newCode,
+          contractorPercent,
+        },
+        include: {
+          truck: { select: { id: true, plate: true, model: true, make: true } },
+          customer: {
+            include: {
+              user: { select: { username: true, fullName: true } },
+            },
+          },
+          contractor: contractorId
+            ? { include: { user: { select: { username: true, fullName: true } } } }
+            : false,
+          branch: { select: { id: true, branchName: true } },
+        },
+      });
+
+      // Create materials if provided
+      if (materials && materials.length > 0) {
+        await tx.material.createMany({
+          data: materials.map((m) => ({
+            jobOrderId: jobOrder.id,
+            materialName: m.materialName,
+            quantity: m.quantity,
+            price: m.price,
+          })),
+        });
+
+        totalMaterialCost = materials.reduce(
+          (sum, m) => sum + m.price * m.quantity,
+          0
+        );
+      }
+
+      return {
+        jobOrder,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+        materials: materials || [],
+      };
+    });
+
+    // Handle successful creation response
+    const { jobOrder, contractorCommission, shopCommission, totalMaterialCost, materials: resultMaterials } = result;
+    const { truckId: _t, customerId: _c, contractorId: _ct, branchId: _b, ...jobOrderFields } = jobOrder;
+    
+    await logActivity(req.username, `${req.username} created Job Order ${jobOrder.jobOrderCode}`);
+
+    return res.status(201).json({
+      message: "Job order successfully created",
+      data: {
+        ...jobOrderFields,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+        materials: resultMaterials,
+      },
+    });
+
+  } catch (err) {
+    console.log('Error in createJobOrder:', err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const createJobOrderOld = async (req, res) => {
+  const parsedBody = parseArrayFields(req.body, ["materials", "images"]);
+  const {
+    customerId,
+    name,
+    email,
+    username,
+    truckId,
+    plate,
+    model,
+    make,
+    branchId,
+    contractorId,
+    description,
+    materials,
+    labor,
+    images,
+  } = parsedBody; 
+
+  const beforeImages = req.files?.beforeImages?.map(f => f.filename) || []; 
+  const afterImages = req.files?.afterImages?.map(f => f.filename) || [];
+
+  const truckImage = req.files?.truckImage?.[0]?.filename || null;
+  const customerImage = req.files?.customerImage?.[0]?.filename || null;
+
+  const imageData = [
+    ...beforeImages.map(filename => ({ type: "before", filename })),
+    ...afterImages.map(filename => ({ type: "after", filename })),
+  ];
+
+  let { phone } = req.body;
+
+  if (
+    !description ||
+    !branchId ||
+    (!truckId && (!plate || !model || !make)) ||
+    (!customerId && (!name || !phone || !username))
+  ) {
+    return res.status(400).json({
+      message: "Customer, branch, description, and truck required.",
+    });
+  }
+
+  try {
+    // ✅ Global validation - runs regardless of approval needs
+    const branch = await prisma.branch.findUnique({ where: { id: branchId } });
+    if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
+
+    if (phone) {
+      phone = phone.toString();
+    }
+
+    // Validate customer exists if customerId is provided
+    if (customerId) {
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+      });
+      if (!customer) return res.status(400).json({ message: "Invalid customer ID" });
+    }
+
+    // Validate new customer data
+    if (name && phone && username) {
+      const existingUser = await prisma.user.findFirst({
+        where: { OR: [{ username }, { email }] },
+      });
+
+      const pendingUsername = await checkPendingApproval(prisma, 'user', ['username'], username);
+      const pendingEmail = await checkPendingApproval(prisma, 'user', ['email'], email);
+
+      if (pendingUsername || pendingEmail) {
+        let message = [];
+        if (
+          (existingUser && existingUser.username === username) ||
+          (pendingUsername && pendingUsername.value === username)
+        )
+          message.push("Username");
+        if (
+          (existingUser && existingUser.email === email) ||
+          (pendingEmail && pendingEmail.value === email)
+        )
+          message.push("Email");
+
+        return res
+          .status(400)
+          .json({ error: `${message.join(" and ")} already exist` });
+      }
+    }
+
+    // Validate truck exists (if truckId provided)
+    if (truckId) {
+      const existingTruck = await prisma.truck.findUnique({ 
+        where: { id: truckId } 
+      });
+      if (!existingTruck) {
+        return res.status(400).json({ message: "Invalid truck ID" });
+      }
+    }
+
+    // Validate contractor if provided
+    if (contractorId) {
+      const contractor = await prisma.contractor.findUnique({
+        where: { id: contractorId },
+      });
+      if (!contractor) return res.status(400).json({ message: "Invalid contractor ID" });
+    }
+
+    // Check if truck plate already exists (for new trucks)
+    if (!truckId && plate) {
+      const existingTruck = await prisma.truck.findUnique({ where: { plate } });
+      const pendingJobOrderTruck = await checkPendingApproval(prisma, 'jobOrder', ['truckData', 'plate'], plate);
+      const pendingTruck = await checkPendingApproval(prisma, 'truck', ['plate'], plate);
+      if (existingTruck || pendingTruck || pendingJobOrderTruck) {
+        return res.status(400).json({
+          message: "A truck with this plate number already exists or is pending.",
+        });
+      }
+    }
+
+    // Validate materials if provided
+    if (materials && materials.length > 0) {
+      const invalid = materials.some(
+        (m) => !m.materialName || !m.price || !m.quantity
+      );
+      if (invalid) {
+        return res.status(400).json({
+          message: "Each material must include non-empty name, non-zero price, and non-zero quantity",
+        });
+      }
+    }
+
+    const needsApproval = req.approval;
+    const newCode = await generateJobOrderCode(prisma);
+
+    // ✅ If approval is needed, create approval request
+    if (needsApproval) {
+      const approvalPayload = {
+        customerData: customerId ? { customerId } : { name, email, phone, username, image: customerImage },
+        truckData: truckId ? { truckId } : { plate, model, make, image: truckImage },
         jobOrderData: {
           branchId,
           description,
@@ -243,6 +713,7 @@ const createJobOrder = async (req, res) => {
               plate,
               model,
               make,
+              image: truckImage,
               createdByUser: req.username,
               updatedByUser: req.username,
             },
@@ -273,6 +744,7 @@ const createJobOrder = async (req, res) => {
             email,
             phone,
             username,
+            image: customerImage,
             roles: {
               create: [
                 {
@@ -434,6 +906,7 @@ const createJobOrder = async (req, res) => {
     const { jobOrder, contractorCommission, shopCommission, totalMaterialCost, materials: resultMaterials } = result;
     const { truckId: _t, customerId: _c, contractorId: _ct, branchId: _b, ...jobOrderFields } = jobOrder;
 
+    await logActivity(req.username, `${req.username } created Job Order ${jobOrder.jobOrderCode}`);
     return res.status(201).json({
       message: "Job order successfully created",
       data: {
@@ -636,6 +1109,7 @@ const editJobOrder = async (req, res) => {
     // Handle successful update response
     const { jobOrder: editedJobOrder, contractorCommission, shopCommission, totalMaterialCost, materials: resultMaterials } = result;
     const { truckId: _, customerId: __, contractorId: ___, branchId: ____, ...jobOrderFields } = editedJobOrder;
+    await logActivity(req.username, `${req.username} edited Job Order ${jobOrder.jobOrderCode}`);
 
     return res.status(200).json({
       message: "Job order successfully updated",

@@ -257,10 +257,10 @@ model Component {
 
 model ActivityLog {
   id        String   @id @default(uuid())
-  userName    String
+  createdByUser    String
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userName], references: [username], onDelete: NoAction)
+  user      User     @relation(fields: [createdByUser], references: [username], onDelete: NoAction)
 
   @@map("activitylog")
 

@@ -1763,3 +1763,8 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251026	22:05:41	36eef879-a8cb-42c7-bed8-0557a2dd4683	Error: Approval request not found
 20251026	22:06:27	c5cb7841-9b49-4f6c-a643-7d67e4ad7cdf	TypeError: Cannot read properties of undefined (reading 'image')
 20251026	23:11:07	e65a1fcf-fc22-49b0-b4af-8de8d3257905	Error: Cannot set headers after they are sent to the client
+20251027	00:11:20	938e8bc4-e3d7-4804-8cfc-fbad5c089c11	MulterError: Unexpected field
+20251027	00:13:23	bc5f15e7-fc2c-4423-8549-15c2527ac0fb	MulterError: Unexpected field
+20251027	00:15:18	cfd69aa8-109a-446b-a691-dd7548ef934c	MulterError: Unexpected field
+20251027	00:36:24	906590b4-d58b-4fa3-a1c1-a54363680fcb	Error: Only image files are allowed
+20251027	00:59:51	2170bd31-27f1-4a9f-a9dc-8ff286c6b244	Error: Only image files are allowed

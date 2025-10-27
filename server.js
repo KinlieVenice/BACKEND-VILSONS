@@ -56,6 +56,7 @@ app.use("/api/dashboard", require("./routes/api/maintabs/dashboard"));
 app.use("/api/trucks", require("./routes/api/maintabs/trucks"));
 app.use("/api/job-orders", require("./routes/api/maintabs/jobOrders"));
 app.use("/api/approval-logs", require("./routes/api/maintabs/approvalLogs"));
+app.use("/api/activity-logs", require("./routes/api/maintabs/activityLogs"));
 app.use("/api/other-incomes", require("./routes/api/maintabs/otherincomes"));
 
 app.use("/api/branches", require("./routes/api/branches"));

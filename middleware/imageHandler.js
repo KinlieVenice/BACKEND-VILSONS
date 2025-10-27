@@ -10,8 +10,8 @@ const crypto = require("crypto");
  * @param {boolean} multiple - Whether to allow multiple files (default: false)
  * @param {number} maxCount - Max number of files for multiple uploads
  */
-const createUploader = (folderName = "general", multiple = false, maxCount = 10) => {
-  const uploadDir = path.join(__dirname, `../images/${folderName}`);
+const createUploader = (multiple = false, maxCount = 10000) => {
+  const uploadDir = path.join(__dirname, `../images/`);
 
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -40,6 +40,8 @@ const createUploader = (folderName = "general", multiple = false, maxCount = 10)
     return uploader.fields([
       { name: "beforeImages", maxCount: 1000 },
       { name: "afterImages", maxCount: 1000 },
+      { name: "truckImage", maxCount: 1 },     
+      { name: "customerImage", maxCount: 1 },
     ]);
   } else {
     // For single file, expect key "image"

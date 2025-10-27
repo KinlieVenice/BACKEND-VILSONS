@@ -1,7 +1,7 @@
 const checkPendingApproval = async (prisma, tableName, fieldPath, value, excludeId = null) => {
   try {
     // Skip if value is null or undefined — avoids Prisma error
-    if (value === undefined || value === null) return null;
+    if (value === undefined || value === null || value === "undefined" || value === "null") return null;
 
     console.log(`Checking pending approval: ${tableName}, ${fieldPath.join('.')}, ${value}`);
 

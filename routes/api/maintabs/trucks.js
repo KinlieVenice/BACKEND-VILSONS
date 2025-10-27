@@ -4,7 +4,7 @@ const truckController = require("../../../controllers/admin/maintabs/truckContro
 const verifyPermission = require("../../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
 const createUploader = require("../../../middleware/imageHandler");
-const uploadImage = createUploader("trucks");
+const uploadImage = createUploader();
 
 router.route("/")
   .post(verifyPermission(PERMISSIONS_LIST.CREATE_TRUCK), uploadImage, truckController.createTruck)

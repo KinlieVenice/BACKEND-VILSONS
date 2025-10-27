@@ -4,7 +4,7 @@ const userController = require("../../../controllers/admin/maintabs/userControll
 const verifyPermission = require("../../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
 const createUploader = require("../../../middleware/imageHandler");
-const uploadImage = createUploader("users");
+const uploadImage = createUploader();
 
 router.route("/")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS), userController.getAllUsers)

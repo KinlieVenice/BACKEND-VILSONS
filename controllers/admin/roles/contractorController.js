@@ -231,7 +231,7 @@ const getContractor = async (req, res) => {
             fullName: contractor.user.fullName,
             username: contractor.user.username,
             email: contractor.user.email,
-            createdAt: contractor.user.email,
+            createdAt: contractor.user.createdAt,
             createdByUser: contractor.user.createdByUser,
             updatedAt: contractor.user.updatedAt,
             updatedByUser: contractor.user.updatedByUser,
