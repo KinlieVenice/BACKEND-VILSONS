@@ -37367,3 +37367,8 @@
 20251028	22:18:28	51ab481a-c76c-4d4a-8d50-8c748f911021	GET	undefined	/api/job-orders?unpaid=true
 20251028	22:18:39	fc13f3c4-8556-4ae0-98dc-8faa95061d14	GET	undefined	/api/job-orders
 20251028	22:22:16	70511e01-33d2-4726-aded-69cda71b1b71	GET	undefined	/api/job-orders?unpaid=true
+20251028	22:28:03	e6930c5e-5951-4b73-9c9a-ff5eb13afc81	GET	undefined	/api/transactions
+20251028	22:37:13	711e2a25-4b4c-4b99-be0f-1289fa918804	POST	undefined	/api/transactions
+20251028	22:42:13	e414b724-352d-499c-b709-8a2766c14592	POST	undefined	/api/transactions
+20251028	22:43:07	3e5e4e59-7384-4a96-8aa0-e7a1135d365f	POST	undefined	/api/transactions
+20251028	22:43:37	3ba204e4-048a-4455-9bde-e4b9b08c4c2f	POST	undefined	/api/transactions

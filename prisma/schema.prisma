@@ -258,6 +258,7 @@ model Component {
 model ActivityLog {
   id        String   @id @default(uuid())
   createdByUser    String
+  remarks String?
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [createdByUser], references: [username], onDelete: NoAction)

@@ -27,14 +27,14 @@ const createEmployeePay = async (req, res) => {
     }
 
     // Validate pay components
-    const invalidComponents = payComponents.some(
-      (pc) => !pc.componentId || !pc.amount
-    );
-    if (invalidComponents) {
-      return res.status(400).json({
-        message: "Each pay component must include non-empty name and non-negative amount",
-      });
-    }
+    // const invalidComponents = payComponents.some(
+    //   (pc) => !pc.componentId || !pc.amount
+    // );
+    // if (invalidComponents) {
+    //   return res.status(400).json({
+    //     message: "Each pay component must include non-empty name and non-negative amount",
+    //   });
+    // }
 
     const needsApproval = req.approval;
 
@@ -199,14 +199,14 @@ const editEmployeePay = async (req, res) => {
     }
 
     // Validate pay components
-    const invalidComponents = payComponents.some(
-      (pc) => !pc.componentId || !pc.amount
-    );
-    if (invalidComponents) {
-      return res.status(400).json({
-        message: "Each pay component must include non-empty name and non-negative amount",
-      });
-    }
+    // const invalidComponents = payComponents.some(
+    //   (pc) => !pc.componentId || !pc.amount
+    // );
+    // if (invalidComponents) {
+    //   return res.status(400).json({
+    //     message: "Each pay component must include non-empty name and non-negative amount",
+    //   });
+    // }
 
     // 2️⃣ If updating employee link, validate userId
     let employee;
