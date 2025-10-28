@@ -1217,7 +1217,7 @@ const deleteJobOrder = async (req, res) => {
 };
 
 // "GET /"
-const getAllJobOrders = async (req, res) => {
+const getAllJobOrdersoLD = async (req, res) => {
   const statusGroup = req?.params.statusGroup; // 'active' or 'archived'
   const search = req?.query?.search;
   const status = req?.query?.status;
@@ -1299,6 +1299,7 @@ const getAllJobOrders = async (req, res) => {
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
      include: {
+        transactions: true,
         truck: {
           select: {
             id: true,
@@ -1349,7 +1350,7 @@ const getAllJobOrders = async (req, res) => {
     // compute commissions & flatten output
     const result = jobOrders.map((job) => {
       let contractorCommission = 0,
-        shopCommission = 0,
+        shopCommission = 0, totalTransactions = 0,
         totalMaterialCost = 0;
 
       if (job.contractor && job.labor) {
@@ -1360,6 +1361,13 @@ const getAllJobOrders = async (req, res) => {
       if (job.materials?.length) {
         totalMaterialCost = job.materials.reduce(
           (sum, m) => sum + Number(m.price) * Number(m.quantity),
+          0
+        );
+      }
+
+      if (job.transactions?.length) {
+        totalTransactions = job.transactions.reduce(
+          (sum, m) => sum + Number(m.amount),
           0
         );
       }
@@ -1384,7 +1392,7 @@ const getAllJobOrders = async (req, res) => {
         contractorCommission,
         shopCommission,
         totalBill,
-        balance: totalBill, // adjust if you track payments separately
+        balance: totalBill - totalTransactions, // adjust if you track payments separately
         // new audit fields
         createdAt: job.createdAt,
         updatedAt: job.updatedAt,
@@ -1409,6 +1417,194 @@ const getAllJobOrders = async (req, res) => {
   }
 };
 
+const getAllJobOrders = async (req, res) => {
+  const statusGroup = req?.params.statusGroup; // 'active' or 'archived'
+  const search = req?.query?.search;
+  const status = req?.query?.status;
+  const branch = req?.query?.branch;
+  const unpaid = req?.query?.unpaid === "true"; // new query flag
+  const page = req?.query?.page && parseInt(req.query.page, 10);
+  const limit = req?.query?.limit && parseInt(req.query.limit, 10);
+  const startDate = req?.query?.startDate;
+  const endDate = req?.query?.endDate;
+  
+  let where;
+
+  // Add status filter based on statusGroup
+  if (statusGroup === "active") {
+    where = { ...where, status: { in: ["pending", "ongoing", "completed", "forRelease"] } };
+  } else if (statusGroup === "archived") {
+    where = { ...where, status: "archived" };
+  } else if (statusGroup) {
+    return res.status(200).json({
+      data: { jobOrders: [] },
+      pagination: { totalItems: 0, totalPages: 0, currentPage: 1 },
+    });
+  }
+
+  where = { ...where, ...branchFilter("jobOrder", branch, req.branchIds) };
+
+  const createdAtFilter = getDateRangeFilter(startDate, endDate);
+  if (createdAtFilter) {
+    where.createdAt = createdAtFilter;
+  }
+
+  // If specific status is provided in query, override statusGroup
+  if (status) {
+    where.status = status;
+  }
+
+  // Search filter
+  if (search) {
+    let searchValue = search.trim().replace(/^["']|["']$/g, "");
+    where.OR = [
+      { jobOrderCode: { contains: searchValue } },
+      {
+        truck: {
+          OR: [
+            { plate: { contains: searchValue } },
+            { make: { contains: searchValue } },
+            { model: { contains: searchValue } },
+          ],
+        },
+      },
+      {
+        customer: {
+          user: {
+            OR: [
+              { username: { contains: searchValue } },
+              { fullName: { contains: searchValue } },
+              { phone: { contains: searchValue } },
+              { email: { contains: searchValue } },
+            ],
+          },
+        },
+      },
+      {
+        contractor: {
+          user: {
+            OR: [
+              { username: { contains: searchValue } },
+              { fullName: { contains: searchValue } },
+              { phone: { contains: searchValue } },
+              { email: { contains: searchValue } },
+            ],
+          },
+        },
+      },
+    ];
+  }
+
+  try {
+    const totalItems = await prisma.jobOrder.count({ where });
+    const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
+
+    const jobOrders = await prisma.jobOrder.findMany({
+      where,
+      ...(page && limit ? { skip: (page - 1) * limit } : {}),
+      ...(limit ? { take: limit } : {}),
+      include: {
+        transactions: true,
+        truck: { select: { id: true, plate: true } },
+        customer: {
+          select: {
+            id: true,
+            userId: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        contractor: {
+          select: {
+            id: true,
+            userId: true,
+            commission: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        branch: { select: { id: true, branchName: true } },
+        materials: { select: { price: true, quantity: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // compute commissions & flatten output
+    let result = jobOrders.map((job) => {
+      let contractorCommission = 0,
+        shopCommission = 0,
+        totalTransactions = 0,
+        totalMaterialCost = 0;
+
+      if (job.contractor && job.labor) {
+        contractorCommission = Number(job.labor) * Number(job.contractor.commission);
+        shopCommission = Number(job.labor) - contractorCommission;
+      }
+
+      if (job.materials?.length) {
+        totalMaterialCost = job.materials.reduce(
+          (sum, m) => sum + Number(m.price) * Number(m.quantity),
+          0
+        );
+      }
+
+      if (job.transactions?.length) {
+        totalTransactions = job.transactions.reduce(
+          (sum, m) => sum + Number(m.amount),
+          0
+        );
+      }
+
+      const totalBill = Number(job.labor) + Number(totalMaterialCost);
+
+      return {
+        id: job.id,
+        jobOrderCode: job.jobOrderCode,
+        status: job.status,
+        plateNumber: job.truck?.plate,
+        truckId: job.truck?.id,
+        contractorId: job.contractor?.id || null,
+        contractorUserId: job.contractor?.userId || null,
+        contractorName: job.contractor?.user?.fullName || null,
+        customerId: job.customer?.id,
+        customerUserId: job.customer?.userId,
+        customerName: job.customer?.user?.fullName,
+        branchId: job.branch?.id || null,
+        branchName: job.branch?.branchName || null,
+        totalMaterialCost,
+        contractorCommission,
+        shopCommission,
+        totalBill,
+        totalTransactions,
+        balance: totalBill - totalTransactions,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        createdBy: job.createdByUser,
+        updatedBy: job.updatedByUser,
+      };
+    });
+
+    // 🔹 Apply "unpaid" filter (where totalBill !== totalTransactions)
+    if (unpaid) {
+      result = result.filter((job) => 
+        job.totalBill !== job.totalTransactions || 
+        (job.totalBill === 0 && job.totalTransactions === 0)
+      );
+    }
+    
+    return res.status(200).json({
+      data: { jobOrders: result },
+      pagination: {
+        totalItems: result.length,
+        totalPages: limit ? Math.ceil(result.length / limit) : 1,
+        currentPage: page || 1,
+      },
+    });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
 // "GET /id"
 const getJobOrder = async (req, res) => {
   if (!req?.params?.id)
@@ -1417,6 +1613,7 @@ const getJobOrder = async (req, res) => {
   try {
     const jobOrderInclude = {
       truck: true,
+      transactions: true,
       customer: {
         include: { user: true },
       },
@@ -1438,7 +1635,7 @@ const getJobOrder = async (req, res) => {
     }
 
     let contractorCommission = 0,
-      shopCommission = 0,
+      shopCommission = 0, totalTransactions = 0,
       totalMaterialCost = 0;
 
     // calculate commissions
@@ -1459,6 +1656,13 @@ const getJobOrder = async (req, res) => {
         0
       );
     }
+
+    if (jobOrder.transactions?.length) {
+        totalTransactions = jobOrder.transactions.reduce(
+          (sum, m) => sum + Number(m.amount),
+          0
+        );
+      }
 
     const processedMaterials = (jobOrder.materials || []).map((m) => {
       const total = Number(m.price) * Number(m.quantity);
@@ -1497,7 +1701,7 @@ const getJobOrder = async (req, res) => {
         branchName: jobOrder.branch?.branchName  || null,
         labor: Number(jobOrder.labor),
         totalBill,
-        balance: jobOrder.balance,
+        balance: totalBill - totalTransactions,
         description: jobOrder.description,
         createdAt: jobOrder.createdAt,
         updatedAt: jobOrder.updatedAt,

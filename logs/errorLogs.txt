@@ -1768,3 +1768,4 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251027	00:15:18	cfd69aa8-109a-446b-a691-dd7548ef934c	MulterError: Unexpected field
 20251027	00:36:24	906590b4-d58b-4fa3-a1c1-a54363680fcb	Error: Only image files are allowed
 20251027	00:59:51	2170bd31-27f1-4a9f-a9dc-8ff286c6b244	Error: Only image files are allowed
+20251028	21:57:57	4b7405b3-f72e-45fb-a962-be9db50c9b28	SyntaxError: Expected ',' or '}' after property value in JSON at position 28 (line 2 column 26)
