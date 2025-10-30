@@ -1422,11 +1422,13 @@ const getAllJobOrders = async (req, res) => {
   const search = req?.query?.search;
   const status = req?.query?.status;
   const branch = req?.query?.branch;
-  const unpaid = req?.query?.unpaid === "true"; // new query flag
+  const unpaidParam = req?.params.unpaid;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const startDate = req?.query?.startDate;
   const endDate = req?.query?.endDate;
+
+  const unpaid = unpaidParam === "unpaid";
   
   let where;
 
