@@ -153,6 +153,7 @@ model Truck {
   make        String   @db.VarChar(20) 
   model       String   @db.VarChar(20)
   image String?
+  engine String?
   createdAt   DateTime @default(now())
   createdByUser String
   updatedAt   DateTime @updatedAt
@@ -394,6 +395,7 @@ model Overhead {
 
   description String
   amount      Decimal @db.Decimal(13, 2)
+  isMonthly   Boolean? @default(false)
   branchId    String
 
   createdAt   DateTime @default(now())

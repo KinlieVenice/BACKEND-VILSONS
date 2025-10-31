@@ -450,6 +450,7 @@ const getCustomer = async (req, res) => {
         plate: t.truck.plate,
         model: t.truck.model,
         make: t.truck.make,
+        engine: t.truck.engine,
       })),
       jobOrders: {
         active: activeOrders,
@@ -545,6 +546,7 @@ const getAllCustomers = async (req, res) => {
         plate: t.truck.plate,
         model: t.truck.model,
         make: t.truck.make,
+        engine: t.truck.engine,
       })),
     }));
 

@@ -37377,3 +37377,9 @@
 20251030	23:29:04	08b2bf92-fa5c-4a89-b81c-163d1d7050d3	GET	undefined	/api/job-orders/unpaid
 20251030	23:37:12	9bc58340-a0e4-428d-8eb1-08009e8434f4	GET	undefined	/api/job-orders/unpaid
 20251030	23:40:02	407b1b84-8ba0-4381-a641-1f502b9ec44b	GET	undefined	/api/job-orders/unpaid
+20251031	22:57:57	c255e045-6e59-4f7a-9216-5499ed28655f	POST	undefined	/auth
+20251031	23:01:34	939f7d58-558a-4838-8a59-bcafb0425d6f	POST	undefined	/api/trucks
+20251031	23:02:14	2094bc8e-c746-4856-9ea0-16b86a44a7f2	POST	undefined	/auth
+20251031	23:02:30	ec5e826f-ab20-466b-b3a8-8fb1d5165d43	POST	undefined	/api/trucks
+20251031	23:14:50	61cfb54d-8846-43d0-bb92-c84253ea5eb8	POST	undefined	/api/trucks
+20251031	23:15:10	cd4fd38d-a6c0-4219-9aeb-3b1a79f6e2d0	PUT	undefined	/api/trucks/6c4d8cac-fcc0-4712-a5a1-d192b33d947f

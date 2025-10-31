@@ -28,6 +28,7 @@ const createJobOrder = async (req, res) => {
     plate,
     model,
     make,
+    engine,
     image,
     branchId,
     contractorId,
@@ -164,7 +165,7 @@ const createJobOrder = async (req, res) => {
     if (needsApproval) {
       const approvalPayload = {
         customerData: hasValidCustomerId ? { customerId } : { name, email, phone, username, image: customerImage },
-        truckData: truckId ? { truckId } : { plate, model, make, image: truckImage },
+        truckData: truckId ? { truckId } : { plate, model, make, image: truckImage, engine },
         jobOrderData: {
           branchId,
           description,
@@ -261,6 +262,7 @@ const createJobOrder = async (req, res) => {
               plate,
               model,
               make,
+              engine,
               image: truckImage,
               createdByUser: req.username,
               updatedByUser: req.username,
@@ -1605,7 +1607,6 @@ const getAllJobOrders = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 
 // "GET /id"
 const getJobOrder = async (req, res) => {

@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 */
 
 const createTruck = async (req, res) => {
-  const { plate, make, model } = req.body;
+  const { plate, make, model, engine } = req.body;
   const image = req.file ? req.file.filename : null;
 
   if (!plate || !make || !model)
@@ -45,7 +45,8 @@ const createTruck = async (req, res) => {
       plate,
       make,
       model,
-      image,
+      engine: engine ?? null,
+      image: image ?? null,
       createdByUser: req.username,
       updatedByUser: req.username,
     };
@@ -71,7 +72,7 @@ const createTruck = async (req, res) => {
 };
 
 const editTruck = async (req, res) => {
-  const { plate, make, model } = req.body;
+  const { plate, make, model, engine } = req.body;
   const newImage = req.file ? req.file.filename : null;
 
 
@@ -118,7 +119,8 @@ const editTruck = async (req, res) => {
       plate: plate ?? truck.plate,
       make: make ?? truck.make,
       model: model ?? truck.model,
-      image,
+      engine: engine ?? truck.engine,
+      image: image ?? truck.image,
       updatedByUser: req.username,
     };
 
@@ -295,6 +297,7 @@ const getAllTrucks = async (req, res) => {
         { plate: { contains: search } },
         { make: { contains: search } },
         { model: { contains: search } },
+        { engine: { contains: search } },
       ];
     }
 
@@ -326,6 +329,7 @@ const getAllTrucks = async (req, res) => {
         make: truck.make,
         model: truck.model,
         image: truck.image,
+        engine: truck.engine,
         customerId: truck.owners[0]?.customer?.id || null,
         customerUserId: truck.owners[0]?.customer?.user?.id || null,
         customerFullName: truck.owners[0]?.customer?.user?.fullName || null, // irst active owner only
