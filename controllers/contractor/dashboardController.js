@@ -135,5 +135,41 @@ const getContractorBalance = async (req, res) => {
   }
 };
 
+const getContractorJobStatus = async (req, res) => {
+  try {
+    const contractor = await prisma.contractor.findUnique({
+      where: { userId: req.id },
+      select: { id: true },
+    });
 
-module.exports = { getContractorDashboard }
+    if (!contractor) return res.status(404).json({ message: "Contractor not found" });
+
+    const jobOrders = await prisma.jobOrder.findMany({
+      where: { contractorId: contractor.id },
+      select: { status: true },
+    });
+
+    const statusCounts = {
+      pending: 0,
+      ongoing: 0,
+      completed: 0,
+      forRelease: 0,
+      archived: 0,
+    };
+
+    for (const jo of jobOrders) {
+      if (statusCounts.hasOwnProperty(jo.status)) {
+        statusCounts[jo.status]++;
+      }
+    }
+
+    return res.status(200).json({ data: statusCounts });
+  } catch (err) {
+    console.error("Error in getContractorJobStatus:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+module.exports = { getContractorDashboard,  getContractorBalance, getContractorJobStatus }
