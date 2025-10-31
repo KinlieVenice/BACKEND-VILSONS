@@ -92,4 +92,48 @@ const getContractorDashboard = async (req, res) => {
   }
 };
 
+const getContractorBalance = async (req, res) => {
+  try {
+    const contractor = await prisma.contractor.findUnique({
+      where: { userId: req.id }, // use req.id dynamically
+      select: { id: true },
+    });
+
+    if (!contractor) return res.status(404).json({ message: "Contractor not found" });
+
+    // Get total labor
+    const labors = await prisma.contractorPay.findMany({
+      where: { contractorId: contractor.id },
+      select: { amount: true },
+    });
+
+    const totalLabor = labors.reduce(
+      (sum, labor) => sum + (Number(labor.amount) || 0),
+      0
+    );
+
+    // Get job orders for commission calculation
+    const jobOrders = await prisma.jobOrder.findMany({
+      where: { contractorId: contractor.id },
+      select: { labor: true, contractorPercent: true },
+    });
+
+    const totalCommission = jobOrders.reduce((sum, jo) => {
+      const labor = Number(jo.labor) || 0;
+      const percent = Number(jo.contractorPercent) || 0;
+      return sum + labor * percent;
+    }, 0);
+
+    const totalBalance = totalCommission - totalLabor;
+
+    return res.status(200).json({
+      data: { totalLabor, totalCommission, totalBalance },
+    });
+  } catch (err) {
+    console.error("Error in getContractorBalance:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
 module.exports = { getContractorDashboard }
