@@ -187,8 +187,37 @@ const getCustomerBalance = async (req, res) => {
   }
 };
 
+const getCustomerJobStatus = async (req, res) => {
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: { userId: req.id },
+      include: { jobOrders: { select: { status: true } } },
+    });
+
+    if (!customer) return res.status(404).json({ message: "You are not a customer" });
+
+    const statusCounts = {
+      pending: 0,
+      ongoing: 0,
+      completed: 0,
+      forRelease: 0,
+      archived: 0,
+    };
+
+    for (const jo of customer.jobOrders) {
+      if (statusCounts.hasOwnProperty(jo.status)) {
+        statusCounts[jo.status]++;
+      }
+    }
+
+    return res.status(200).json({ data: statusCounts });
+  } catch (err) {
+    console.error("Error in getCustomerJobStatus:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
 
 
 
 
-module.exports = { getCustomerDashboard, getCustomerBalance }
+module.exports = { getCustomerDashboard, getCustomerBalance, getCustomerJobStatus }
