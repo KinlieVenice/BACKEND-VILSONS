@@ -217,7 +217,71 @@ const getCustomerJobStatus = async (req, res) => {
   }
 };
 
+const getCustomerRecentJobs = async (req, res) => {
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: { userId: req.id },
+      include: {
+        jobOrders: {
+          select: {
+            id: true,
+            jobOrderCode: true,
+            status: true,
+            labor: true,
+            materials: true,
+            createdAt: true,
+            truck: { select: { plate: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+      },
+    });
+
+    if (!customer) return res.status(404).json({ message: "You are not a customer" });
+
+    // Fetch transactions for those recent job orders
+    const jobOrderCodes = customer.jobOrders.map((jo) => jo.jobOrderCode);
+    const transactions = await prisma.transaction.findMany({
+      where: { jobOrderCode: { in: jobOrderCodes } },
+      select: { jobOrderCode: true, amount: true },
+    });
+
+    const transactionMap = {};
+    for (const t of transactions) {
+      transactionMap[t.jobOrderCode] =
+        (transactionMap[t.jobOrderCode] || 0) + (Number(t.amount) || 0);
+    }
+
+    const recentJobOrders = customer.jobOrders.map((jo) => {
+      const laborTotal = Number(jo.labor) || 0;
+      const materialsTotal = Array.isArray(jo.materials)
+        ? jo.materials.reduce((a, m) => a + (Number(m.amount) || 0), 0)
+        : 0;
+      const bill = laborTotal + materialsTotal;
+      const paid = transactionMap[jo.jobOrderCode] || 0;
+      const balance = bill - paid;
+
+      return {
+        id: jo.id,
+        jobOrderCode: jo.jobOrderCode,
+        plate: jo.truck?.plate || "N/A",
+        createdAt: jo.createdAt,
+        status: jo.status,
+        totalBill: bill,
+        totalBalance: balance,
+      };
+    });
+
+    return res.status(200).json({ data: recentJobOrders });
+  } catch (err) {
+    console.error("Error in getCustomerRecentJobs:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
 
 
 
-module.exports = { getCustomerDashboard, getCustomerBalance, getCustomerJobStatus }
+
+
+module.exports = { getCustomerDashboard, getCustomerBalance, getCustomerJobStatus, getCustomerRecentJobs }
