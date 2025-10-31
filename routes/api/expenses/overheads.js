@@ -8,6 +8,9 @@ router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_OVERHEAD), overheadController.createOverhead)
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_OVERHEADS), overheadController.getAllOverheads)
 
+router.route("/:isMonthlyParam")
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_OVERHEADS), overheadController.getAllOverheads)
+
 router.route("/:id")
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_OVERHEAD), overheadController.deleteOverhead)
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_OVERHEAD), overheadController.editOverhead)

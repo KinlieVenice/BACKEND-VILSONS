@@ -11,7 +11,7 @@ const { requestApproval } = require("../../../utils/services/approvalService")
 */
 
 const createOverhead = async (req, res) => {
-  const { description, amount, branchId } = req.body;
+  const { description, amount, branchId, isMonthly } = req.body;
   if (!description || !amount || !branchId)
     return res
       .status(400)
@@ -24,6 +24,7 @@ const createOverhead = async (req, res) => {
       description,
       amount,
       branchId,
+      isMonthly: isMonthly ?? false,
       createdByUser: req.username,
       updatedByUser: req.username,
     };
@@ -49,7 +50,7 @@ const createOverhead = async (req, res) => {
 };
 
 const editOverhead = async (req, res) => {
-  const { description, amount, branchId } = req.body;
+  const { description, amount, branchId, isMonthly } = req.body;
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
@@ -68,6 +69,7 @@ const editOverhead = async (req, res) => {
       description: description ?? overhead.description,
       amount: amount ?? overhead.amount,
       branchId: branchId ?? overhead.branchId,
+      isMonthly: isMonthly ?? overhead.isMonthly,
       updatedByUser: req.username,
     };
 
@@ -130,10 +132,13 @@ const deleteOverhead = async (req, res) => {
 
 const getAllOverheads = async (req, res) => {
   const search = req?.query?.search;
+  const isMonthlyParam = req?.params?.isMonthlyParam;
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
+
+  const isMonthly = isMonthlyParam === "monthly";
 
   let where = {
     createdAt: { gte: startDate, lt: endDate },
@@ -151,6 +156,11 @@ const getAllOverheads = async (req, res) => {
   if (search) {
     let searchValue = search.trim().replace(/^["']|["']$/g, "");
     where.OR = [{ description: { contains: searchValue } }];
+  }
+
+  // Monthly filter
+  if (isMonthly) {
+    where.isMonthly = true;
   }
 
   try {

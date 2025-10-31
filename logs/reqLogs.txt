@@ -37383,3 +37383,5 @@
 20251031	23:02:30	ec5e826f-ab20-466b-b3a8-8fb1d5165d43	POST	undefined	/api/trucks
 20251031	23:14:50	61cfb54d-8846-43d0-bb92-c84253ea5eb8	POST	undefined	/api/trucks
 20251031	23:15:10	cd4fd38d-a6c0-4219-9aeb-3b1a79f6e2d0	PUT	undefined	/api/trucks/6c4d8cac-fcc0-4712-a5a1-d192b33d947f
+20251031	23:29:57	ccbf54ec-d8b0-4c1f-b36f-8c58bcbddb64	GET	undefined	/api/overheads/monthly
+20251031	23:30:43	b3098416-ca75-4108-b6cf-38715184421b	GET	undefined	/api/overheads/monthly
