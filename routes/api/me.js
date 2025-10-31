@@ -43,6 +43,10 @@ router.route("/my-job-orders/:id")
 router.route("/contractor-dashboard")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), contractorDashboardController.getContractorDashboard);
 
+router.get("/contractor-balance", contractorDashboardController.getContractorBalance);
+router.get("/contractor-status", contractorDashboardController.getContractorJobStatus);
+router.get("/contractor-recent-jobs", contractorDashboardController.getContractorRecentJobs);
+
 router.route("/assigned-job-orders")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), assignedJobOrderController.getAllAssignedJobOrders);
 

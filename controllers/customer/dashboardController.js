@@ -124,7 +124,71 @@ const getCustomerDashboard = async (req, res) => {
   }
 };
 
+const getCustomerBalance = async (req, res) => {
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: { userId: req.id },
+      include: {
+        jobOrders: {
+          select: {
+            jobOrderCode: true,
+            labor: true,
+            materials: true,
+          },
+        },
+      },
+    });
+
+    if (!customer) return res.status(404).json({ message: "You are not a customer" });
+
+    const jobOrderCodes = customer.jobOrders.map((jo) => jo.jobOrderCode);
+    if (!jobOrderCodes.length)
+      return res.status(200).json({
+        data: { totalBalance: 0, totalBill: 0, totalTransactions: 0 },
+      });
+
+    // Fetch all transactions related to the customer's job orders
+    const transactions = await prisma.transaction.findMany({
+      where: { jobOrderCode: { in: jobOrderCodes } },
+      select: { jobOrderCode: true, amount: true },
+    });
+
+    // Group transactions by jobOrderCode
+    const transactionMap = {};
+    for (const t of transactions) {
+      transactionMap[t.jobOrderCode] =
+        (transactionMap[t.jobOrderCode] || 0) + (Number(t.amount) || 0);
+    }
+
+    // Compute totals
+    let totalBill = 0;
+    let totalTransactions = 0;
+
+    for (const jo of customer.jobOrders) {
+      const laborTotal = Number(jo.labor) || 0;
+      const materialsTotal = Array.isArray(jo.materials)
+        ? jo.materials.reduce((a, m) => a + (Number(m.amount) || 0), 0)
+        : 0;
+      const bill = laborTotal + materialsTotal;
+      const paid = transactionMap[jo.jobOrderCode] || 0;
+
+      totalBill += bill;
+      totalTransactions += paid;
+    }
+
+    const totalBalance = totalBill - totalTransactions;
+
+    return res.status(200).json({
+      data: { totalBill, totalTransactions, totalBalance },
+    });
+  } catch (err) {
+    console.error("Error in getCustomerBalance:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
 
 
 
-module.exports = { getCustomerDashboard }
+
+
+module.exports = { getCustomerDashboard, getCustomerBalance }
