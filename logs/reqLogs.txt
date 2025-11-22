@@ -37385,3 +37385,7 @@
 20251031	23:15:10	cd4fd38d-a6c0-4219-9aeb-3b1a79f6e2d0	PUT	undefined	/api/trucks/6c4d8cac-fcc0-4712-a5a1-d192b33d947f
 20251031	23:29:57	ccbf54ec-d8b0-4c1f-b36f-8c58bcbddb64	GET	undefined	/api/overheads/monthly
 20251031	23:30:43	b3098416-ca75-4108-b6cf-38715184421b	GET	undefined	/api/overheads/monthly
+20251116	19:19:41	a6bbcd8b-972a-48e4-a14e-b036b5ff3408	GET	undefined	/
+20251116	19:19:42	c98a6ea9-83e4-4c84-a5bb-a4031c29aeaf	GET	undefined	/favicon.ico
+20251122	18:16:15	c0f036c1-2ae1-475a-bd33-d7aa0171a09c	GET	undefined	/
+20251122	18:16:17	35f4e139-c0a8-455a-a1b5-faeaca9a0306	GET	undefined	/favicon.ico

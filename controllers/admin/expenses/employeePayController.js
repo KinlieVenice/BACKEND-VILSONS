@@ -11,7 +11,6 @@ const createEmployeePay = async (req, res) => {
       return res.status(400).json({ message: "Total salary cannot be 0" });
     }
 
-    // ✅ Global validation - runs regardless of approval needs
     // Check if user is an employee
     const employee = await prisma.employee.findFirst({
       where: { userId },
@@ -38,7 +37,6 @@ const createEmployeePay = async (req, res) => {
 
     const needsApproval = req.approval;
 
-    // ✅ If approval is needed, create approval request
     if (needsApproval) {
       const approvalPayload = {
         employeeId: employee.id,
@@ -62,9 +60,7 @@ const createEmployeePay = async (req, res) => {
       });
     }
 
-    // ✅ If no approval needed, proceed with creation in transaction
     const result = await prisma.$transaction(async (tx) => {
-      // 1️⃣ Create employeePay record
       const employeePay = await tx.employeePay.create({
         data: {
           employeeId: employee.id,
@@ -74,7 +70,6 @@ const createEmployeePay = async (req, res) => {
         },
       });
 
-      // 2️⃣ Process payComponents (create missing ones if needed)
       const userComponents = await Promise.all(
         payComponents.map(async (pc) => {
           const existing = await tx.component.findUnique({
@@ -101,10 +96,8 @@ const createEmployeePay = async (req, res) => {
         })
       );
 
-      // 3️⃣ Fetch all existing components
       const allComponents = await tx.component.findMany();
 
-      // 4️⃣ Merge userComponents with allComponents (fill missing with amount 0)
       const processedComponents = allComponents.map((component) => {
         const match = userComponents.find(
           (pc) =>
@@ -119,14 +112,12 @@ const createEmployeePay = async (req, res) => {
           };
         }
 
-        // component not submitted → default 0
         return {
           componentId: component.id,
           amount: 0,
         };
       });
 
-      // 5️⃣ Create all payComponents
       await tx.payComponent.createMany({
         data: processedComponents.map((pc) => ({
           employeePayId: employeePay.id,
@@ -137,7 +128,6 @@ const createEmployeePay = async (req, res) => {
         })),
       });
 
-      // 6️⃣ Compute total
       const totalComponentCost = processedComponents.reduce(
         (sum, pc) => sum + Number(pc.amount),
         0
@@ -147,7 +137,6 @@ const createEmployeePay = async (req, res) => {
         throw new Error("Total salary cannot be 0");
       }
 
-      // 7️⃣ Re-fetch full record
       const employeePayWithComponents = await tx.employeePay.findUnique({
         where: { id: employeePay.id },
         include: {

@@ -27,6 +27,11 @@ router.route("/password")
 router.route("/customer-dashboard")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_ASSIGNED_JOB_ORDERS), customerDashboardController.getCustomerDashboard);
 
+
+router.get("/customer-balance", customerDashboardController.getCustomerBalance);
+router.get("/customer-status", customerDashboardController.getCustomerJobStatus);
+router.get("/customer-recent-jobs", customerDashboardController.getCustomerRecentJobs);
+
 router.route("/my-job-orders")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), myJobOrderController.getAllMyJobOrders);
 
@@ -35,8 +40,6 @@ router.route("/customer/transactions")
 
 router.route("/my-job-orders/:id")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_MY_JOB_ORDERS), myJobOrderController.getMyJobOrder);
-
-
 
 
 // contractor
