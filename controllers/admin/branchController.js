@@ -1,7 +1,9 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { requestApproval } = require("../../utils/services/approvalService")
-const checkPendingApproval = require("../../utils/services/checkPendingApproval")
+const { requestApproval } = require("../../utils/services/approvalService");
+const checkPendingApproval = require("../../utils/services/checkPendingApproval");
+const { logActivity } = require("../../utils/services/activityService.js");
+
 
 /*
 branchName           String         @db.VarChar(100)
@@ -56,6 +58,12 @@ const createBranch = async (req, res) => {
 
       return branch;
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Branch ${branchData.name}`
+        : `${req.username} created Branch ${branchData.name}`
+    );
 
     return res.status(201).json({
       message,
@@ -67,7 +75,7 @@ const createBranch = async (req, res) => {
 };
 
 const editBranch = async (req, res) => {
-  const { name, description, address } = req.body;
+  const { name, description, address, remarks } = req.body;
 
   if (!req.params.id) return res.status(404).json({ message: "ID is required" });
 
@@ -117,6 +125,13 @@ const editBranch = async (req, res) => {
 
       return editedBranch;
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Branch ${updatedData.branchName}`
+        : `${req.username} edited Branch ${updatedData.branchName}`,
+        remarks
+    );
     return res.status(201).json({
       message,
       data: result,
@@ -164,6 +179,13 @@ const deleteBranch = async (req, res) => {
 
       return deletedBranch.branchName;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} deleted Branch ${deletedData.branchName}`
+        : `${req.username} deleted Branch ${deletedData.branchName}`
+    );
 
     return res.status(201).json({
       message,

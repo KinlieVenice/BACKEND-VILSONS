@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { logActivity } = require("../../../utils/services/activityService.js");
+
 
 /*
   contractorId String
@@ -35,6 +37,8 @@ const createContractorPay = async (req, res)  => {
 
             return contractoyPay
         });
+
+        await logActivity(req.username, `${req.username} created Contractor Pay ${contractorPayData.contractorId}`);
         return res.status(201).json({ message, date: result})
     } catch (err) {
         return res.status(500).json({ message: err.message })

@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
-
+const { logActivity } = require("../../../utils/services/activityService.js");
 
 const createTransactionOld = async (req, res) => {
     const { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
@@ -55,7 +55,7 @@ const createTransaction = async (req, res) => {
     if (!jobOrder)
       return res.status(400).json({ message: "Job order not found" });
 
-    // 🧮 Compute totals
+    // Compute totals
     const totalMaterialCost = jobOrder.materials?.reduce(
       (sum, m) => sum + Number(m.price) * Number(m.quantity),
       0
@@ -83,8 +83,6 @@ const createTransaction = async (req, res) => {
       });
     }
 
-
-
     // Proceed with transaction creation
     const needsApproval = req.approval;
 
@@ -109,6 +107,13 @@ const createTransaction = async (req, res) => {
 
       return transaction;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`
+    );
 
     return res.status(201).json({ message: "Transaction completed", result });
   } catch (err) {
@@ -154,7 +159,7 @@ const editTransactionOld = async (req, res) => {
 }
 
 const editTransaction = async (req, res) => {
-  let { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
+  let { jobOrderCode, referenceNumber, senderName, amount, mop, status, remarks } = req.body;
   if (!req?.params?.id)
     return res.status(404).json({ message: "Transaction ID is required" });
 
@@ -246,6 +251,14 @@ const editTransaction = async (req, res) => {
       return editedTransaction;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`,
+        remarks
+    );
+
     return res
       .status(201)
       .json({ message: "Transaction edit completed", result });
@@ -270,7 +283,15 @@ const deleteTransaction = async (req, res) => {
                 where: { id: transaction.id },
             })
             return deletedTransaction
-        })
+        });
+
+        await logActivity(
+          req.username,
+          needsApproval
+            ? `FOR APPROVAL: ${req.username} deleted Transaction for Job Order ${jobOrder.jobOrderCode}`
+            : `${req.username} deleted Transaction for Job Order ${jobOrder.jobOrderCode}`,
+        );
+
         return res.status(201).json({ message: "Transaction delete completed" })
     } catch (err) {
         return res.status(500).json({ message: err.message })

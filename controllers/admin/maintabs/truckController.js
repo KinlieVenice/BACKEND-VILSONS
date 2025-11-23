@@ -2,8 +2,10 @@ const jobOwnerFinder = require("../../../utils/finders/jobOwnerFinder");
 const { getDateRangeFilter } = require("../../../utils/filters/dateRangeFilter");
 const { requestApproval } = require("../../../utils/services/approvalService")
 const relationsChecker = require("../../../utils/services/relationsChecker");
-const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
+const checkPendingApproval = require("../../../utils/services/checkPendingApproval");
 const deleteFile = require("../../../utils/services/imageDeleter.js");
+const { logActivity } = require("../../../utils/services/activityService.js");
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -65,6 +67,13 @@ const createTruck = async (req, res) => {
       return truck;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Truck ${truckData.plate}`
+        : `${req.username} created Truck ${truckData.plate}`
+    );
+
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -72,7 +81,7 @@ const createTruck = async (req, res) => {
 };
 
 const editTruck = async (req, res) => {
-  const { plate, make, model, engine } = req.body;
+  const { plate, make, model, engine, remarks } = req.body;
   const newImage = req.file ? req.file.filename : null;
 
 
@@ -140,6 +149,13 @@ const editTruck = async (req, res) => {
 
       return truck_edit;
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Truck ${truckData.plate}`
+        : `${req.username} created Truck ${truckData.plate}`,
+        remarks
+    );
 
     return res.status(201).json({
       message,
@@ -226,6 +242,13 @@ const editTruckOwner = async (req, res) => {
       return newTruckOwner;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Truck Owner ${truckData.plate}`
+        : `${req.username} edited Truck Owner ${truckData.plate}`,
+    );
+
     return res.status(201).json({
       message,
       data: { result },
@@ -267,6 +290,12 @@ const deleteTruck = async (req, res) => {
         ? "Truck delete is awaiting approval"
         : "Truck is successfully deleted";
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Truck ${truckData.plate}`
+        : `${req.username} edited Truck ${truckData.plate}`,
+    );
     return res
       .status(201)
       .json({ message });

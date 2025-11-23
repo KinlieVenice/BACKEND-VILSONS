@@ -1,7 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
-const { requestApproval } = require("../../../utils/services/approvalService")
+const { requestApproval } = require("../../../utils/services/approvalService");
+const { logActivity } = require("../../../utils/services/activityService.js");
 
 
 /*
@@ -43,6 +44,13 @@ const createOverhead = async (req, res) => {
       return overhead;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Overhead ${overheadData.description}`
+        : `${req.username} created Overhead ${overheadData.description}`,
+    );
+    
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -50,7 +58,7 @@ const createOverhead = async (req, res) => {
 };
 
 const editOverhead = async (req, res) => {
-  const { description, amount, branchId, isMonthly } = req.body;
+  const { description, amount, branchId, isMonthly, remarks } = req.body;
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
@@ -89,6 +97,15 @@ const editOverhead = async (req, res) => {
 
       return editedOverhead;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Overhead ${overheadData.description}`
+        : `${req.username} edited Overhead ${overheadData.description}`,
+      remarks
+    );
+
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -124,6 +141,13 @@ const deleteOverhead = async (req, res) => {
       return deletedOverhead;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} deleted Overhead ${overheadData.description}`
+        : `${req.username} deleted Overhead ${overheadData.description}`
+    );
+
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -132,13 +156,12 @@ const deleteOverhead = async (req, res) => {
 
 const getAllOverheads = async (req, res) => {
   const search = req?.query?.search;
-  const isMonthlyParam = req?.params?.isMonthlyParam;
   const branch = req?.query?.branch;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
 
-  const isMonthly = isMonthlyParam === "monthly";
+  const isMonthly = req.originalUrl.includes("/monthly");
 
   let where = {
     createdAt: { gte: startDate, lt: endDate },

@@ -2,7 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
 const { branchFilter } = require("../../../utils/filters/branchFilter");
-const { requestApproval } = require("../../../utils/services/approvalService")
+const { requestApproval } = require("../../../utils/services/approvalService");
+const { logActivity } = require("../../../utils/services/activityService.js");
+
 
 
 /*
@@ -43,6 +45,13 @@ const createOtherIncome = async (req, res) => {
       return otherIncome;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Other Income ${otherIncomeData.description}`
+        : `${req.username} created Other Income ${otherIncomeData.description}`
+    );
+
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -50,7 +59,7 @@ const createOtherIncome = async (req, res) => {
 };
 
 const editOtherIncome = async (req, res) => {
-  const { description, amount, branchId } = req.body;
+  const { description, amount, branchId, remarks } = req.body;
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
@@ -88,6 +97,14 @@ const editOtherIncome = async (req, res) => {
 
       return editedOtherIncome;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Other Income ${otherIncomeData.description}`
+        : `${req.username} edited Other Income ${otherIncomeData.description}`,
+      remarks
+    );
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -121,6 +138,13 @@ const deleteOtherIncome = async (req, res) => {
 
       return deletedOtherIncome;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} deleted Other Income ${otherIncome.id}`
+        : `${req.username} deleted Other Income ${otherIncome.id}`
+    );
 
     return res.status(201).json({ message, data: result });
   } catch (err) {

@@ -2,7 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { branchFilter } = require("../../../utils/filters/branchFilter");
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
-const { requestApproval } = require("../../../utils/services/approvalService")
+const { requestApproval } = require("../../../utils/services/approvalService");
+const { logActivity } = require("../../../utils/services/activityService.js");
+
 
 
 /*
@@ -45,6 +47,13 @@ const createEquipment = async (req, res) => {
       return equipment;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Equipment ${equipmentData.equipmentName}`
+        : `${req.username} created Equipment ${equipmentData.equipmentName}`
+    );
+    
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -52,7 +61,7 @@ const createEquipment = async (req, res) => {
 };
 
 const editEquipment = async (req, res) => {
-  const { name, quantity, price, branchId } = req.body;
+  const { name, quantity, price, branchId, remarks } = req.body;
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
 
@@ -92,6 +101,14 @@ const editEquipment = async (req, res) => {
 
       return editedEquipment;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Equipment ${equipmentData.equipmentName}`
+        : `${req.username} edited Equipment ${equipmentData.equipmentName}`,
+      remarks
+    );
 
     return res.status(201).json({ message, data: result });
   } catch (err) {
@@ -137,6 +154,12 @@ const deleteEquipment = async (req, res) => {
       return deletedEquipment;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} deleted Equipment ${equipmentData.equipmentName}`
+        : `${req.username} deleted Equipment ${equipmentData.equipmentName}`
+    );
     return res.status(201).json({ message, data: result });
   } catch (err) {
     return res.status(500).json({ message: err.message });

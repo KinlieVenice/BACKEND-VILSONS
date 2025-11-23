@@ -13,9 +13,6 @@ const deleteFile = require("../../../utils/services/imageDeleter")
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
 const parseArrayFields = require("../../../utils/services/parseArrayFields.js");
 
-
-
-
 // "POST /"
 const createJobOrder = async (req, res) => {
   const parsedBody = parseArrayFields(req.body, ["materials", "images"]);
@@ -72,7 +69,7 @@ const createJobOrder = async (req, res) => {
   }
 
   try {
-    // ✅ Global validation - runs regardless of approval needs
+    // Global validation - runs regardless of approval needs
     const branch = await prisma.branch.findUnique({ where: { id: branchId } });
     if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
 
@@ -161,7 +158,7 @@ const createJobOrder = async (req, res) => {
     const needsApproval = req.approval;
     const newCode = await generateJobOrderCode(prisma);
 
-    // ✅ If approval is needed, create approval request
+    // If approval is needed, create approval request
     if (needsApproval) {
       const approvalPayload = {
         customerData: hasValidCustomerId ? { customerId } : { name, email, phone, username, image: customerImage },
@@ -187,12 +184,12 @@ const createJobOrder = async (req, res) => {
       });
     }
 
-    // ✅ If no approval needed, proceed with creation in transaction
+    // If no approval needed, proceed with creation in transaction
     const result = await prisma.$transaction(async (tx) => {
       let customer = null;
       let activeTruckId = truckId;
 
-      // 1️⃣ Handle existing customer
+      // Handle existing customer
       if (hasValidCustomerId) {
         customer = await tx.customer.findUnique({
           where: { id: customerId },
@@ -281,7 +278,7 @@ const createJobOrder = async (req, res) => {
           activeTruckId = createdTruck.id;
         } 
       }
-      // 2️⃣ Handle new customer
+      // Handle new customer
       else if (name && phone && username) {
         console.log('Creating new customer with:', { name, email, phone, username });
         
@@ -392,8 +389,8 @@ const createJobOrder = async (req, res) => {
         });
 
         if (labor) {
-          contractorPercent = contractor.commission;
-          contractorCommission = labor * contractorPercent;
+          contractorPercent = Number(contractor.commission);
+          contractorCommission = Number(labor * contractorPercent);
           shopCommission = labor - contractorCommission;
         }
       }
@@ -466,7 +463,12 @@ const createJobOrder = async (req, res) => {
     const { jobOrder, contractorCommission, shopCommission, totalMaterialCost, materials: resultMaterials } = result;
     const { truckId: _t, customerId: _c, contractorId: _ct, branchId: _b, ...jobOrderFields } = jobOrder;
     
-    await logActivity(req.username, `${req.username} created Job Order ${jobOrder.jobOrderCode}`);
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} created Job Order ${jobOrder.jobOrderCode}`
+    );
 
     return res.status(201).json({
       message: "Job order successfully created",
@@ -936,13 +938,14 @@ const editJobOrder = async (req, res) => {
     materials,
     labor,
     images,
+    remarks,
   } = parsedBody;
 
   if (!req?.params?.id)
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    // ✅ Global validation - runs regardless of approval needs
+    //  Global validation - runs regardless of approval needs
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
       include: {
@@ -966,8 +969,6 @@ const editJobOrder = async (req, res) => {
       });
       if (!contractor) return res.status(400).json({ message: "Invalid contractor ID" });
     }
-
-
 
     // Validate materials if provided
     if (materials && materials.length > 0) {
@@ -1040,13 +1041,17 @@ const editJobOrder = async (req, res) => {
     }
 
       // Calculate commissions if contractor and labor provided
-      if (contractorId && labor) {
+      if (contractorId !== jobOrder.contractorId && contractorId && labor) {
         contractor = await tx.contractor.findUnique({
           where: { id: contractorId },
         });
-        contractorPercent = contractor.commission;
+        contractorPercent = Number(contractor.commission);
         contractorCommission = Number(labor) * contractorPercent;
         shopCommission = Number(labor) - contractorCommission;
+
+        console.log(labor, "labor");
+        console.log(contractorPercent, "contractorPercent");
+        console.log(contractorCommission, 'commission');
       }
 
       const jobOrderData = {
@@ -1054,9 +1059,16 @@ const editJobOrder = async (req, res) => {
         truckId: jobOrder.truckId,
         branchId: branchId ?? jobOrder.branchId,
         description: description ?? jobOrder.description,
-        contractorId: contractorId && contractorId !== "undefined" && contractorId !== "null" ? contractorId : null,
-        labor: labor && labor !== "undefined" && labor !== "null" ? labor : null,
+        contractorId:
+          contractorId &&
+          contractorId !== "undefined" &&
+          contractorId !== "null"
+            ? contractorId
+            : null,
+        labor:
+          labor && labor !== "undefined" && labor !== "null" ? labor : null,
         updatedByUser: req.username,
+        contractorPercent: contractorPercent || jobOrder.contractorPercent,
       };
 
       const jobOrderInclude = {
@@ -1111,7 +1123,14 @@ const editJobOrder = async (req, res) => {
     // Handle successful update response
     const { jobOrder: editedJobOrder, contractorCommission, shopCommission, totalMaterialCost, materials: resultMaterials } = result;
     const { truckId: _, customerId: __, contractorId: ___, branchId: ____, ...jobOrderFields } = editedJobOrder;
-    await logActivity(req.username, `${req.username} edited Job Order ${jobOrder.jobOrderCode}`);
+    
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`,
+      remarks
+    );
 
     return res.status(200).json({
       message: "Job order successfully updated",
@@ -1205,6 +1224,14 @@ const deleteJobOrder = async (req, res) => {
 
       return deletedJobOrder;
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} deleted Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} deleted Job Order ${jobOrder.jobOrderCode}`,
+    );
+
 
     return res.status(200).json({ 
       message: "Job order successfully deleted as well as materials",
@@ -1424,13 +1451,12 @@ const getAllJobOrders = async (req, res) => {
   const search = req?.query?.search;
   const status = req?.query?.status;
   const branch = req?.query?.branch;
-  const unpaidParam = req?.params.unpaid;
   const page = req?.query?.page && parseInt(req.query.page, 10);
   const limit = req?.query?.limit && parseInt(req.query.limit, 10);
   const startDate = req?.query?.startDate;
   const endDate = req?.query?.endDate;
 
-  const unpaid = unpaidParam === "unpaid";
+  const unpaid = req.originalUrl.includes("/unpaid");
   
   let where;
 
@@ -1539,7 +1565,7 @@ const getAllJobOrders = async (req, res) => {
         totalMaterialCost = 0;
 
       if (job.contractor && job.labor) {
-        contractorCommission = Number(job.labor) * Number(job.contractor.commission);
+        contractorCommission = Number(job.labor) * Number(job.contractorPercent);
         shopCommission = Number(job.labor) - contractorCommission;
       }
 
@@ -1567,6 +1593,7 @@ const getAllJobOrders = async (req, res) => {
         truckId: job.truck?.id,
         contractorId: job.contractor?.id || null,
         contractorUserId: job.contractor?.userId || null,
+        contractorPercent: job.contractorPercent,
         contractorName: job.contractor?.user?.fullName || null,
         customerId: job.customer?.id,
         customerUserId: job.customer?.userId,
@@ -1588,9 +1615,10 @@ const getAllJobOrders = async (req, res) => {
 
     // 🔹 Apply "unpaid" filter (where totalBill !== totalTransactions)
     if (unpaid) {
-      result = result.filter((job) => 
-        job.totalBill !== job.totalTransactions || 
-        (job.totalBill === 0 && job.totalTransactions === 0)
+      result = result.filter(
+        (job) =>
+          job.totalBill !== job.totalTransactions ||
+          (job.totalBill < job.totalTransactions)
       );
     }
     
@@ -1647,7 +1675,7 @@ const getJobOrder = async (req, res) => {
         where: { id: jobOrder.contractorId },
       });
       if (contractor) {
-        contractorCommission = jobOrder.labor * contractor.commission;
+        contractorCommission = jobOrder.labor * jobOrder.contractorPercent;
         shopCommission = jobOrder.labor - contractorCommission;
       }
     }
@@ -1688,20 +1716,21 @@ const getJobOrder = async (req, res) => {
         make: jobOrder.truck?.make,
         model: jobOrder.truck?.model,
         truckId: jobOrder.truck?.id,
-        contractorId: jobOrder.contractor?.id  || null,
-        contractorUserId: jobOrder.contractor?.user?.id  || null,
-        contractorName: jobOrder.contractor?.user?.fullName  || null,
-        contractorUsername: jobOrder.contractor?.user?.username  || null,
+        contractorId: jobOrder.contractor?.id || null,
+        contractorUserId: jobOrder.contractor?.user?.id || null,
+        contractorName: jobOrder.contractor?.user?.fullName || null,
+        contractorUsername: jobOrder.contractor?.user?.username || null,
         contractorEmail: jobOrder.contractor?.user?.email,
         contractorPhone: jobOrder.contractor?.user?.phone,
+        contractorPercent: jobOrder.contractorPercent,
         customerId: jobOrder.customer?.id,
         customerUserId: jobOrder.customer?.user?.id,
         customerName: jobOrder.customer?.user?.fullName,
         customerUsername: jobOrder.customer?.user?.username,
         customerEmail: jobOrder.customer?.user?.email,
         customerPhone: jobOrder.customer?.user?.phone,
-        branchId: jobOrder.branch?.id  || null,
-        branchName: jobOrder.branch?.branchName  || null,
+        branchId: jobOrder.branch?.id || null,
+        branchName: jobOrder.branch?.branchName || null,
         labor: Number(jobOrder.labor),
         totalBill,
         balance: totalBill - totalTransactions,

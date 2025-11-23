@@ -14,7 +14,7 @@ router.route("/")
 router.route("/group/:statusGroup")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_JOB_ORDERS), jobOrderController.getAllJobOrders);
 
-router.route("/:unpaid")
+router.route("/unpaid")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_JOB_ORDERS), jobOrderController.getAllJobOrders);
 
 router.route("/:id")

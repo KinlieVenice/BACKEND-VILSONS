@@ -1008,7 +1008,7 @@ const approveRequest = async (requestId, updateUser) => {
 
 };
 
-const rejectRequest = async (requestId, approveUser, reason = null) => {
+const rejectRequest = async (requestId, approveUser, responseComment = null) => {
   const request = await prisma.approvalLog.findUnique({ where: { id: requestId } })
   if (!request) throw new Error('Approval request not found');
 
@@ -1017,7 +1017,7 @@ const rejectRequest = async (requestId, approveUser, reason = null) => {
     data: {
       status: 'rejected',
       approvedByUser: approveUser,  
-      responseComment: reason || 'No comment provided',
+      responseComment: responseComment || 'No comment provided',
       updatedAt: new Date(),
     },
   });

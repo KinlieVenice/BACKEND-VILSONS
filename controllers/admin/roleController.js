@@ -3,6 +3,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const getMainBaseRole = require("../../utils/services/getMainBaseRole.js");
 const relationsChecker = require("../../utils/services/relationsChecker.js")
+const { logActivity } = require("../../utils/services/activityService.js");
+
 
 const createRoleOLD = async (req, res) => {
   try {
@@ -193,6 +195,13 @@ const createRole = async (req, res) => {
             : undefined,
       };
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created Role ${roleName}`
+        : `${req.username} created Role ${roleName}`
+    );
 
     return res.status(201).json(result);
   } catch (err) {

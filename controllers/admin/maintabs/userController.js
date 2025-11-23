@@ -12,6 +12,8 @@ const { requestApproval } = require("../../../utils/services/approvalService");
 const { branchFilter } = require("../../../utils/filters/branchFilter");
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
 const relationsChecker = require("../../../utils/services/relationsChecker");
+const { logActivity } = require("../../../utils/services/activityService.js");
+
 
 
 
@@ -164,6 +166,13 @@ const createUser = async (req, res) => {
       return { user, userDetails } ;
     });
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} created User ${username}`
+        : `${req.username} created User ${username}`,
+    );
+
     return res.status(201).json({
       message,
       data: needsApproval ? { approvalId: result.user.id, username: result.user.payload.username, fullName: result.user.payload.fullName } : { userId: result.userDetails.id, username: result.userDetails.username,  fullName: result.userDetails.fullName } ,
@@ -175,9 +184,9 @@ const createUser = async (req, res) => {
 };
 
 // PUT /:id
-const editUser = async (req, res) => {
+const editUserOld = async (req, res) => {
   const parsedBody = parseArrayFields(req.body, ["roles", "branches"]);
-  const { name, phone, email, description, roles, branches } = parsedBody;
+  const { name, phone, email, description, roles, branches, remarks } = parsedBody;
   const newImage = req.file ? req.file.filename : null;
 
   if (!req?.params?.id)
@@ -222,13 +231,13 @@ const editUser = async (req, res) => {
     if (!needsApproval) {
       if (newImage) {
         if (user.image) {
-          deleteFile(`images/users/${user.image}`);
+          deleteFile(`images/${user.image}`);
         }
         image = newImage;
       }
       // If frontend sent image: null or empty string → remove old image
       else if ((req.body.image === null || req.body.image === "") && user.image) {
-        deleteFile(`images/users/${user.image}`);
+        deleteFile(`images/${user.image}`);
         image = null;
       }
     }
@@ -345,7 +354,15 @@ const editUser = async (req, res) => {
     if (!needsApproval) {
       const { hashPwd: _, refreshToken, ...rest } = result.userDetails;
       safeUser = rest;
-    }
+    };
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited User ${updatedData.username}`
+        : `${req.username} edited User ${updatedData.username}`,
+        remarks
+    );
 
     return res.status(201).json({
       message,
@@ -353,6 +370,291 @@ const editUser = async (req, res) => {
     });
   } catch (err) {
     console.log(err.message)
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+const editUser = async (req, res) => {
+  const parsedBody = parseArrayFields(req.body, ["roles", "branches"]);
+  const {
+    name,
+    phone,
+    email,
+    description,
+    roles,
+    branches,
+    remarks,
+    commission,
+  } = parsedBody;
+  const newImage = req.file ? req.file.filename : null;
+
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  const user = await prisma.user.findFirst({
+    where: { id: req.params.id },
+    include: {
+      roles: { include: { role: true } },
+      contractor: true,
+    },
+  });
+
+  if (!user)
+    return res
+      .status(400)
+      .json({ message: `User with ${req.params.id} doesn't exist` });
+
+  try {
+    let needsApproval = req.approval;
+    let message = needsApproval
+      ? "User edit awaiting approval"
+      : "User edited successfully";
+
+    // Get current role IDs for comparison
+    const currentRoleIds = user.roles.map((role) => role.roleId);
+
+    if (roles) {
+      const hasCustomerRole = await checkCustomerRole(prisma, roles);
+
+      if (!hasCustomerRole && (!branches || branches.length === 0)) {
+        return res
+          .status(400)
+          .json({ message: "Branches are required for non-customer users" });
+      }
+    }
+
+    if (email && email !== user.email) {
+      const existingUser = await prisma.user.findFirst({
+        where: { email, status: "active", id: { not: req.params.id } },
+      });
+      const pendingUser = await checkPendingApproval(
+        prisma,
+        "user",
+        ["email"],
+        email,
+        req.params.id
+      );
+      const pendingJobOrderUser = await checkPendingApproval(
+        prisma,
+        "jobOrder",
+        ["customerData", "email"],
+        email,
+        req.params.id
+      );
+
+      if (existingUser || pendingUser || pendingJobOrderUser) {
+        return res
+          .status(400)
+          .json({ message: "Email already in use or pending approval" });
+      }
+    }
+
+    let image = newImage ? newImage : user.image;
+
+    if (!needsApproval) {
+      if (newImage) {
+        if (user.image) {
+          deleteFile(`images/${user.image}`);
+        }
+        image = newImage;
+      }
+      // If frontend sent image: null or empty string → remove old image
+      else if (
+        (req.body.image === null || req.body.image === "") &&
+        user.image
+      ) {
+        deleteFile(`images/${user.image}`);
+        image = null;
+      }
+    }
+
+    const updatedData = {
+      fullName: name ?? user.fullName,
+      username: user.username,
+      phone: phone ?? user.phone,
+      email: email ?? user.email,
+      hashPwd: user.hashPwd,
+      description: description ?? user.description,
+      image,
+      updatedByUser: req.username,
+      ...(needsApproval ? { roles, branches } : {}),
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const editedUser = needsApproval
+        ? await requestApproval(
+            "user",
+            req.params.id,
+            "edit",
+            {
+              ...updatedData,
+              createdByUser: req.username,
+            },
+            req.username
+          )
+        : await tx.user.update({
+            where: { id: user.id },
+            data: updatedData,
+          });
+
+      const arraysEqual = (a, b) =>
+        Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        [...a].sort().join(",") === [...b].sort().join(",");
+
+      // ✅ Check if user is currently a contractor (using base roles)
+      const currentBaseRoles = await Promise.all(
+        currentRoleIds.map((roleId) => getMainBaseRole(prisma, roleId))
+      );
+      const isCurrentlyContractor = currentBaseRoles.includes("contractor");
+
+      // ✅ Check if user will be a contractor after role changes
+      let willBeContractor = isCurrentlyContractor;
+      if (roles && !arraysEqual(currentRoleIds, roles)) {
+        const newBaseRoles = await Promise.all(
+          roles.map((roleId) => getMainBaseRole(prisma, roleId))
+        );
+        willBeContractor = newBaseRoles.includes("contractor");
+      }
+
+      // ✅ Handle commission updates for contractors
+      if (!needsApproval && commission !== undefined) {
+        if (willBeContractor) {
+          const commissionValue = Number(commission);
+
+          if (isNaN(commissionValue)) {
+            throw new Error("Commission must be a valid number");
+          }
+          if (commissionValue > 1) {
+            throw new Error("Commission cannot be higher than 1 (100%)");
+          }
+          if (commissionValue < 0) {
+            throw new Error("Commission cannot be negative");
+          }
+
+          // Update or create contractor record
+          if (user.contractor) {
+            await tx.contractor.update({
+              where: { userId: user.id },
+              data: { commission: commissionValue },
+            });
+          } else {
+            await tx.contractor.create({
+              data: {
+                userId: user.id,
+                commission: commissionValue,
+              },
+            });
+          }
+        } else if (user.contractor) {
+          // Remove contractor record if user is no longer a contractor
+          await tx.contractor.deleteMany({ where: { userId: user.id } });
+        }
+      }
+
+      if (!needsApproval && roles && !arraysEqual(currentRoleIds, roles)) {
+        // STEP 1: Reset junction table roles
+        await tx.userRole.deleteMany({ where: { userId: user.id } });
+
+        await tx.userRole.createMany({
+          data: roles.map((role) => ({ userId: user.id, roleId: role })),
+        });
+
+        // STEP 2: Clear old role-specific tables
+        await Promise.all([
+          tx.admin.deleteMany({ where: { userId: user.id } }),
+          tx.customer.deleteMany({ where: { userId: user.id } }),
+          tx.employee.deleteMany({ where: { userId: user.id } }),
+          tx.contractor.deleteMany({ where: { userId: user.id } }),
+        ]);
+
+        // STEP 3: Recreate tables based on main roles (using getMainBaseRole)
+        const roleTableMap = {
+          admin: () => tx.admin.create({ data: { userId: user.id } }),
+          customer: () => tx.customer.create({ data: { userId: user.id } }),
+          employee: () => tx.employee.create({ data: { userId: user.id } }),
+          contractor: () => {
+            const commissionValue = Number(
+              commission ?? user.contractor?.commission ?? 0
+            );
+
+            if (isNaN(commissionValue)) {
+              throw new Error("Commission must be a valid number");
+            }
+            if (commissionValue > 1) {
+              throw new Error("Commission cannot be higher than 1 (100%)");
+            }
+            if (commissionValue < 0) {
+              throw new Error("Commission cannot be negative");
+            }
+
+            return tx.contractor.create({
+              data: { userId: user.id, commission: commissionValue },
+            });
+          },
+        };
+
+        // Determine main roles from roleIds using getMainBaseRole
+        const roleNamesToCreateTables = await Promise.all(
+          roles.map((roleId) => getMainBaseRole(prisma, roleId))
+        );
+
+        const uniqueRoleNames = [...new Set(roleNamesToCreateTables)].filter(
+          Boolean
+        );
+
+        // Run mapped role table functions for main roles
+        await Promise.all(
+          uniqueRoleNames
+            .filter((roleName) => roleTableMap[roleName])
+            .map((roleName) => roleTableMap[roleName]())
+        );
+      }
+
+      // STEP 4: Update branches if changed
+      if (!needsApproval && branches && !arraysEqual(user.branches, branches)) {
+        await tx.userBranch.deleteMany({ where: { userId: user.id } });
+        await tx.userBranch.createMany({
+          data: branches.map((branch) => ({
+            userId: user.id,
+            branchId: branch,
+          })),
+        });
+      }
+
+      const userDetails = await tx.user.findFirst({
+        where: { id: editedUser.id },
+        include: {
+          roles: { include: { role: true } },
+          branches: { include: { branch: true } },
+          contractor: true,
+        },
+      });
+
+      return { userDetails, user };
+    });
+
+    let safeUser;
+    if (!needsApproval) {
+      const { hashPwd: _, refreshToken, ...rest } = result.userDetails;
+      safeUser = rest;
+    }
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited User ${updatedData.username}`
+        : `${req.username} edited User ${updatedData.username}`,
+      remarks
+    );
+
+    return res.status(201).json({
+      message,
+      data: needsApproval ? result.user : safeUser,
+    });
+  } catch (err) {
+    console.log(err.message);
     return res.status(500).json({ error: err.message });
   }
 };
@@ -386,7 +688,7 @@ const editProfile = async (req, res) => {
 
     if (newImage) {
       if (user.image) {
-        deleteFile(`images/users/${user.image}`);
+        deleteFile(`images/${user.image}`);
       }
       image = newImage;
     }
@@ -413,6 +715,11 @@ const editProfile = async (req, res) => {
 
       return editedProfile;
     });
+
+    await logActivity(
+      req.username,
+      `${req.username} edited User Profile ${updatedData.username}`,
+    );
 
     return res.status(201).json({
       message,
@@ -472,6 +779,10 @@ const editProfilePassword = async (req, res) => {
         data: updatedData,
       });
     });
+    await logActivity(
+      req.username,
+      `${req.username} edited User ${updatedData.username}`,
+    );
 
     return res.status(201).json({
       message,
@@ -535,6 +846,13 @@ const editUserPassword = async (req, res) => {
         ? "User password awaiting approval"
         : "User password successfully changed";
     });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited User Password ${updatedData.username}`
+        : `${req.username} edited User Password ${updatedData.username}`
+    );
 
     return res.status(201).json({
       message,
@@ -611,6 +929,13 @@ const deleteUser = async (req, res) => {
 
     let message = hasRelations ? "User marked as inactive (has related records)" : "User deleted successfully"
 
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} deleted User ${user.username}`
+        : `${req.username} deleted User ${user.username}`
+    );
+
     await prisma.$transaction(async (tx) => {
 
       if (needsApproval) {
@@ -647,7 +972,8 @@ const deleteUser = async (req, res) => {
         // finally delete the user
         await tx.user.delete({ where: { id: user.id } });
       }
-    })
+    });
+
     
 
     return res.status(200).json({ message });
