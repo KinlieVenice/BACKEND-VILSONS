@@ -181,25 +181,63 @@ const getAllOverheads = async (req, res) => {
     where.OR = [{ description: { contains: searchValue } }];
   }
 
-  // Monthly filter
-  if (isMonthly) {
-    where.isMonthly = true;
-  }
-
   try {
-    const overheads = await prisma.overhead.findMany({
-      where,
-      ...(page && limit ? { skip: (page - 1) * limit } : {}),
-      ...(limit ? { take: limit } : {}),
-      include: {
-        branch: { select: { id: true, branchName: true, address: true } },
-      },
-    });
+    let overheads;
 
-    const totalAmount = overheads.reduce(
-      (sum, o) => sum + Number(o.amount),
-      0
-    );
+    if (isMonthly) {
+      // Step 1: Get all overheads (without isMonthly filter first)
+      const allOverheads = await prisma.overhead.findMany({
+        where, // This includes date range, branch, search filters but NOT isMonthly
+        include: {
+          branch: { select: { id: true, branchName: true, address: true } },
+        },
+        orderBy: {
+          createdAt: "desc", // Order by latest first
+        },
+      });
+
+      // Step 2: Filter to get only the latest record for each description
+      const uniqueOverheads = new Map();
+
+      allOverheads.forEach((overhead) => {
+        const description = overhead.description?.toLowerCase().trim();
+
+        // If we haven't seen this description before, or if this record is newer
+        if (
+          !uniqueOverheads.has(description) ||
+          new Date(overhead.createdAt) >
+            new Date(uniqueOverheads.get(description).createdAt)
+        ) {
+          uniqueOverheads.set(description, overhead);
+        }
+      });
+
+      // Step 3: Now filter by isMonthly=true from the unique records
+      overheads = Array.from(uniqueOverheads.values()).filter(
+        (overhead) => overhead.isMonthly === true
+      );
+
+      // Apply pagination manually after all filtering
+      if (page && limit) {
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        overheads = overheads.slice(startIndex, endIndex);
+      } else if (limit) {
+        overheads = overheads.slice(0, limit);
+      }
+    } else {
+      // Original logic for non-monthly requests
+      overheads = await prisma.overhead.findMany({
+        where,
+        ...(page && limit ? { skip: (page - 1) * limit } : {}),
+        ...(limit ? { take: limit } : {}),
+        include: {
+          branch: { select: { id: true, branchName: true, address: true } },
+        },
+      });
+    }
+
+    const totalAmount = overheads.reduce((sum, o) => sum + Number(o.amount), 0);
 
     return res.status(200).json({ data: { overheads, totalAmount } });
   } catch (err) {

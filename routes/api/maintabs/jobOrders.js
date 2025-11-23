@@ -25,4 +25,13 @@ router.route("/:id")
 router.route("/:id/status")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_JOB_ORDER_STATUS), jobOrderController.editJobOrderStatus)
 
+router.route("/accept/:id")
+.put(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.acceptJobOrderCompleted) //change permission
+
+router.route("/reject/:id")
+.put(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.rejectJobOrderCompleted) //change permission
+
+router.route("/released/:id")
+.put(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.acceptJobOrderForRelease) //change permission
+
 module.exports = router;

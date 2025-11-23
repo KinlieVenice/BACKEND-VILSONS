@@ -20,4 +20,14 @@ const getPayComponent = async (req, res) => {
     }
 }
 
-module.exports = { getPayComponent }
+const getAllComponents = async (req, res) => {
+  try {
+    const components = await prisma.component.findMany();
+
+    return res.status(200).json({ data: components });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getPayComponent, getAllComponents };
