@@ -3,8 +3,7 @@ const prisma = new PrismaClient();
 const { requestApproval, approveRequest, rejectRequest } = require("../../../utils/services/approvalService");
 const { logActivity } = require("../../../utils/services/activityService.js");
 const { enrichPayloadWithNames } = require("../../../utils/services/enrichPayloadService.js"); // Adjust path
-
-
+const { branchFilter } = require("../../../utils/filters/branchFilter"); 
 
 const getAllApprovalLogsOLDDD2 = async (req, res) => {
   try {
@@ -25,13 +24,13 @@ const getAllApprovalLogsOLDDD2 = async (req, res) => {
 
 const getAllApprovalLogs = async (req, res) => {
   try {
+    const branch = req.query?.branch;
     const pendingApprovalLogs = await prisma.approvalLog.findMany({
       where: {
         status: "pending",
+        ...branchFilter("approvalLog", branch, req.branchIds),
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     // Define field mappings based on your schema

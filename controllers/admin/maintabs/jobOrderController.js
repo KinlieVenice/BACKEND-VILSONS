@@ -1005,6 +1005,7 @@ const editJobOrder = async (req, res) => {
           description: description ?? jobOrder.description,
           contractorId: contractorId && contractorId !== "undefined" && contractorId !== "null" ? contractorId : null,
           labor: labor && labor !== "undefined" && labor !== "null" ? labor : null,
+          status: (contractorId === null && jobOrder.contractorId !== null) ? "pending" : jobOrder.status,
           images: imageData
         },
         materials: materials || [],
@@ -1048,10 +1049,6 @@ const editJobOrder = async (req, res) => {
         contractorPercent = Number(contractor.commission);
         contractorCommission = Number(labor) * contractorPercent;
         shopCommission = Number(labor) - contractorCommission;
-
-        console.log(labor, "labor");
-        console.log(contractorPercent, "contractorPercent");
-        console.log(contractorCommission, 'commission');
       }
 
       const jobOrderData = {
@@ -1068,7 +1065,10 @@ const editJobOrder = async (req, res) => {
         labor:
           labor && labor !== "undefined" && labor !== "null" ? labor : null,
         updatedByUser: req.username,
-        contractorPercent: contractorPercent || jobOrder.contractorPercent,
+        status:
+          contractorId === null && jobOrder.contractorId !== null
+            ? "pending"
+            : jobOrder.status,
       };
 
       const jobOrderInclude = {

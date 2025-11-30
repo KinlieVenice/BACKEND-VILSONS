@@ -1770,3 +1770,6 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251027	00:59:51	2170bd31-27f1-4a9f-a9dc-8ff286c6b244	Error: Only image files are allowed
 20251028	21:57:57	4b7405b3-f72e-45fb-a962-be9db50c9b28	SyntaxError: Expected ',' or '}' after property value in JSON at position 28 (line 2 column 26)
 20251122	20:05:24	073d31c8-7e03-44f8-9bc7-62c83c84ddda	TypeError: Cannot read properties of undefined (reading 'map')
+20251129	21:54:09	c61b57bf-9f75-4197-8d93-35859dbbdbdf	ReferenceError: name is not defined
+20251129	21:54:10	50da9933-b927-41b7-8894-1d968bb337b4	ReferenceError: name is not defined
+20251129	21:54:15	e784f875-782a-4e61-8f81-fc9b5f56f198	ReferenceError: name is not defined

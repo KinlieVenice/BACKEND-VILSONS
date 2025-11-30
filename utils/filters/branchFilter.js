@@ -7,6 +7,7 @@ function branchFilter(model, branch, branchIds) {
       case "material":
         return { jobOrder: { branch: { id: branchValue } } };
       case "otherIncome":
+      case "approvalLog":
       case "overhead":
       case "equipment":
       case "jobOrder":
@@ -24,6 +25,7 @@ function branchFilter(model, branch, branchIds) {
       case "material":
         return { jobOrder: { branchId: { in: branchIds } } };
       case "otherIncome":
+      case "approvalLog":
       case "overhead":
       case "equipment":
       case "jobOrder":

@@ -134,8 +134,11 @@ model Branch {
 
   jobOrders    JobOrder[]
   otherIncomes OtherIncome[]
+  approvalLogs ApprovalLog[]
   equipments   Equipment[]
+  activityLogs    ActivityLog[]
   overheads    Overhead[]
+
   employeePays    EmployeePay[]
   contractorPays    ContractorPay[]
 
@@ -262,8 +265,11 @@ model ActivityLog {
   id        String   @id @default(uuid())
   createdByUser    String
   remarks String?
+  branchId String?
   activity  String   @db.VarChar(255)
   createdAt DateTime @default(now())
+  
+  branch      Branch?           @relation(fields: [branchId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [createdByUser], references: [username], onDelete: NoAction)
 
   @@map("activitylog")
@@ -486,6 +492,7 @@ model ApprovalLog {
   recordId      String?  // null for new CREATE requests
   actionType    RequestType
   payload       Json
+  branchId String?
   requestedByUser   String
   status        ApprovalStatus @default(pending)
   approvedByUser    String?
@@ -493,6 +500,7 @@ model ApprovalLog {
   updatedAt     DateTime @updatedAt
   responseComment String?
 
+  branch      Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
   requestedBy User    @relation("RequestedBy", fields: [requestedByUser], references: [username], onDelete: NoAction)
   approvedBy User?    @relation("ApprovedBy", fields: [approvedByUser], references: [username], onDelete: NoAction)
 

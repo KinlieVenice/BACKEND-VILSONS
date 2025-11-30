@@ -52,6 +52,20 @@ const createBranch = async (req, res) => {
             data: branchData,
           });
 
+          const superadmin = await tx.user.findFirst({
+            where: { username: "superadmin" },
+          });
+          if (superadmin) {
+            const existingLink = await tx.userBranch.findFirst({
+              where: { userId: superadmin.id, branchId: branch.id },
+            });
+            if (!existingLink) {
+              await tx.userBranch.create({
+                data: { userId: superadmin.id, branchId: branch.id },
+              });
+            }
+          }
+
       message = needsApproval
         ? "Branch awaiting approval"
         : "Branch successfully created";
@@ -61,8 +75,8 @@ const createBranch = async (req, res) => {
     await logActivity(
       req.username,
       needsApproval
-        ? `FOR APPROVAL: ${req.username} created Branch ${branchData.name}`
-        : `${req.username} created Branch ${branchData.name}`
+        ? `FOR APPROVAL: ${req.username} created Branch ${branchData.branchName}`
+        : `${req.userbranchName} created Branch ${branchData.name}`
     );
 
     return res.status(201).json({

@@ -672,7 +672,7 @@ const editUserOld = async (req, res) => {
   }
 };
 
-const editUserNew = async (req, res) => {
+const editUser = async (req, res) => {
   const parsedBody = parseArrayFields(req.body, ["roles", "branches"]);
   const {
     name,
@@ -964,7 +964,7 @@ const editUserNew = async (req, res) => {
   }
 };
 
-const editUser = async (req, res) => {
+const editUserXX = async (req, res) => {
   const parsedBody = parseArrayFields(req.body, ["roles", "branches"]);
   const {
     name,

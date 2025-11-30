@@ -16,6 +16,10 @@ router.route("/expenses")
 router.route("/customer-balance")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_CUSTOMER_BALANCE), dashboardController.getCustomerBalance);
 
+router.route("/job-orders")
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_JOB_ORDERS), dashboardController.getRecentJobOrders);
+
+
 // GET /api/dashboard/revenue-profit-chart?type=monthly&year=2025
 // GET /api/dashboard/revenue-profit-chart?type=yearly
 

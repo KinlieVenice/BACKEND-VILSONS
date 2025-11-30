@@ -7,14 +7,15 @@ const deleteFile = require("./imageDeleter")
 
 const requestApproval = async (tableName, recordId, actionType, payload, reqUser) => {
     return prisma.approvalLog.create({
-        data: {
-            tableName,
-            recordId,
-            actionType,
-            payload,
-            requestedByUser: reqUser,
-        },
-    })
+      data: {
+        tableName,
+        recordId,
+        actionType,
+        payload,
+        requestedByUser: reqUser,
+        ...(branchId ? { branchId } : {}),
+      },
+    });
 };
 
 const handleUserApprovalOld = async (request, updateUser, tx) => {
