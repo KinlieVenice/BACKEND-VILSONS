@@ -1,3 +1,6 @@
+const ROLES_LIST = require("../../constants/ROLES_LIST");
+
+
 /**
  * Recursively finds the main/base role (admin, customer, employee, contractor)
  * for a given roleId, with circular dependency protection.
@@ -29,7 +32,7 @@ const getMainBaseRole = async (prismaOrTx, roleId, visited = new Set()) => {
   // ❌ Role not found in DB
   if (!role) return null;
 
-  const baseRoles = ["admin", "customer", "employee", "contractor"];
+  const baseRoles = [ROLES_LIST.ADMIN, ROLES_LIST.CUSTOMER, ROLES_LIST.EMPLOYEE, ROLES_LIST.CONTRACTOR];
 
   // ✅ If this role is a base role, return its name
   if (baseRoles.includes(role.roleName)) return role.roleName;

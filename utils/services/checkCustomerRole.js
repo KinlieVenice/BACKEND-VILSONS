@@ -1,5 +1,7 @@
 // utils/checkCustomerRole.js
 const getMainBaseRole = require("./getMainBaseRole.js");
+const ROLES_LIST = require("../../constants/ROLES_LIST");
+
 
 const checkCustomerRole = async (prisma, roles) => {
   if (!roles || roles.length === 0) return false;
@@ -17,9 +19,9 @@ const checkCustomerRole = async (prisma, roles) => {
 
   const roleNames = roleDetails.map((r) => r.roleName.toLowerCase());
 
-  // Check if any role or base role is "customer"
+  // Check if any role or base role is ROLES_LIST.CUSTOMER
   const hasCustomerRole =
-    baseRoles.includes("customer") || roleNames.includes("customer");
+    baseRoles.includes(ROLES_LIST.CUSTOMER) || roleNames.includes(ROLES_LIST.CUSTOMER);
 
   return hasCustomerRole;
 };
