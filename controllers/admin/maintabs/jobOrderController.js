@@ -174,7 +174,7 @@ const createJobOrder = async (req, res) => {
         images: imageData || [],
       };
 
-      const approvalLog = await requestApproval('jobOrder', null, 'create', approvalPayload, req.username)
+      const approvalLog = await requestApproval('jobOrder', null, 'create', approvalPayload, req.username, branchId)
 
       return res.status(202).json({
         message: "Job order creation awaiting approval",
@@ -467,7 +467,7 @@ const createJobOrder = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} created Job Order ${jobOrder.jobOrderCode}`
-        : `${req.username} created Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} created Job Order ${jobOrder.jobOrderCode}`, branchId
     );
 
     return res.status(201).json({
@@ -1016,7 +1016,8 @@ const editJobOrder = async (req, res) => {
         req.params.id, 
         'edit', 
         approvalPayload, 
-        req.username
+        req.username,
+        branchId ?? jobOrder.branchId
       );
 
       return res.status(202).json({
@@ -1128,7 +1129,7 @@ const editJobOrder = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} edited Job Order ${jobOrder.jobOrderCode}`
-        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`,
+        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`, branchId ?? jobOrder.branchId,
       remarks
     );
 
@@ -1192,7 +1193,8 @@ const deleteJobOrder = async (req, res) => {
         req.params.id, 
         'delete', 
         approvalPayload, 
-        req.username
+        req.username,
+        jobOrder.branchId
       );
 
       return res.status(202).json({
@@ -1229,7 +1231,7 @@ const deleteJobOrder = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} deleted Job Order ${jobOrder.jobOrderCode}`
-        : `${req.username} deleted Job Order ${jobOrder.jobOrderCode}`,
+        : `${req.username} deleted Job Order ${jobOrder.jobOrderCode}`, jobOrder.branchId
     );
 
 
@@ -1789,7 +1791,8 @@ const acceptJobOrderCompleted = async (req, res) => {
           id,
           "edit",
           jobOrderData,
-          req.username
+          req.username,
+          jobOrder.branchId
         );
       } else {
         message = "Job order status successfully updated";
@@ -1799,6 +1802,13 @@ const acceptJobOrderCompleted = async (req, res) => {
         });
       }
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} accepted Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} accepted Job Order ${jobOrder.jobOrderCode}`,
+      jobOrder.branchId
+    );
 
     return res.status(200).json({ message, data: result });
   } catch (err) {
@@ -1841,7 +1851,8 @@ const rejectJobOrderCompleted = async (req, res) => {
           id,
           "edit",
           jobOrderData,
-          req.username
+          req.username,
+          jobOrder.branchId
         );
       } else {
         message = "Job order status successfully updated";
@@ -1851,6 +1862,13 @@ const rejectJobOrderCompleted = async (req, res) => {
         });
       }
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} rejected Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} rejected Job Order ${jobOrder.jobOrderCode}`,
+      jobOrder.branchId
+    );
 
     return res.status(200).json({ message, data: result });
   } catch (err) {
@@ -1893,7 +1911,8 @@ const acceptJobOrderForRelease = async (req, res) => {
           id,
           "edit",
           jobOrderData,
-          req.username
+          req.username,
+          jobOrder.branchId
         );
       } else {
         message = "Job order status successfully updated";
@@ -1945,7 +1964,8 @@ const editJobOrderStatus = async (req, res) => {
           id,
           "edit",
           jobOrderData,
-          req.username
+          req.username,
+          jobOrder.branchId
         );
       } else {
         message = "Job order status successfully updated";
@@ -1955,6 +1975,13 @@ const editJobOrderStatus = async (req, res) => {
         });
       }
     });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`,
+      jobOrder.branchId
+    );
 
     return res.status(200).json({ message, data: result });
   } catch (err) {

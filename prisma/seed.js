@@ -24,10 +24,10 @@ async function main() {
 
     await tx.role.createMany({
       data: [
-        { roleName: "admin", baseRoleId: null, isCustom: false },
-        { roleName: "employee", baseRoleId: null, isCustom: false },
-        { roleName: "contractor", baseRoleId: null, isCustom: false },
-        { roleName: "customer", baseRoleId: null, isCustom: false },
+        { roleName: "_admin_", baseRoleId: null, isCustom: false },
+        { roleName: "_employee_", baseRoleId: null, isCustom: false },
+        { roleName: "_contractor_", baseRoleId: null, isCustom: false },
+        { roleName: "_customer_", baseRoleId: null, isCustom: false },
       ],
       skipDuplicates: true,
     });

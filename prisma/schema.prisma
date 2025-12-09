@@ -141,6 +141,7 @@ model Branch {
 
   employeePays    EmployeePay[]
   contractorPays    ContractorPay[]
+  transactions   Transaction[]
 
   userBranches       UserBranch[]
 
@@ -286,12 +287,14 @@ model Transaction {
   amount          Decimal  @db.Decimal(13, 2)
   email           String?
   status          TransactionStatus   @default(pending) // pending | paid | failed
+  branchId String?
   createdAt       DateTime @default(now())
   createdByUser String?
   updatedAt   DateTime @updatedAt
   updatedByUser String?
 
   jobOrder JobOrder @relation(fields: [jobOrderCode], references: [jobOrderCode])
+  branch     Branch?           @relation(fields: [branchId], references: [id], onDelete: Cascade)
   createdBy User?             @relation("CreatedBy", fields: [createdByUser], references: [username], onDelete: NoAction)
   updatedBy User?             @relation("UpdatedBy", fields: [updatedByUser], references: [username], onDelete: NoAction)
 

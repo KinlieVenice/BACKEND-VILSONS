@@ -1773,3 +1773,5 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251129	21:54:09	c61b57bf-9f75-4197-8d93-35859dbbdbdf	ReferenceError: name is not defined
 20251129	21:54:10	50da9933-b927-41b7-8894-1d968bb337b4	ReferenceError: name is not defined
 20251129	21:54:15	e784f875-782a-4e61-8f81-fc9b5f56f198	ReferenceError: name is not defined
+20251208	17:32:41	d241a3b5-3f6f-4bc0-9f50-82b23c2c4449	Error: Cannot set headers after they are sent to the client
+20251208	17:32:43	01a18bae-320d-4205-9691-4e073af08cba	Error: Cannot set headers after they are sent to the client

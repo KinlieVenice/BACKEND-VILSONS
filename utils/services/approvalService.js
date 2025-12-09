@@ -5,7 +5,7 @@ const getMainBaseRole = require("./getMainBaseRole"); // make sure this exists
 const generateJobOrderCode = require("./generateJobOrderCode");
 const deleteFile = require("./imageDeleter")
 
-const requestApproval = async (tableName, recordId, actionType, payload, reqUser, branchId) => {
+const requestApproval = async (tableName, recordId, actionType, payload, reqUser, branchId=null) => {
     return prisma.approvalLog.create({
       data: {
         tableName,

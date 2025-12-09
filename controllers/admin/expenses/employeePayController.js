@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { requestApproval } = require("../../../utils/services/approvalService")
+const { requestApproval } = require("../../../utils/services/approvalService");
+const { logActivity } = require("../../../utils/services/activityService.js");
+
 
 
 const createEmployeePay = async (req, res) => {
@@ -9,6 +11,11 @@ const createEmployeePay = async (req, res) => {
   try {
     if (!payComponents || payComponents.length === 0) {
       return res.status(400).json({ message: "Total salary cannot be 0" });
+    }
+
+    const user = await prisma.user.findFirst({ where: { id: userId } });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
     }
 
     // Check if user is an employee
@@ -49,7 +56,8 @@ const createEmployeePay = async (req, res) => {
         null, 
         'create', 
         approvalPayload, 
-        req.username
+        req.username,
+        branchId
       );
 
       return res.status(202).json({
@@ -154,7 +162,17 @@ const createEmployeePay = async (req, res) => {
 
       return { ...employeePayWithComponents, totalComponentCost };
     });
-
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Employee Pay for ${
+            user.username
+          } with amount PHP ${totalComponentCost / 100}`
+        : `${req.username} edited Contractor Pay for ${
+            user.username
+          } with amount PHP ${totalComponentCost / 100}`,
+      branchId
+    );
     return res.status(201).json({
       message: "Employee pay successfully created",
       data: result,
@@ -199,12 +217,22 @@ const editEmployeePay = async (req, res) => {
 
     // 2️⃣ If updating employee link, validate userId
     let employee;
+    let user;
     if (userId) {
+      user = await prisma.user.findFirst({ where: { id: userId } });
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
       employee = await prisma.employee.findFirst({ where: { userId } });
       if (!employee)
         return res
           .status(404)
           .json({ message: `Employee with userId: ${userId} not found` });
+    } else if (!userId) {
+      employee = await prisma.employee.findFirst({
+        where: { id: employeePay.employeeId },
+      });
+      user = await prisma.user.findFirst({ where: { id: employee.userId } });
     }
 
     // Validate branch exists if provided
@@ -231,7 +259,8 @@ const editEmployeePay = async (req, res) => {
         req.params.id, 
         'edit', 
         approvalPayload, 
-        req.username
+        req.username, 
+        branchId || employeePay.branchId
       );
 
       return res.status(202).json({
@@ -322,6 +351,17 @@ const editEmployeePay = async (req, res) => {
           branch: { select: { id: true, branchName: true } },
         },
       });
+      await logActivity(
+        req.username,
+        needsApproval
+          ? `FOR APPROVAL: ${req.username} edited Employee Pay for ${
+              user.username
+            } with amount PHP ${totalComponentCost / 100}`
+          : `${req.username} edited Employee Pay for ${
+              user.username
+            } with amount PHP ${totalComponentCost / 100}`,
+        branchId
+      );
 
       return { ...updated, totalComponentCost };
     });
@@ -346,9 +386,11 @@ const deleteEmployeePay = async (req, res) => {
     const employeePay = await prisma.employeePay.findFirst({
       where: { id: req.params.id },
       include: {
-        payComponents: true,
+        payComponents: true
       }
     });
+
+    const user = await prisma.user.findFirst({ where: { id: employeePay.employee.userId }});
 
     if (!employeePay)
       return res
@@ -372,7 +414,8 @@ const deleteEmployeePay = async (req, res) => {
         req.params.id, 
         'delete', 
         approvalPayload, 
-        req.username
+        req.username,
+        employeePay.branchId
       );
 
       return res.status(202).json({
@@ -382,6 +425,11 @@ const deleteEmployeePay = async (req, res) => {
         },
       });
     }
+
+    const totalComponentCost = employeePay.payComponents.reduce(
+      (sum, pc) => sum + Number(pc.amount),
+      0
+    );
 
     // ✅ If no approval needed, proceed with deletion in transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -395,6 +443,19 @@ const deleteEmployeePay = async (req, res) => {
 
       return deletedEmployeePay;
     });
+
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Employee Pay for ${
+            user.username
+          } with amount PHP ${totalComponentCost / 100}`
+        : `${req.username} edited Employee Pay for ${
+            user.username
+          } with amount PHP ${totalComponentCost / 100}`,
+      branchId
+    );
 
     return res.status(200).json({ 
       message: "Employee pay successfully deleted",

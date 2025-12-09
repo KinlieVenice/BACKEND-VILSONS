@@ -32,7 +32,7 @@ const createOverhead = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const overhead = needsApproval
-        ? await requestApproval('overhead', null, 'create', overheadData, req.username)
+        ? await requestApproval('overhead', null, 'create', overheadData, req.username, branchId)
         : await tx.overhead.create({
             data: overheadData,
           });
@@ -48,7 +48,7 @@ const createOverhead = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} created Overhead ${overheadData.description}`
-        : `${req.username} created Overhead ${overheadData.description}`,
+        : `${req.username} created Overhead ${overheadData.description}`, branchId
     );
     
     return res.status(201).json({ message, data: result });
@@ -59,8 +59,8 @@ const createOverhead = async (req, res) => {
 
 const editOverhead = async (req, res) => {
   const { description, amount, branchId, isMonthly, remarks } = req.body;
-  if (!req?.params?.id)
-    return res.status(400).json({ message: "ID is required" });
+  if (!req?.params?.id || !remarks)
+    return res.status(400).json({ message: "ID and remarks are required" });
 
   try {
     const overhead = await prisma.overhead.findFirst({
@@ -85,7 +85,7 @@ const editOverhead = async (req, res) => {
       const editedOverhead = needsApproval
         ? await requestApproval('overhead', req.params.id, 'edit', {
               ...updatedData,
-              createdByUser: req.username }, req.username)
+              createdByUser: req.username }, req.username, branchId || overhead.branchId)
         : await tx.overhead.update({
             where: { id: overhead.id },
             data: overheadData,
@@ -102,7 +102,7 @@ const editOverhead = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} edited Overhead ${overheadData.description}`
-        : `${req.username} edited Overhead ${overheadData.description}`,
+        : `${req.username} edited Overhead ${overheadData.description}`, branchId,
       remarks
     );
 
@@ -129,7 +129,7 @@ const deleteOverhead = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedOverhead = needsApproval
-        ? await requestApproval( "overhead", overhead.id, "delete", overhead, req.username)
+        ? await requestApproval( "overhead", overhead.id, "delete", overhead, req.username, overhead.branchId)
         : await tx.overhead.delete({
             where: { id: overhead.id },
           });
@@ -145,7 +145,7 @@ const deleteOverhead = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} deleted Overhead ${overheadData.description}`
-        : `${req.username} deleted Overhead ${overheadData.description}`
+        : `${req.username} deleted Overhead ${overheadData.description}`, overhead.branchId 
     );
 
     return res.status(201).json({ message, data: result });

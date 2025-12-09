@@ -36,11 +36,11 @@ const createTransactionOld = async (req, res) => {
 }
 
 const createTransaction = async (req, res) => {
-  const { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
+  const { jobOrderCode, referenceNumber, senderName, amount, mop, status, branchId } = req.body;
 
-  if (!jobOrderCode || !senderName || !amount || !mop || !status)
+  if (!jobOrderCode || !senderName || !amount || !mop || !status || !branchId)
     return res.status(400).json({
-      message: "All jobOrderCode, senderName, amount, mop, and status are required",
+      message: "All jobOrderCode, senderName, amount, mop, branchId and status are required",
     });
 
   try {
@@ -94,13 +94,14 @@ const createTransaction = async (req, res) => {
         amount: phpAmount,
         mop,
         status,
+        branchId,
         referenceNumber: referenceNumber ?? null,
         createdByUser: req.username,
         updatedByUser: req.username,
       };
 
       const transaction = needsApproval
-        ? await requestApproval("transaction", null, "create", transactionData, req.username)
+        ? await requestApproval("transaction", null, "create", transactionData, req.username, branchId)
         : await tx.transaction.create({
             data: transactionData,
           });
@@ -112,7 +113,7 @@ const createTransaction = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`
-        : `${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`, branchId
     );
 
     return res.status(201).json({ message: "Transaction completed", result });
@@ -159,7 +160,7 @@ const editTransactionOld = async (req, res) => {
 }
 
 const editTransaction = async (req, res) => {
-  let { jobOrderCode, referenceNumber, senderName, amount, mop, status, remarks } = req.body;
+  let { jobOrderCode, referenceNumber, senderName, amount, mop, status, branchId, remarks } = req.body;
   if (!req?.params?.id)
     return res.status(404).json({ message: "Transaction ID is required" });
 
@@ -230,6 +231,7 @@ const editTransaction = async (req, res) => {
         senderName: senderName ?? transaction.senderName,
         referenceNumber: referenceNumber ?? transaction.referenceNumber,
         amount: newAmount,
+        branchId: branchId ?? transaction.branchId,
         mop: mop ?? transaction.mop,
         status: status ?? transaction.status,
         updatedByUser: req.username,
@@ -241,7 +243,8 @@ const editTransaction = async (req, res) => {
             req.params.id,
             "edit",
             { ...transactionData, createdByUser: req.username },
-            req.username
+            req.username,
+            branchId || transaction.branchId
           )
         : await tx.transaction.update({
             where: { id: transaction.id },
@@ -255,7 +258,7 @@ const editTransaction = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`
-        : `${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`,
+        : `${req.username} created Transaction for Job Order ${jobOrder.jobOrderCode}`, branchId || transaction.branchId,
         remarks
     );
 
@@ -273,12 +276,13 @@ const deleteTransaction = async (req, res) => {
 
     try {
         const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
+        const jobOrder = await prisma.jobOrder.findFirst({ where: { jobOrderCode: transaction.jobOrderCode }});
         if (!transaction) return res.status(404).json({ message: "Transaction not found" });
         const needsApproval = req.approval;
          const result = await prisma.$transaction(async (tx) => {
             
             const deletedTransaction = needsApproval
-            ? await requestApproval( "transaction", transaction.id, "delete", transaction, req.username)
+            ? await requestApproval( "transaction", transaction.id, "delete", transaction, req.username, transaction.branchId)
             : await tx.transaction.delete({
                 where: { id: transaction.id },
             })
@@ -289,7 +293,7 @@ const deleteTransaction = async (req, res) => {
           req.username,
           needsApproval
             ? `FOR APPROVAL: ${req.username} deleted Transaction for Job Order ${jobOrder.jobOrderCode}`
-            : `${req.username} deleted Transaction for Job Order ${jobOrder.jobOrderCode}`,
+            : `${req.username} deleted Transaction for Job Order ${jobOrder.jobOrderCode}`, transaction.branchId
         );
 
         return res.status(201).json({ message: "Transaction delete completed" })
@@ -340,6 +344,10 @@ const getAllTransactions = async (req, res) => {
           select: {
             id: true,
             jobOrderCode: true,
+            contractorId: true,
+            customerId: true,
+            truckId: true,
+            truck: { select: { plate: true } },
             branch: { select: { id: true, branchName: true } },
           },
         },

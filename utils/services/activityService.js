@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
  * @param {string} username - The username of the user performing the action.
  * @param {string} activity - A brief description of the activity.
  */
-async function logActivity(username, activity, remarks=null) {
+async function logActivity(username, activity, branchId = null, remarks=null) {
   if (!username || !activity) {
     throw new Error("Username and activity are required");
   }
@@ -17,6 +17,7 @@ async function logActivity(username, activity, remarks=null) {
         createdByUser: username,
         activity,
         remarks,
+        branchId,
       },
     });
     console.log(`Activity logged: ${activity} by ${username}`);

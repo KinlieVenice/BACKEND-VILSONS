@@ -22,7 +22,7 @@ router.route("/")
 .get(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), profileController.getMyProfile)
 
 router.route("/permissions")
-.get(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_DETAILS), permissionController.getUserPermissions)
+.get(permissionController.getUserPermissions)
 
 router.route("/password")
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_PROFILE_PASSWORD),profileController.editProfilePassword);

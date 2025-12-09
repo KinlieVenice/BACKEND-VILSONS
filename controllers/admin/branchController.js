@@ -91,7 +91,8 @@ const createBranch = async (req, res) => {
 const editBranch = async (req, res) => {
   const { name, description, address, remarks } = req.body;
 
-  if (!req.params.id) return res.status(404).json({ message: "ID is required" });
+  if (!req.params.id || !remarks)
+    return res.status(404).json({ message: "ID and Remarks are required" });
 
   const branch = await prisma.branch.findFirst({ where: { id: req.params.id } });
 
@@ -143,7 +144,7 @@ const editBranch = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} edited Branch ${updatedData.branchName}`
-        : `${req.username} edited Branch ${updatedData.branchName}`,
+        : `${req.username} edited Branch ${updatedData.branchName}`, null,
         remarks
     );
     return res.status(201).json({

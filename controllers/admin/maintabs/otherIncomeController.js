@@ -33,7 +33,7 @@ const createOtherIncome = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const otherIncome = needsApproval
-        ? await requestApproval('otherIncome', null, 'create', otherIncomeData, req.username)
+        ? await requestApproval('otherIncome', null, 'create', otherIncomeData, req.username, branchId)
         : await tx.otherIncome.create({
             data: otherIncomeData,
           });
@@ -49,7 +49,7 @@ const createOtherIncome = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} created Other Income ${otherIncomeData.description}`
-        : `${req.username} created Other Income ${otherIncomeData.description}`
+        : `${req.username} created Other Income ${otherIncomeData.description}`, branchId
     );
 
     return res.status(201).json({ message, data: result });
@@ -85,7 +85,7 @@ const editOtherIncome = async (req, res) => {
       const editedOtherIncome = needsApproval
         ? await requestApproval('otherIncome', req.params.id, 'edit', {
               ...updatedData,
-              createdByUser: req.username }, req.username)
+              createdByUser: req.username }, req.username, branchId || otherIncome.branchId)
         : await tx.otherIncome.update({
             where: { id: otherIncome.id },
             data: otherIncomeData,
@@ -102,7 +102,7 @@ const editOtherIncome = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} edited Other Income ${otherIncomeData.description}`
-        : `${req.username} edited Other Income ${otherIncomeData.description}`,
+        : `${req.username} edited Other Income ${otherIncomeData.description}`, branchId || otherIncome.branchId,
       remarks
     );
     return res.status(201).json({ message, data: result });
@@ -127,7 +127,7 @@ const deleteOtherIncome = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedOtherIncome = needsApproval
-        ? await requestApproval( "otherIncome", otherIncome.id, "delete", otherIncome, req.username)
+        ? await requestApproval( "otherIncome", otherIncome.id, "delete", otherIncome, req.username, otherIncome.branchId)
         : await tx.otherIncome.delete({
             where: { id: otherIncome.id },
           });
@@ -142,8 +142,8 @@ const deleteOtherIncome = async (req, res) => {
     await logActivity(
       req.username,
       needsApproval
-        ? `FOR APPROVAL: ${req.username} deleted Other Income ${otherIncome.id}`
-        : `${req.username} deleted Other Income ${otherIncome.id}`
+        ? `FOR APPROVAL: ${req.username} deleted Other Income ${otherIncome.description}`
+        : `${req.username} deleted Other Income ${otherIncome.description}`, otherIncome.branchId
     );
 
     return res.status(201).json({ message, data: result });

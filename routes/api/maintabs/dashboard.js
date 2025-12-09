@@ -24,6 +24,6 @@ router.route("/job-orders")
 // GET /api/dashboard/revenue-profit-chart?type=yearly
 
 router.route("/revenue-profit-chart")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_PROFIT), dashboardController.getRevenueAndProfitChart);
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_PROFIT || PERMISSIONS_LIST.VIEW_DASHBOARD_REVENUE), dashboardController.getRevenueAndProfitChart);
 
 module.exports = router;

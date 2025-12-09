@@ -36,7 +36,7 @@ const createEquipment = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const equipment = needsApproval
-        ?await requestApproval('equipment', null, 'create', equipmentData, req.username)
+        ?await requestApproval('equipment', null, 'create', equipmentData, req.username, branchId)
         : await tx.equipment.create({
             data: equipmentData,
           });
@@ -51,7 +51,7 @@ const createEquipment = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} created Equipment ${equipmentData.equipmentName}`
-        : `${req.username} created Equipment ${equipmentData.equipmentName}`
+        : `${req.username} created Equipment ${equipmentData.equipmentName}`, branchId
     );
     
     return res.status(201).json({ message, data: result });
@@ -62,8 +62,8 @@ const createEquipment = async (req, res) => {
 
 const editEquipment = async (req, res) => {
   const { name, quantity, price, branchId, remarks } = req.body;
-  if (!req?.params?.id)
-    return res.status(404).json({ message: "ID is required" });
+  if (!req?.params?.id || !remarks)
+    return res.status(404).json({ message: "ID and remarks are required" });
 
   try {
     const equipment = await prisma.equipment.findFirst({
@@ -89,7 +89,7 @@ const editEquipment = async (req, res) => {
       const editedEquipment = needsApproval
         ? await requestApproval('equipment', req.params.id, 'edit', {
               ...updatedData,
-              createdByUser: req.username }, req.username)
+              createdByUser: req.username }, req.username, branchId || equipment.branchId)
         : await tx.equipment.update({
             where: { id: equipment.id },
             data: equipmentData,
@@ -106,7 +106,7 @@ const editEquipment = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} edited Equipment ${equipmentData.equipmentName}`
-        : `${req.username} edited Equipment ${equipmentData.equipmentName}`,
+        : `${req.username} edited Equipment ${equipmentData.equipmentName}`, branchId,
       remarks
     );
 
@@ -142,7 +142,7 @@ const deleteEquipment = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const deletedEquipment = needsApproval
-        ? await requestApproval( "equipment", equipment.id, "delete", equipment, req.username)
+        ? await requestApproval( "equipment", equipment.id, "delete", equipment, req.username, equipment.branchId)
         : await tx.equipment.delete({
             where: { id: equipment.id },
           });
@@ -158,7 +158,7 @@ const deleteEquipment = async (req, res) => {
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} deleted Equipment ${equipmentData.equipmentName}`
-        : `${req.username} deleted Equipment ${equipmentData.equipmentName}`
+        : `${req.username} deleted Equipment ${equipmentData.equipmentName}`, equipment.branchId
     );
     return res.status(201).json({ message, data: result });
   } catch (err) {

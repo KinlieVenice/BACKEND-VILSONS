@@ -74,7 +74,7 @@ const getAllAssignedJobOrders = async (req, res) => {
 // CONTRACTOR
 const getAssignedJobOrder = async (req, res) => {
   if (!req?.params?.id) {
-    return res.status(400).json({ message: "Job Order ID is required" });
+    return res.status(400).json({ message: "ID is required" });
   }
 
   try {
