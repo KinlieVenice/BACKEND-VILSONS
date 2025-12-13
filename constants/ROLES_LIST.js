@@ -1,8 +1,9 @@
 const ROLES_LIST = {
-  ADMIN: "admin",
-  EMPLOYEE: "employee",
-  CONTRACTOR: "contractor",
-  CUSTOMER: "customer",
+  SUPERADMIN: "_SUPERADMIN_",
+  ADMIN: "_ADMIN_",
+  EMPLOYEE: "_EMPLOYEE_",
+  CONTRACTOR: "_CONTRACTOR_",
+  CUSTOMER: "_CUSTOMER_",
 };
 
 module.exports = ROLES_LIST;

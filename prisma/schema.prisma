@@ -566,6 +566,7 @@ enum Module {
   Job_Orders @map("Job Orders")
   Other_Incomes @map("Other Incomes")
   Transactions @map("Transactions")
+  Single_Page @map("Single Page")
   Branches
   Finances_Revenue_And_Profit @map("Finances - Revenue and Profit")
   Finances_Operational_Materials @map("Finances - Operational - Materials")
@@ -584,6 +585,7 @@ enum Module {
   My_Trucks @map("My Trucks")
   My_Salary @map("My Salary")
   Profile @map("Profile")
+  Finances
   Approval_Logs @map("Approval Logs")
   Customers
   Contractors

@@ -8,9 +8,9 @@ router.route("/")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_APPROVAL_LOGS), approvalLogController.getAllApprovalLogs);
 
 router.route("/approve/:id")
-.put(verifyPermission(PERMISSIONS_LIST.ACCEPT_APPROVAL_LOGS), approvalLogController.approveApprovalLog);
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_APPROVAL_LOGS), approvalLogController.approveApprovalLog);
 
 router.route("/reject/:id")
-.put(verifyPermission(PERMISSIONS_LIST.ACCEPT_APPROVAL_LOGS), approvalLogController.rejectApprovalLog);
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_APPROVAL_LOGS), approvalLogController.rejectApprovalLog);
 
 module.exports = router

@@ -5,25 +5,25 @@ const verifyPermission = require("../../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
 
 router.route("/revenue")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_REVENUE), dashboardController.getRevenue);
+.get(verifyPermission(PERMISSIONS_LIST.ADMIN_DASHBOARD_REVENUE), dashboardController.getRevenue);
 
 router.route("/profit")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_PROFIT), dashboardController.getProfit); 
+.get(verifyPermission(PERMISSIONS_LIST.ADMIN_DASHBOARD_PROFIT), dashboardController.getProfit); 
 
 router.route("/expenses")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_EXPENSES), dashboardController.getExpenses);
+.get(verifyPermission(PERMISSIONS_LIST.ADMIN_DASHBOARD_EXPENSES), dashboardController.getExpenses);
 
 router.route("/customer-balance")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_CUSTOMER_BALANCE), dashboardController.getCustomerBalance);
+.get(verifyPermission(PERMISSIONS_LIST.ADMIN_DASHBOARD_CUSTOMER_BALANCE), dashboardController.getCustomerBalance);
 
 router.route("/job-orders")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_JOB_ORDERS), dashboardController.getRecentJobOrders);
+.get(verifyPermission(PERMISSIONS_LIST.ADMIN_DASHBOARD_JOB_ORDERS), dashboardController.getRecentJobOrders);
 
 
 // GET /api/dashboard/revenue-profit-chart?type=monthly&year=2025
 // GET /api/dashboard/revenue-profit-chart?type=yearly
 
 router.route("/revenue-profit-chart")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_DASHBOARD_PROFIT || PERMISSIONS_LIST.VIEW_DASHBOARD_REVENUE), dashboardController.getRevenueAndProfitChart);
+.get(verifyPermission(PERMISSIONS_LIST.ADMIN_DASHBOARD_PROFIT || PERMISSIONS_LIST.ADMIN_DASHBOARD_REVENUE), dashboardController.getRevenueAndProfitChart);
 
 module.exports = router;

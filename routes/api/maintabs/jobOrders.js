@@ -20,18 +20,18 @@ router.route("/unpaid")
 router.route("/:id")
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.deleteJobOrder)
 .put(verifyPermission(PERMISSIONS_LIST.EDIT_JOB_ORDER), uploadImages, jobOrderController.editJobOrder)
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_JOB_ORDERS), jobOrderController.getJobOrder);
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_JOB_ORDER_DETAILS), jobOrderController.getJobOrder);
 
 router.route("/:id/status")
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_JOB_ORDER_STATUS), jobOrderController.editJobOrderStatus)
+.put(verifyPermission(PERMISSIONS_LIST.CHANGE_JOB_ORDER_STATUS), jobOrderController.editJobOrderStatus)
 
 router.route("/accept/:id")
-.put(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.acceptJobOrderCompleted) //change permission
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_COMPLETED_JOB_ORDERS), jobOrderController.acceptJobOrderCompleted) //change permission
 
 router.route("/reject/:id")
-.put(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.rejectJobOrderCompleted) //change permission
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_COMPLETED_JOB_ORDERS), jobOrderController.rejectJobOrderCompleted) //change permission
 
 router.route("/released/:id")
-.put(verifyPermission(PERMISSIONS_LIST.DELETE_JOB_ORDER), jobOrderController.acceptJobOrderForRelease) //change permission
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_FOR_RELEASE_JOB_ORDERS), jobOrderController.acceptJobOrderForRelease) //change permission
 
 module.exports = router;

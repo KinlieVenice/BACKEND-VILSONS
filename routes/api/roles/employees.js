@@ -5,9 +5,9 @@ const verifyPermission = require("../../../middleware/verifyPermissions");
 const PERMISSIONS_LIST = require("../../../constants/PERMISSIONS_LIST");
 
 router.route("/")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_EMPLOYEES), employeeController.getAllEmployees)
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_LABOR || PERMISSIONS_LIST.EDIT_LABOR), employeeController.getAllEmployees)
 
 router.route("/:id")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_EMPLOYEES), employeeController.getEmployee)
+.get(verifyPermission(PERMISSIONS_LIST.CREATE_LABOR || PERMISSIONS_LIST.EDIT_LABOR || PERMISSIONS_LIST.VIEW_LABORS || PERMISSIONS_LIST.VIEW_EMPLOYEE_DETAILS), employeeController.getEmployee)
 
 module.exports = router

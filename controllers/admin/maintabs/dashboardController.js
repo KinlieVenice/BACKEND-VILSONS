@@ -435,11 +435,6 @@ const getCustomerBalance = async (req, res) => {
         },
       },
     });
-
-    if (!customers.length) {
-      return res.status(404).json({ message: "No customers found" });
-    }
-
     let totalBalanceAllCustomers = 0;
 
     for (const customer of customers) {

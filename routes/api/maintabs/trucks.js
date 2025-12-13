@@ -11,12 +11,12 @@ router.route("/")
   .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getAllTrucks);
 
 router.route("/ownership")
-  .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK_OWNER),truckController.editTruckOwner)
+  .put(verifyPermission(PERMISSIONS_LIST.CHANGE_TRUCK_OWNER),truckController.editTruckOwner)
 
 router.route("/:id")
   .delete(verifyPermission(PERMISSIONS_LIST.DELETE_TRUCK),truckController.deleteTruck)
   .put(verifyPermission(PERMISSIONS_LIST.EDIT_TRUCK), uploadImage, truckController.editTruck)
-  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCKS),truckController.getTruck);
+  .get(verifyPermission(PERMISSIONS_LIST.VIEW_TRUCK_DETAILS),truckController.getTruck);
 
 
 module.exports = router;

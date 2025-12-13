@@ -39,8 +39,6 @@ const handleLogin = async (req, res) => {
     { expiresIn: "5h" }
   );
 
-
-
     const refreshToken = jwt.sign(
       { username: foundUser.username },
       process.env.REFRESH_TOKEN_SECRET,
@@ -59,7 +57,7 @@ const handleLogin = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.json({ accessToken });
+    res.json({ accessToken, refreshToken });
   } else {
     return res.status(401).json({ message: "Invalid password" });
   }

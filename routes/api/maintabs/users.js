@@ -11,11 +11,11 @@ router.route("/")
 .post(verifyPermission(PERMISSIONS_LIST.CREATE_USER), uploadImage, userController.createUser);
 
 router.route("/:id/password")
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_PASSWORD),userController.editUserPassword);
+.put(verifyPermission(PERMISSIONS_LIST.CHANGE_USER_PASSWORD),userController.editUserPassword);
 
 router.route("/:id")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_USERS),userController.getUser)
-.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER_DETAILS), uploadImage, userController.editUser)
+.get(verifyPermission(PERMISSIONS_LIST.VIEW_USER_DETAILS),userController.getUser)
+.put(verifyPermission(PERMISSIONS_LIST.EDIT_USER), uploadImage, userController.editUser)
 .delete(verifyPermission(PERMISSIONS_LIST.DELETE_USER),userController.deleteUser);
 
 

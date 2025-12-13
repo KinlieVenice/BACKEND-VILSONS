@@ -172,7 +172,6 @@ const getAllMyJobOrders = async (req, res) => {
   }
 };
 
-
 // CUSTOMER
 const getMyJobOrder = async (req, res) => {
   if (!req?.params?.id) {

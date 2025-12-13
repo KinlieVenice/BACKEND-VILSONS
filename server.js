@@ -46,12 +46,13 @@ app.use(logger);
 // urlencoded date
 app.use(express.urlencoded({ extended: false }));
 
+
+app.use(cookieParser());
+
 // json middleware for auto parse
 app.use(express.json());
 
 app.set("trust proxy", 1);
-
-app.use(cookieParser());
 
 app.use(limiter);
 app.use(sanitizeInput);

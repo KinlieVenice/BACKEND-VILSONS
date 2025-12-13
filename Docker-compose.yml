@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: deguzman09!   # root password
+      MYSQL_DATABASE: vilsons_final_db   # default database
+      MYSQL_USER: root                   # non-root user (can stay root for now)
+      MYSQL_PASSWORD: deguzman09!        # password for the user
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://root:deguzman09!@db:3306/vilsons_final_db
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm install && npx prisma migrate dev --name vilsons && npx prisma db seed && npm run dev"
+
+volumes:
+  db_data:
