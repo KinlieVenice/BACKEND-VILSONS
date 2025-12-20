@@ -128,25 +128,39 @@ async function main() {
     const baseRolePermissions = await getRolePermissionData();
 
     // Assign base role permissions to both base and derived roles
-    const derivedRoles = [
-      "superadmin",
-      "admin",
-      "employee",
-      "contractor",
-      "customer",
-    ];
-    for (const derived of derivedRoles) {
-      const derivedRoleId = await roleIdFinder(derived, tx);
-      const rolePermissionsToInsert = baseRolePermissions.map((p) => ({
-        roleId: derivedRoleId,
-        permissionId: p.permissionId,
-        approval: p.approval,
-      }));
-      await tx.rolePermission.createMany({
-        data: rolePermissionsToInsert,
-        skipDuplicates: true,
-      });
-    }
+const derivedRoles = await tx.role.findMany({
+  where: {
+    isCustom: true,
+    baseRoleId: { not: null },
+  },
+  select: {
+    id: true,
+    baseRoleId: true,
+  },
+});
+
+for (const derived of derivedRoles) {
+  // get permissions of the BASE role
+  const basePermissions = await tx.rolePermission.findMany({
+    where: { roleId: derived.baseRoleId },
+    select: {
+      permissionId: true,
+      approval: true,
+    },
+  });
+
+  if (!basePermissions.length) continue;
+
+  // clone to derived role
+  await tx.rolePermission.createMany({
+    data: basePermissions.map((p) => ({
+      roleId: derived.id,
+      permissionId: p.permissionId,
+      approval: p.approval,
+    })),
+    skipDuplicates: true,
+  });
+}
 
     /* ---------- User Branch ---------- */
     const mainBranchId = await branchIdFinder("main", tx);

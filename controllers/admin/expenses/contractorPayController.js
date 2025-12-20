@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { logActivity } = require("../../../utils/services/activityService.js");
+const { requestApproval } = require("../../../utils/services/approvalService");
+
 
 
 /*
@@ -65,7 +67,7 @@ const createContractorPay = async (req, res)  => {
 const editContractorPay = async (req, res) => {
      const { userId, type, amount, branchId, remarks } = req.body;
 
-    if (!req?.params?.id || !remarks) return res.status(400).json({ message: "ID and remarks are required" });
+    if (!req?.params?.id || !remarks) return res.status(400).json({ message: "Remarks are required" });
 
     try {
         const contractorPay = await prisma.contractorPay.findFirst({
@@ -100,7 +102,7 @@ const editContractorPay = async (req, res) => {
         const result = await prisma.$transaction(async (tx) => {
             const editedContractorPay = needsApproval 
                 ? await requestApproval('contractorPay', req.params.id, 'edit', {
-                ...updatedData,
+                ...contractorPayData,
                 createdByUser: req.username }, req.username, branchId || contractorPay.branchId)
                 : await tx.contractorPay.update({
                     where: { id: contractorPay.id },
@@ -113,9 +115,11 @@ const editContractorPay = async (req, res) => {
           needsApproval
             ? `FOR APPROVAL: ${req.username} edited Contractor Pay for ${
                 user.username
-              } with amount PHP ${amount / 100}`
-            : `${req.username} edited Contractor Pay for ${user.username} with amount PHP ${amount / 100}`,
-          branchId,
+              } with amount PHP ${contractorPayData.amount / 100}`
+            : `${req.username} edited Contractor Pay for ${
+                user.username
+              } with amount PHP ${contractorPayData.amount / 100}`,
+          contractorPayData.branchId,
           remarks
         );
           
@@ -127,64 +131,161 @@ const editContractorPay = async (req, res) => {
 
 };
 
-const deleteContractorPay = async (req, res) => {
-    if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
+const deleteContractorPayOld = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
 
-    try {
-        const contractorPay = await prisma.contractorPay.findFirst({            
-            where: { id: req.params.id }
+  try {
+    const contractorPay = await prisma.contractorPay.findFirst({
+      where: { id: req.params.id },
+      include: { contractor: true },
+    });
+    if (!contractorPay)
+      return res.status(400).json({ message: "Contractor pay not found" });
+
+    const needsApproval = req.approval;
+    let message = needsApproval
+      ? "Contractor pay delete awaiting approval"
+      : "Contractor pay deleted";
+
+    // Prepare the contractor pay data for approval payload
+    const contractorPayData = {
+      contractorId: contractorPay.contractorId,
+      type: contractorPay.type,
+      branchId: contractorPay.branchId,
+      amount: contractorPay.amount,
+      updatedByUser: req.username,
+      createdByUser: req.username,
+    };
+
+    const user = await prisma.user.findFirst({
+      where: { id: contractorPay.contractor.userId },
+    });
+
+    if (needsApproval) {
+      // Only create approval request, don't delete immediately
+      const approvalLog = await requestApproval(
+        "contractorPay",
+        req.params.id,
+        "delete",
+        contractorPayData,
+        req.username,
+        contractorPayData.branchId
+      );
+
+      await logActivity(
+        req.username,
+        `FOR APPROVAL: ${req.username} requested to delete Contractor Pay for ${
+          user.username
+        } with amount PHP ${contractorPayData.amount / 100}`,
+        contractorPayData.branchId
+      );
+
+      return res.status(202).json({
+        message: "Contractor pay delete awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+        },
+      });
+    } else {
+      // No approval needed, delete immediately
+      await prisma.$transaction(async (tx) => {
+        await tx.contractorPay.delete({
+          where: { id: contractorPay.id },
         });
-        if (!contractorPay) return res.status((400).json({ message: "Contractor pay not found"}));
+      });
 
-        const needsApproval = req.approval;
-        let message = needsApproval ? "Contractor pay delete awaiting approval" : "Contactor pay deleted";
+      await logActivity(
+        req.username,
+        `${req.username} deleted Contractor Pay for ${
+          user.username
+        } with amount PHP ${contractorPayData.amount / 100}`,
+        contractorPayData.branchId
+      );
 
-        const contractorPayData = {
-            contractorId:  contractorPay.contractorId,
-            type: contractorPay.type,
-            branchId: contractorPay.branchId,
-            amount: contractorPay.amount,
-            updatedByUser: req.username,
-            createdByUser: req.username
-        }
-
-        const user = await prisma.user.findFirst({ where: { id: contractorPay.contractor.userId }});
-
-        const result = await prisma.$transaction(async (tx) => {
-            const deletedContractorPay = needsApproval
-              ? await requestApproval(
-                  "contractorPay",
-                  req.params.id,
-                  "delete",
-                  {
-                    ...contractorPayData,
-                    createdByUser: req.username,
-                  },
-                  req.username,
-                  contractorPayData.branchId
-                )
-              : await tx.contractorPay.delete({
-                  where: { id: contractorPay.id },
-                });
-            return deletedContractorPay;
-        })
-        needsApproval
-          ? await logActivity(
-              req.username,
-              `FOR APPROVAL: ${req.username} edited Contractor Pay for ${user.username} with amount PHP ${amount/100}`,
-              branchId
-            )
-          : await logActivity(
-              req.username,
-              `${req.username} edited Contractor Pay for ${user.username} with amount PHP ${amount/100}`,
-              branchId
-            );
-
-        return res.status(201).json({ message })
-    } catch (err) {
-        return res.status(500).json({ message: err.message });
+      return res
+        .status(200)
+        .json({ message: "Contractor pay deleted successfully" });
     }
-}
+  } catch (err) {
+    console.log("Error in deleteContractorPay:", err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteContractorPay = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const contractorPay = await prisma.contractorPay.findFirst({
+      where: { id: req.params.id },
+      include: { contractor: true },
+    });
+
+    if (!contractorPay)
+      return res.status(404).json({ message: "Contractor pay not found" });
+
+    const needsApproval = req.approval;
+    const user = await prisma.user.findFirst({
+      where: { id: contractorPay.contractor.userId },
+    });
+
+    if (needsApproval) {
+      // Only create approval request, don't delete immediately
+      const approvalLog = await requestApproval(
+        "contractorPay",
+        req.params.id,
+        "delete",
+        {
+          contractorId: contractorPay.contractorId,
+          type: contractorPay.type,
+          branchId: contractorPay.branchId,
+          amount: contractorPay.amount,
+          createdByUser: req.username,
+          updatedByUser: req.username,
+        },
+        req.username,
+        contractorPay.branchId
+      );
+
+      await logActivity(
+        req.username,
+        `FOR APPROVAL: ${req.username} requested to delete Contractor Pay for ${
+          user.username
+        } with amount PHP ${contractorPay.amount / 100}`,
+        contractorPay.branchId
+      );
+
+      return res.status(202).json({
+        message: "Contractor pay delete awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+        },
+      });
+    } else {
+      // No approval needed, delete immediately
+      await prisma.contractorPay.delete({
+        where: { id: contractorPay.id },
+      });
+
+      await logActivity(
+        req.username,
+        `${req.username} deleted Contractor Pay for ${
+          user.username
+        } with amount PHP ${contractorPay.amount / 100}`,
+        contractorPay.branchId
+      );
+
+      return res.status(200).json({
+        message: "Contractor pay deleted successfully",
+      });
+    }
+  } catch (err) {
+    console.log("Error in deleteContractorPay:", err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
 
 const getContractorPay = async (req, res) => {
     if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });

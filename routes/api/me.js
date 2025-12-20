@@ -38,13 +38,17 @@ router.route("/customer-balance")
 .get(verifyPermission(PERMISSIONS_LIST.CUSTOMER_DASHBOARD_BALANCE), customerDashboardController.getCustomerBalance);
 
 router.route("/customer-status")
-.get(verifyPermission(PERMISSIONS_LIST.CUSTOMER_DASHBOARD_JOB_ORDERS), customerDashboardController.getCustomerJobStatus);
+.get(verifyPermission(PERMISSIONS_LIST.CUSTOMER_DASHBOARD_JOB_ORDERS), customerDashboardController.getCustomerRecentJobs);
 
 router.route("/customer-recent-jobs")
 .get(verifyPermission(PERMISSIONS_LIST.CUSTOMER_DASHBOARD_JOB_ORDERS), customerDashboardController.getCustomerRecentJobs);
 
-router.route("/my-job-orders")
-.get(verifyPermission(PERMISSIONS_LIST.VIEW_CUSTOMER_OWN_JOB_ORDERS), myJobOrderController.getAllMyJobOrders);
+router
+  .route("/my-job-orders/group/:statusGroup")
+  .get(
+    verifyPermission(PERMISSIONS_LIST.VIEW_CUSTOMER_OWN_JOB_ORDERS),
+    myJobOrderController.getAllMyJobOrders
+  );
 
 router.route("/my-trucks")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_CUSTOMER_OWN_TRUCKS), truckController.getAllMyTrucks);
@@ -72,18 +76,17 @@ router.route("/contractor-status")
 router.route("/contractor-recent-jobs")
 .get(verifyPermission(PERMISSIONS_LIST.CONTRACTOR_DASHBOARD_JOB_ORDERS), contractorDashboardController.getContractorRecentJobs);
 
-router.route("/assigned-job-orders")
+router.route("/assigned-job-orders/group/:statusGroup")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_CONTRACTOR_ASSIGNED_JOB_ORDERS), assignedJobOrderController.getAllAssignedJobOrders);
 
 router.route("/contractor/finances")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_CONTRACTOR_FINANCES), financeController.getAllLabor)
 
+router.route("/assigned-job-orders/action/:action/:id")
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_CONTRACTOR_ASSIGNED_JOB_ORDERS), assignedJobOrderController.acceptJobOrder)
+
 router.route("/assigned-job-orders/:id")
 .get(verifyPermission(PERMISSIONS_LIST.VIEW_CONTRACTOR_ASSIGNED_JOB_ORDER_DETAILS), assignedJobOrderController.getAssignedJobOrder)
-
-router.route("/assigned-job-orders/:id/:action")
-.patch(verifyPermission(PERMISSIONS_LIST.HANDLE_CONTRACTOR_ASSIGNED_JOB_ORDERS), assignedJobOrderController.acceptJobOrder)
-
 
 
 module.exports = router;

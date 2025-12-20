@@ -69,7 +69,6 @@ const getContractorDashboard = async (req, res) => {
         ongoing: 0,
         completed: 0,
         forRelease: 0,
-        archived: 0,
       };
 
       for (const jo of jobOrders) {
@@ -135,7 +134,7 @@ const getContractorBalance = async (req, res) => {
   }
 };
 
-const getContractorJobStatus = async (req, res) => {
+const getContractorJobStatusOLD = async (req, res) => {
   try {
     const contractor = await prisma.contractor.findUnique({
       where: { userId: req.id },
@@ -143,6 +142,31 @@ const getContractorJobStatus = async (req, res) => {
     });
 
     if (!contractor) return res.status(404).json({ message: "Contractor not found" });
+
+        const recentJobOrders = await prisma.jobOrder.findMany({
+          where: { contractorId: contractor.id },
+          select: {
+            id: true,
+            jobOrderCode: true,
+            labor: true,
+            contractorPercent: true,
+            status: true,
+            createdAt: true,
+            truck: { select: { plate: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        });
+
+        const formatted = recentJobOrders.map((jo) => ({
+          id: jo.id,
+          jobOrderCode: jo.jobOrderCode,
+          plate: jo.truck?.plate || "N/A",
+          commission: Number(jo.labor) * Number(jo.contractorPercent),
+          contractorPercent: jo.contractorPercent,
+          status: jo.status,
+          createdAt: jo.createdAt,
+        }));
 
     const jobOrders = await prisma.jobOrder.findMany({
       where: { contractorId: contractor.id },
@@ -154,7 +178,6 @@ const getContractorJobStatus = async (req, res) => {
       ongoing: 0,
       completed: 0,
       forRelease: 0,
-      archived: 0,
     };
 
     for (const jo of jobOrders) {
@@ -163,12 +186,131 @@ const getContractorJobStatus = async (req, res) => {
       }
     }
 
-    return res.status(200).json({ data: statusCounts });
+    return res
+      .status(200)
+      .json({ data: { recent: formatted, count: statusCounts } });
   } catch (err) {
     console.error("Error in getContractorJobStatus:", err);
     return res.status(500).json({ message: err.message });
   }
 };
+
+const getContractorJobStatus = async (req, res) => {
+  try {
+    // Find contractor by logged-in user ID
+    const contractor = await prisma.contractor.findUnique({
+      where: { userId: req.id },
+      select: { id: true },
+    });
+
+    if (!contractor)
+      return res.status(404).json({ message: "Contractor not found" });
+
+    // Recent 5 job orders for this contractor
+    const recentPromise = prisma.jobOrder.findMany({
+      where: { contractorId: contractor.id, status: { not: "archived" } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: {
+        transactions: true,
+        truck: { select: { id: true, plate: true } },
+        customer: {
+          select: {
+            id: true,
+            userId: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        contractor: {
+          select: {
+            id: true,
+            userId: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        branch: { select: { id: true, branchName: true } },
+        materials: { select: { price: true, quantity: true } },
+      },
+    });
+
+    // Get counts per status
+    const statuses = [
+      "pending",
+      "ongoing",
+      "completed",
+      "forRelease",
+    ];
+    const countPromises = statuses.map((s) =>
+      prisma.jobOrder.count({
+        where: { contractorId: contractor.id, status: s },
+      })
+    );
+
+    const [recentJobs, ...countsArr] = await Promise.all([
+      recentPromise,
+      ...countPromises,
+    ]);
+    const counts = {};
+    statuses.forEach((s, i) => (counts[s] = countsArr[i] || 0));
+
+    // Format recent jobs
+    const recent = recentJobs.map((job) => {
+      const laborValue = Number(job.labor || 0);
+
+      // Calculate commissions
+      const contractorPercent = Number(job.contractorPercent || 0);
+      const contractorCommission = laborValue * contractorPercent;
+      const shopCommission = laborValue - contractorCommission;
+
+      // Total material cost
+      const totalMaterialCost =
+        job.materials?.reduce(
+          (sum, m) => sum + Number(m.price) * Number(m.quantity),
+          0
+        ) || 0;
+
+      // Total transactions
+      const totalTransactions =
+        job.transactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) ||
+        0;
+
+      const totalBill = laborValue + totalMaterialCost;
+      const balance = totalBill - totalTransactions;
+
+      return {
+        id: job.id,
+        jobOrderCode: job.jobOrderCode,
+        status: job.status,
+        plateNumber: job.truck?.plate || null,
+        truckId: job.truck?.id || null,
+        contractorId: job.contractor?.id || null,
+        contractorUserId: job.contractor?.userId || null,
+        contractorName: job.contractor?.user?.fullName || null,
+        customerId: job.customer?.id || null,
+        customerUserId: job.customer?.userId || null,
+        customerName: job.customer?.user?.fullName || null,
+        branchId: job.branch?.id || null,
+        branchName: job.branch?.branchName || null,
+        totalMaterialCost,
+        contractorCommission,
+        shopCommission,
+        totalBill,
+        totalTransactions,
+        balance,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        createdBy: job.createdByUser,
+        updatedBy: job.updatedByUser,
+      };
+    });
+
+    return res.status(200).json({ data: { recent, counts } });
+  } catch (err) {
+    console.error("Error in getContractorJob:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 const getContractorRecentJobs = async (req, res) => {
   try {

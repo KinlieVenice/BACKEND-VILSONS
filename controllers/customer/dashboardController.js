@@ -124,7 +124,7 @@ const getCustomerDashboard = async (req, res) => {
   }
 };
 
-const getCustomerBalance = async (req, res) => {
+const getCustomerBalanceOld = async (req, res) => {
   try {
     const customer = await prisma.customer.findFirst({
       where: { userId: req.id },
@@ -187,6 +187,85 @@ const getCustomerBalance = async (req, res) => {
   }
 };
 
+const getCustomerBalance = async (req, res) => {
+  try {
+    // Fetch the customer along with their job orders and materials
+    const customer = await prisma.customer.findFirst({
+      where: { userId: req.id },
+      include: {
+        jobOrders: {
+          select: {
+            jobOrderCode: true,
+            labor: true,
+            materials: { select: { price: true, quantity: true } }, // correct fields
+          },
+        },
+      },
+    });
+
+    if (!customer) {
+      return res.status(404).json({ message: "You are not a customer" });
+    }
+
+    const jobOrderCodes = customer.jobOrders.map((jo) => jo.jobOrderCode);
+
+    // If no job orders exist, return 0 totals
+    if (!jobOrderCodes.length) {
+      return res.status(200).json({
+        data: { totalBill: 0, totalTransactions: 0, totalBalance: 0 },
+      });
+    }
+
+    // Fetch all transactions for the customer's job orders
+    const transactions = await prisma.transaction.findMany({
+      where: { jobOrderCode: { in: jobOrderCodes } },
+      select: { jobOrderCode: true, amount: true },
+    });
+
+    // Group transactions by jobOrderCode
+    const transactionMap = {};
+    for (const t of transactions) {
+      transactionMap[t.jobOrderCode] =
+        (transactionMap[t.jobOrderCode] || 0) + (Number(t.amount) || 0);
+    }
+
+    // Compute totals
+    let totalBill = 0;
+    let totalTransactions = 0;
+
+    for (const jo of customer.jobOrders) {
+      const laborTotal = Number(jo.labor) || 0;
+      const materialsTotal = Array.isArray(jo.materials)
+        ? jo.materials.reduce(
+            (sum, m) =>
+              sum + (Number(m.price) || 0) * (Number(m.quantity) || 0),
+            0
+          )
+        : 0;
+
+      const bill = laborTotal + materialsTotal;
+      const paid = transactionMap[jo.jobOrderCode] || 0;
+
+      totalBill += bill;
+      totalTransactions += paid;
+    }
+
+    const totalBalance = totalBill - totalTransactions;
+
+    return res.status(200).json({
+      data: {
+        totalBill,
+        totalTransactions,
+        totalBalance,
+      },
+    });
+  } catch (err) {
+    console.error("Error in getCustomerBalance:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
 const getCustomerJobStatus = async (req, res) => {
   try {
     const customer = await prisma.customer.findFirst({
@@ -217,7 +296,7 @@ const getCustomerJobStatus = async (req, res) => {
   }
 };
 
-const getCustomerRecentJobs = async (req, res) => {
+const getCustomerRecentJobsOld = async (req, res) => {
   try {
     const customer = await prisma.customer.findFirst({
       where: { userId: req.id },
@@ -279,6 +358,112 @@ const getCustomerRecentJobs = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+const getCustomerRecentJobs = async (req, res) => {
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: { userId: req.id, status: { not: "archived" } },
+      include: {
+        jobOrders: {
+          select: {
+            id: true,
+            jobOrderCode: true,
+            status: true,
+            labor: true,
+            contractorPercent: true,
+            contractor: {
+              select: {
+                id: true,
+                userId: true,
+                user: { select: { fullName: true } },
+              },
+            },
+            branch: { select: { id: true, branchName: true } },
+            materials: { select: { price: true, quantity: true } },
+            transactions: { select: { amount: true } },
+            truck: { select: { id: true, plate: true } },
+            createdAt: true,
+            updatedAt: true,
+            createdByUser: true,
+            updatedByUser: true,
+          },
+        },
+      },
+    });
+
+    if (!customer)
+      return res.status(404).json({ message: "You are not a customer" });
+
+    // Status counts
+    const statuses = [
+      "pending",
+      "ongoing",
+      "completed",
+      "forRelease",
+    ];
+    const counts = statuses.reduce((acc, status) => {
+      acc[status] = customer.jobOrders.filter(
+        (jo) => jo.status === status
+      ).length;
+      return acc;
+    }, {});
+
+    // Recent 5 job orders
+    const recentJobs = customer.jobOrders
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+      .map((job) => {
+        let contractorCommission = 0,
+          shopCommission = 0,
+          totalTransactions = 0,
+          totalMaterialCost = 0;
+
+
+        // Materials cost
+        if (job.materials?.length) {
+          totalMaterialCost = job.materials.reduce(
+            (sum, m) => sum + Number(m.price) * Number(m.quantity),
+            0
+          );
+        }
+
+        // Total transactions
+        if (job.transactions?.length) {
+          totalTransactions = job.transactions.reduce(
+            (sum, t) => sum + Number(t.amount || 0),
+            0
+          );
+        }
+
+        const totalBill = Number(job.labor || 0) + totalMaterialCost;
+        const balance = totalBill - totalTransactions;
+
+        return {
+          id: job.id,
+          jobOrderCode: job.jobOrderCode,
+          status: job.status,
+          plateNumber: job.truck?.plate || null,
+          truckId: job.truck?.id || null,
+          branchId: job.branch?.id || null,
+          branchName: job.branch?.branchName || null,
+          totalMaterialCost,
+          totalBill,
+          totalTransactions,
+          balance,
+          createdAt: job.createdAt,
+          updatedAt: job.updatedAt,
+          createdBy: job.createdByUser,
+          updatedBy: job.updatedByUser,
+        };
+      });
+
+    return res.status(200).json({ data: { recent: recentJobs, counts } });
+  } catch (err) {
+    console.error("Error in getCustomerRecentJobsAndStatus:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 
 

@@ -12,7 +12,7 @@ const { logActivity } = require("../../../utils/services/activityService.js");
 */
 
 const createOverhead = async (req, res) => {
-  const { description, amount, branchId, isMonthly } = req.body;
+  const { description, amount, branchId, isMonthly, automated } = req.body;
   if (!description || !amount || !branchId)
     return res
       .status(400)
@@ -28,6 +28,7 @@ const createOverhead = async (req, res) => {
       isMonthly: isMonthly ?? false,
       createdByUser: req.username,
       updatedByUser: req.username,
+      automated: automated ?? false,
     };
 
     const result = await prisma.$transaction(async (tx) => {
@@ -58,7 +59,7 @@ const createOverhead = async (req, res) => {
 };
 
 const editOverhead = async (req, res) => {
-  const { description, amount, branchId, isMonthly, remarks } = req.body;
+  const { description, amount, branchId, isMonthly, automated, remarks } = req.body;
   if (!req?.params?.id || !remarks)
     return res.status(400).json({ message: "ID and remarks are required" });
 
@@ -78,6 +79,7 @@ const editOverhead = async (req, res) => {
       amount: amount ?? overhead.amount,
       branchId: branchId ?? overhead.branchId,
       isMonthly: isMonthly ?? overhead.isMonthly,
+      automated: automated ?? overhead.automated,
       updatedByUser: req.username,
     };
 

@@ -32,6 +32,9 @@ router.route("/reject/:id")
 .put(verifyPermission(PERMISSIONS_LIST.HANDLE_COMPLETED_JOB_ORDERS), jobOrderController.rejectJobOrderCompleted) //change permission
 
 router.route("/released/:id")
-.put(verifyPermission(PERMISSIONS_LIST.HANDLE_FOR_RELEASE_JOB_ORDERS), jobOrderController.acceptJobOrderForRelease) //change permission
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_COMPLETED_JOB_ORDERS), jobOrderController.acceptJobOrderForRelease) //change permission
+
+router.route("/completed/:id")
+.put(verifyPermission(PERMISSIONS_LIST.HANDLE_COMPLETED_JOB_ORDERS), jobOrderController.markJobOrderCompleted) //change permission
 
 module.exports = router;

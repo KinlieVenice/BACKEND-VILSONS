@@ -1775,3 +1775,28 @@ Argument `payComponents`: Invalid value provided. Expected PayComponentUnchecked
 20251129	21:54:15	e784f875-782a-4e61-8f81-fc9b5f56f198	ReferenceError: name is not defined
 20251208	17:32:41	d241a3b5-3f6f-4bc0-9f50-82b23c2c4449	Error: Cannot set headers after they are sent to the client
 20251208	17:32:43	01a18bae-320d-4205-9691-4e073af08cba	Error: Cannot set headers after they are sent to the client
+20251214	10:16:55	ff4710d1-23c9-4386-848b-ced452bc5982	TypeError: Cannot read properties of undefined (reading 'refreshToken')
+20251214	10:16:55	19c788c9-426d-4a6f-b1cd-7fc027e955ef	TypeError: Cannot read properties of undefined (reading 'refreshToken')
+20251214	10:18:10	a3ab8097-cb9e-4844-a480-8d044006e6bf	TypeError: Cannot read properties of undefined (reading 'refreshToken')
+20251214	10:18:10	c89d14f6-8d28-44da-bc19-f3e33af3baac	TypeError: Cannot read properties of undefined (reading 'refreshToken')
+20251214	11:38:28	42012852-aed9-433b-b389-e416dfa068f8	TypeError: res.setHeader is not a function
+20251214	12:36:02	d95b747c-3f17-4a0f-bc70-2481fed354e1	Error: Not allowed by CORS
+20251214	12:36:29	5ae88b8b-ef49-41c8-8a19-c0ccfde3a7e0	Error: Not allowed by CORS
+20251214	12:40:39	ccd642c7-b934-4af7-9e1b-2bfdae2d9978	TypeError: res.setHeader is not a function
+20251214	12:40:39	c59212e8-457c-4de8-b602-9f0c8d9891b4	TypeError: res.setHeader is not a function
+20251214	12:40:39	5fea7e6f-61a9-4a53-8ced-910eb79dffe2	TypeError: res.setHeader is not a function
+20251214	12:40:39	1e0ff972-e217-4fd9-894a-4ebbc3862300	TypeError: res.setHeader is not a function
+20251214	12:56:17	bc4d5aee-a28b-4e90-95d6-0333c1eb4096	Error: Not allowed by CORS
+20251214	12:56:28	be45509f-3411-40d9-bdd9-4fcd7f669891	Error: Not allowed by CORS
+20251214	12:57:31	84a281eb-8557-4b6e-8555-cda80cca7f42	Error: Not allowed by CORS
+20251214	12:57:43	2ef3bf04-b023-4207-93a5-9f4e3f4c52e8	Error: Not allowed by CORS
+20251214	12:59:51	7e2da372-659f-4c9d-a452-afb20d9a0594	Error: Not allowed by CORS
+20251214	12:59:51	55031053-ab46-432a-9cd0-b2e5229a6524	Error: Not allowed by CORS
+20251214	12:59:51	088810fd-fb50-475d-8c01-770ed4724e55	Error: Not allowed by CORS
+20251214	12:59:51	e1a53d8c-4232-46c1-8bbe-25d7e6c08c54	Error: Not allowed by CORS
+20251214	13:00:36	238d9a79-51d1-48ec-a58c-478adfedee39	Error: Not allowed by CORS
+20251214	13:00:39	2f1ec7c5-4231-4fb9-b6ac-b0e3863f1f66	Error: Not allowed by CORS
+20251214	13:05:51	48ba15e7-3967-4703-b960-c452a512119c	Error: Not allowed by CORS
+20251214	13:19:36	4481924f-96af-4b4c-a4fa-694b37d9304b	Error: Not allowed by CORS
+20251214	13:19:45	fc9823db-d5e9-472a-ae39-b18de4027eeb	Error: Not allowed by CORS
+20251214	13:20:32	cb6ab5de-3b3c-49ff-a283-1b420f6cb0c1	Error: Not allowed by CORS

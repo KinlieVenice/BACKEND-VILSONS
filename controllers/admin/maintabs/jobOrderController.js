@@ -945,12 +945,260 @@ const editJobOrder = async (req, res) => {
     return res.status(404).json({ message: "ID is required" });
 
   try {
-    //  Global validation - runs regardless of approval needs
+    // Fetch existing job order
+    const jobOrder = await prisma.jobOrder.findFirst({
+      where: { id: req.params.id },
+      include: { images: true },
+    });
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${req.params.id} not found` });
+
+    // Validate branch if provided
+    if (branchId) {
+      const branch = await prisma.branch.findUnique({
+        where: { id: branchId },
+      });
+      if (!branch)
+        return res.status(400).json({ message: "Invalid branch ID" });
+    }
+
+    // Validate contractor if provided
+    let validContractorId =
+      contractorId && contractorId !== "undefined" && contractorId !== "null"
+        ? contractorId
+        : null;
+    if (validContractorId) {
+      const contractor = await prisma.contractor.findUnique({
+        where: { id: validContractorId },
+      });
+      if (!contractor)
+        return res.status(400).json({ message: "Invalid contractor ID" });
+    }
+
+    // Validate materials
+    if (materials && materials.length > 0) {
+      const invalid = materials.some(
+        (m) => !m.materialName || !m.price || !m.quantity
+      );
+      if (invalid) {
+        return res.status(400).json({
+          message:
+            "Each material must include non-empty name, non-zero price, and non-zero quantity",
+        });
+      }
+    }
+
+    const needsApproval = req.approval;
+
+    // Handle uploaded images
+    const beforeImages = req.files?.beforeImages?.map((f) => f.filename) || [];
+    const afterImages = req.files?.afterImages?.map((f) => f.filename) || [];
+    const imageData = [
+      ...beforeImages.map((filename) => ({
+        type: "before",
+        filename,
+        jobOrderId: jobOrder.id,
+      })),
+      ...afterImages.map((filename) => ({
+        type: "after",
+        filename,
+        jobOrderId: jobOrder.id,
+      })),
+    ];
+
+    // If approval needed, create approval request only
+    if (needsApproval) {
+      const approvalPayload = {
+        jobOrderId: jobOrder.id,
+        updateData: {
+          customerId: jobOrder.customerId,
+          truckId: jobOrder.truckId,
+          branchId: branchId ?? jobOrder.branchId,
+          description: description ?? jobOrder.description,
+          contractorId: validContractorId,
+          labor: labor ?? jobOrder.labor,
+          status:
+            validContractorId === null && jobOrder.contractorId !== null
+              ? "pending"
+              : jobOrder.status,
+          images: imageData,
+        },
+        materials: materials || [],
+      };
+
+      const approvalLog = await requestApproval(
+        "jobOrder",
+        jobOrder.id,
+        "edit",
+        approvalPayload,
+        req.username,
+        branchId ?? jobOrder.branchId
+      );
+
+      return res.status(202).json({
+        message: "Job order edit awaiting approval",
+        data: {
+          approvalId: approvalLog.id,
+          jobOrderCode: jobOrder.jobOrderCode,
+        },
+      });
+    }
+
+    // No approval: update directly in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      let contractorPercent = 0,
+        contractorCommission = 0,
+        shopCommission = 0,
+        totalMaterialCost = 0;
+
+      const laborValue = Number(labor) || 0;
+
+      // Set contractorPercent if contractor exists
+      if (validContractorId) {
+        const contractor = await tx.contractor.findUnique({
+          where: { id: validContractorId },
+        });
+        if (contractor) contractorPercent = Number(contractor.commission);
+      }
+
+      // Commission calculations
+      contractorCommission = laborValue * contractorPercent;
+      shopCommission = laborValue - contractorCommission;
+
+      // Add new images if any
+      if (imageData.length > 0) {
+        await tx.jobOrderImage.createMany({ data: imageData });
+        console.log(`📸 Added ${imageData.length} new job order images`);
+      }
+
+      // Prepare update data
+      const jobOrderData = {
+        customerId: jobOrder.customerId,
+        truckId: jobOrder.truckId,
+        branchId: branchId ?? jobOrder.branchId,
+        description: description ?? jobOrder.description,
+        contractorId: validContractorId,
+        labor: laborValue || null,
+        contractorPercent,
+        updatedByUser: req.username,
+        status:
+          validContractorId === null && jobOrder.contractorId !== null
+            ? "pending"
+            : jobOrder.status,
+      };
+
+      const jobOrderInclude = {
+        truck: { select: { id: true, plate: true } },
+        customer: {
+          include: { user: { select: { username: true, fullName: true } } },
+        },
+        contractor: validContractorId
+          ? {
+              include: { user: { select: { username: true, fullName: true } } },
+            }
+          : false,
+        branch: { select: { id: true, branchName: true } },
+      };
+
+      // Update job order
+      const editedJobOrder = await tx.jobOrder.update({
+        where: { id: jobOrder.id },
+        data: jobOrderData,
+        include: jobOrderInclude,
+      });
+
+      // Update materials
+      if (materials && materials.length > 0) {
+        await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } });
+        await tx.material.createMany({
+          data: materials.map((m) => ({
+            jobOrderId: jobOrder.id,
+            materialName: m.materialName,
+            quantity: m.quantity,
+            price: m.price,
+          })),
+        });
+        totalMaterialCost = materials.reduce(
+          (sum, m) => sum + m.price * m.quantity,
+          0
+        );
+      }
+
+      return {
+        jobOrder: editedJobOrder,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+        materials: materials || [],
+      };
+    });
+
+    // Send response
+    const {
+      jobOrder: editedJobOrder,
+      contractorCommission,
+      shopCommission,
+      totalMaterialCost,
+      materials: resultMaterials,
+    } = result;
+    const {
+      truckId: _,
+      customerId: __,
+      contractorId: ___,
+      branchId: ____,
+      ...jobOrderFields
+    } = editedJobOrder;
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} edited Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`,
+      branchId ?? jobOrder.branchId,
+      remarks
+    );
+
+    return res.status(200).json({
+      message: "Job order successfully updated",
+      data: {
+        ...jobOrderFields,
+        contractorCommission,
+        shopCommission,
+        totalMaterialCost,
+        materials: resultMaterials,
+      },
+    });
+  } catch (err) {
+    console.log("Error in editJobOrder:", err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+const editJobOrderNEWWW = async (req, res) => {
+  const parsedBody = parseArrayFields(req.body, ["materials", "images"]);
+  const {
+    branchId,
+    contractorId,
+    description,
+    materials,
+    labor,
+    images,
+    remarks,
+  } = parsedBody;
+
+  if (!req?.params?.id)
+    return res.status(404).json({ message: "ID is required" });
+
+  try {
+    // Global validation - runs regardless of approval needs
     const jobOrder = await prisma.jobOrder.findFirst({
       where: { id: req.params.id },
       include: {
-        images: true
-      }
+        images: true,
+      },
     });
     if (!jobOrder)
       return res
@@ -959,15 +1207,26 @@ const editJobOrder = async (req, res) => {
 
     // Validate branch exists if provided
     if (branchId) {
-      const branch = await prisma.branch.findUnique({ where: { id: branchId } });
-      if (!branch) return res.status(400).json({ message: "Invalid branch ID" });
+      const branch = await prisma.branch.findUnique({
+        where: { id: branchId },
+      });
+      if (!branch)
+        return res.status(400).json({ message: "Invalid branch ID" });
     }
+
     // Validate contractor if provided
-    if (contractorId && contractorId !== "undefined" && contractorId !== "null") {
+    const hasValidContractor =
+      contractorId && contractorId !== "undefined" && contractorId !== "null";
+
+    // Validate labor if provided
+    const hasValidLabor = labor && labor !== "undefined" && labor !== "null";
+
+    if (hasValidContractor) {
       const contractor = await prisma.contractor.findUnique({
         where: { id: contractorId },
       });
-      if (!contractor) return res.status(400).json({ message: "Invalid contractor ID" });
+      if (!contractor)
+        return res.status(400).json({ message: "Invalid contractor ID" });
     }
 
     // Validate materials if provided
@@ -977,7 +1236,8 @@ const editJobOrder = async (req, res) => {
       );
       if (invalid) {
         return res.status(400).json({
-          message: "Each material must include non-empty name, non-zero price, and non-zero quantity",
+          message:
+            "Each material must include non-empty name, non-zero price, and non-zero quantity",
         });
       }
     }
@@ -989,13 +1249,35 @@ const editJobOrder = async (req, res) => {
     const afterImages = req.files?.afterImages?.map((f) => f.filename) || [];
 
     const imageData = [
-    ...beforeImages.map(filename => ({ type: "before", filename, jobOrderId: jobOrder.id })),
-    ...afterImages.map(filename => ({ type: "after", filename, jobOrderId: jobOrder.id })),
+      ...beforeImages.map((filename) => ({
+        type: "before",
+        filename,
+        jobOrderId: jobOrder.id,
+      })),
+      ...afterImages.map((filename) => ({
+        type: "after",
+        filename,
+        jobOrderId: jobOrder.id,
+      })),
     ];
 
     // ✅ If approval is needed, create approval request
     if (needsApproval) {
-      // Create approval request without updating any entities
+      // Get contractor percent for approval payload
+      let contractorPercent = 0;
+      if (hasValidContractor) {
+        const contractor = await prisma.contractor.findUnique({
+          where: { id: contractorId },
+          select: { commission: true },
+        });
+        contractorPercent = contractor ? Number(contractor.commission) : 0;
+
+        // Convert to decimal if it's a percentage (e.g., 30 -> 0.3)
+        if (contractorPercent > 1) {
+          contractorPercent = contractorPercent / 100;
+        }
+      }
+
       const approvalPayload = {
         jobOrderId: req.params.id,
         updateData: {
@@ -1003,19 +1285,23 @@ const editJobOrder = async (req, res) => {
           truckId: jobOrder.truckId,
           branchId: branchId ?? jobOrder.branchId,
           description: description ?? jobOrder.description,
-          contractorId: contractorId && contractorId !== "undefined" && contractorId !== "null" ? contractorId : null,
-          labor: labor && labor !== "undefined" && labor !== "null" ? labor : null,
-          status: (contractorId === null && jobOrder.contractorId !== null) ? "pending" : jobOrder.status,
-          images: imageData
+          contractorId: hasValidContractor ? contractorId : null,
+          labor: hasValidLabor ? labor : null,
+          contractorPercent: hasValidContractor ? contractorPercent : null, // ✅ Save contractorPercent
+          status:
+            !hasValidContractor && jobOrder.contractorId !== null
+              ? "pending"
+              : jobOrder.status,
+          images: imageData,
         },
         materials: materials || [],
       };
 
       const approvalLog = await requestApproval(
-        'jobOrder', 
-        req.params.id, 
-        'edit', 
-        approvalPayload, 
+        "jobOrder",
+        req.params.id,
+        "edit",
+        approvalPayload,
         req.username,
         branchId ?? jobOrder.branchId
       );
@@ -1037,19 +1323,41 @@ const editJobOrder = async (req, res) => {
         shopCommission = 0,
         totalMaterialCost = 0;
 
-    if (imageData.length > 0) {
-      await prisma.jobOrderImage.createMany({ data: imageData });
-      console.log(`📸 Added ${imageData.length} new job order images`);
-    }
+      if (imageData.length > 0) {
+        await prisma.jobOrderImage.createMany({ data: imageData });
+        console.log(`📸 Added ${imageData.length} new job order images`);
+      }
 
-      // Calculate commissions if contractor and labor provided
-      if (contractorId !== jobOrder.contractorId && contractorId && labor) {
+      // Calculate commissions and get contractor percent
+      if (hasValidLabor) {
         contractor = await tx.contractor.findUnique({
           where: { id: contractorId },
+          select: { commission: true, id: true },
         });
-        contractorPercent = Number(contractor.commission);
-        contractorCommission = Number(labor) * contractorPercent;
-        shopCommission = Number(labor) - contractorCommission;
+
+        if (contractor) {
+          // Get the contractor's commission rate
+          contractorPercent = Number(contractor.commission) || 0;
+
+          // Convert to decimal if it's a percentage (e.g., 30 -> 0.3)
+          if (contractorPercent > 1) {
+            contractorPercent = contractorPercent / 100;
+          }
+
+          contractorCommission = Number(labor) * contractorPercent;
+          shopCommission = Number(labor) - contractorCommission;
+
+          console.log("Commission Calculation:");
+          console.log("Labor:", labor);
+          console.log("Contractor Percent (decimal):", contractorPercent);
+          console.log("Contractor Commission:", contractorCommission);
+          console.log("Shop Commission:", shopCommission);
+        }
+      } else {
+        // Clear commissions if no contractor or no labor
+        contractorPercent = 0;
+        contractorCommission = 0;
+        shopCommission = 0;
       }
 
       const jobOrderData = {
@@ -1057,27 +1365,24 @@ const editJobOrder = async (req, res) => {
         truckId: jobOrder.truckId,
         branchId: branchId ?? jobOrder.branchId,
         description: description ?? jobOrder.description,
-        contractorId:
-          contractorId &&
-          contractorId !== "undefined" &&
-          contractorId !== "null"
-            ? contractorId
-            : null,
-        labor:
-          labor && labor !== "undefined" && labor !== "null" ? labor : null,
+        contractorId: hasValidContractor ? contractorId : null,
+        labor: hasValidLabor ? labor : null,
+        contractorPercent: hasValidContractor ? contractorPercent : null, // ✅ Save contractorPercent to job order
         updatedByUser: req.username,
         status:
-          contractorId === null && jobOrder.contractorId !== null
+          !hasValidContractor && jobOrder.contractorId !== null
             ? "pending"
             : jobOrder.status,
       };
+
+      console.log("Job Order Data to Update:", jobOrderData);
 
       const jobOrderInclude = {
         truck: { select: { id: true, plate: true } },
         customer: {
           include: { user: { select: { username: true, fullName: true } } },
         },
-        contractor: contractorId
+        contractor: hasValidContractor
           ? {
               include: { user: { select: { username: true, fullName: true } } },
             }
@@ -1096,7 +1401,7 @@ const editJobOrder = async (req, res) => {
       if (materials && materials.length > 0) {
         // Delete existing materials and create new ones
         await tx.material.deleteMany({ where: { jobOrderId: jobOrder.id } });
-        
+
         await tx.material.createMany({
           data: materials.map((m) => ({
             jobOrderId: jobOrder.id,
@@ -1116,20 +1421,36 @@ const editJobOrder = async (req, res) => {
         jobOrder: editedJobOrder,
         contractorCommission,
         shopCommission,
+        contractorPercent: jobOrderData.contractorPercent, // Return the saved percent
         totalMaterialCost,
         materials: materials || [],
       };
     });
 
     // Handle successful update response
-    const { jobOrder: editedJobOrder, contractorCommission, shopCommission, totalMaterialCost, materials: resultMaterials } = result;
-    const { truckId: _, customerId: __, contractorId: ___, branchId: ____, ...jobOrderFields } = editedJobOrder;
-    
+    const {
+      jobOrder: editedJobOrder,
+      contractorCommission,
+      shopCommission,
+      contractorPercent,
+      totalMaterialCost,
+      materials: resultMaterials,
+    } = result;
+
+    const {
+      truckId: _,
+      customerId: __,
+      contractorId: ___,
+      branchId: ____,
+      ...jobOrderFields
+    } = editedJobOrder;
+
     await logActivity(
       req.username,
       needsApproval
         ? `FOR APPROVAL: ${req.username} edited Job Order ${jobOrder.jobOrderCode}`
-        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`, branchId ?? jobOrder.branchId,
+        : `${req.username} edited Job Order ${jobOrder.jobOrderCode}`,
+      branchId ?? jobOrder.branchId,
       remarks
     );
 
@@ -1139,13 +1460,13 @@ const editJobOrder = async (req, res) => {
         ...jobOrderFields,
         contractorCommission,
         shopCommission,
+        contractorPercent, // Include in response for debugging
         totalMaterialCost,
         materials: resultMaterials,
       },
     });
-
   } catch (err) {
-    console.log(err.message)
+    console.log(err.message);
     return res.status(500).json({ message: err.message });
   }
 };
@@ -1672,23 +1993,18 @@ const getJobOrder = async (req, res) => {
       totalMaterialCost = 0;
 
     // calculate commissions
-    if (jobOrder.contractorId && jobOrder.labor) {
-      const contractor = await prisma.contractor.findUnique({
-        where: { id: jobOrder.contractorId },
-      });
-      if (contractor) {
-        contractorCommission = jobOrder.labor * jobOrder.contractorPercent;
-        shopCommission = jobOrder.labor - contractorCommission;
-      }
+    if (jobOrder.labor) {
+        contractorCommission = Number(jobOrder.labor) * Number(jobOrder.contractorPercent);
+        shopCommission = Number(jobOrder.labor) - contractorCommission;
     }
 
-    // calculate total material cost
-    if (jobOrder.materials && jobOrder.materials.length > 0) {
-      totalMaterialCost = jobOrder.materials.reduce(
-        (sum, m) => sum + m.price * m.quantity,
-        0
-      );
-    }
+    // // calculate total material cost
+    // if (jobOrder.materials && jobOrder.materials.length > 0) {
+    //   totalMaterialCost = jobOrder.materials.reduce(
+    //     (sum, m) => sum + m.price * m.quantity,
+    //     0
+    //   );
+    // }
 
     if (jobOrder.transactions?.length) {
         totalTransactions = jobOrder.transactions.reduce(
@@ -1706,9 +2022,17 @@ const getJobOrder = async (req, res) => {
       };
     });
 
-    const totalBill =
-        Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
-
+    const totalBill = Number(shopCommission) + Number(contractorCommission) + Number(totalMaterialCost);
+    console.log("Response data:", {
+      totalBill,
+      totalTransactions,
+      balance: totalBill - totalTransactions,
+      labor: Number(jobOrder.labor),
+      contractorCommission,
+      shopCommission,
+      totalMaterialCost,
+      materials: processedMaterials,
+    });
     return res.status(200).json({
       data: {
         id: jobOrder.id,
@@ -1930,6 +2254,64 @@ const acceptJobOrderForRelease = async (req, res) => {
   }
 };
 
+const markJobOrderCompleted = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({ where: { id } });
+
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${id} not found` });
+
+    if (jobOrder.status !== "ongoing")
+      return res.status(400).json({ message: "Job Order is not yet ongoing" });
+
+    const needsApproval = req.approval;
+    let message;
+
+    const jobOrderData = {
+      status: "completed",
+      updatedByUser: req.username
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      if (needsApproval) {
+        message = "Job order status awaiting approval";
+        return await requestApproval(
+          "jobOrder",
+          id,
+          "edit",
+          jobOrderData,
+          req.username,
+          jobOrder.branchId
+        );
+      } else {
+        message = "Job order status successfully updated";
+        return await tx.jobOrder.update({
+          where: { id: jobOrder.id },
+          data: jobOrderData,
+        });
+      }
+    });
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} marked Job Order ${jobOrder.jobOrderCode} as complete`
+        : `${req.username} marked Job Order ${jobOrder.jobOrderCode} as complete`,
+      jobOrder.branchId
+    );
+
+    return res.status(200).json({ message, data: result });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 const editJobOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -2002,4 +2384,5 @@ module.exports = {
   acceptJobOrderCompleted,
   rejectJobOrderCompleted,
   acceptJobOrderForRelease,
+  markJobOrderCompleted,
 };

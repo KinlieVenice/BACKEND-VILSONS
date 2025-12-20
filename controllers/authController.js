@@ -50,12 +50,20 @@ const handleLogin = async (req, res) => {
       data: { refreshToken },
     });
 
+    console.log(
+      "Refresh token created:",
+      refreshToken.substring(0, 20) + "..."
+    );
+    console.log("Request origin:", req.headers.origin);
+
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
       sameSite: "None",
       secure: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
+
+    console.log("Login successful for user:", foundUser.username)
 
     res.json({ accessToken, refreshToken });
   } else {

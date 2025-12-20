@@ -196,12 +196,12 @@ const createRole = async (req, res) => {
       };
     });
 
-    await logActivity(
-      req.username,
-      needsApproval
-        ? `FOR APPROVAL: ${req.username} created Role ${roleName}`
-        : `${req.username} created Role ${roleName}`
-    );
+    // await logActivity(
+    //   req.username,
+    //   needsApproval
+    //     ? `FOR APPROVAL: ${req.username} created Role ${roleName}`
+    //     : `${req.username} created Role ${roleName}`
+    // );
 
     return res.status(201).json(result);
   } catch (err) {
@@ -644,7 +644,7 @@ const getRolePermissions = async (req, res) => {
 
 const getAllRoles = async (req, res) => {
   try {
-    const roles = await prisma.role.findMany();
+    const roles = await prisma.role.findMany( { where: { roleName: { not: "superadmin" } } });
 
     // Add baseRoleName for each role
     const rolesWithBaseName = await Promise.all(

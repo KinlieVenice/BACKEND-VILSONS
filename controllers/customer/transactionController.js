@@ -60,7 +60,7 @@ const getAllTransactions = async (req, res) => {
       );
 
       // 7️⃣ Compute remaining balance (optional)
-      const totalBalance = totalBill - total;
+      const totalBalance = totalBill - totalTransactions;
 
       return { transactions, totalTransactions, totalBill, totalBalance };
     });

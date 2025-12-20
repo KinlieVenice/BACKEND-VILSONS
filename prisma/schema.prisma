@@ -370,7 +370,7 @@ model JobOrder {
   description String
   images        JobOrderImage[]
   labor       Decimal?     @db.Decimal(13, 2)
-  contractorPercent Decimal? @db.Decimal(13, 2)
+  contractorPercent Decimal? @db.Decimal(13, 2) @default(0)
   completedAt DateTime?
 
   transactions Transaction[]
@@ -408,6 +408,7 @@ model Overhead {
   amount      Decimal @db.Decimal(13, 2)
   isMonthly   Boolean? @default(false)
   branchId    String
+  automated Boolean?
 
   createdAt   DateTime @default(now())
   createdByUser String

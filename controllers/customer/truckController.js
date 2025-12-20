@@ -1,4 +1,5 @@
 const { getDateRangeFilter, } = require("../../utils/filters/dateRangeFilter");
+const jobOwnerFinder = require("../../utils/finders/jobOwnerFinder");
 
 
 const { PrismaClient } = require("@prisma/client");
@@ -88,7 +89,7 @@ const getAllMyTrucks = async (req, res) => {
   }
 };
 
-const getMyTruck = async (req, res) => {
+const getMyTruckOOld = async (req, res) => {
   if (!req?.params?.id)
     return res.status(400).json({ message: "ID is required" });
 
@@ -185,6 +186,96 @@ const getMyTruck = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+const getMyTruck = async (req, res) => {
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const truck = await prisma.truck.findUnique({
+      where: { id: req.params.id },
+      include: {
+        owners: {
+          orderBy: { startDate: "desc" }, // newest ownership first
+          include: { customer: { include: { user: true } } },
+        },
+        jobOrders: {
+          include: { materials: true },
+        },
+      },
+    });
+
+    if (!truck) {
+      return res.status(404).json({ message: "Truck not found" });
+    }
+
+    // Map owners and mark current ownership
+    const owners = truck.owners.map((owner) => ({
+      customerId: owner.customer?.id || null,
+      userId: owner.customer?.user?.id || null,
+      fullName: owner.customer?.user?.fullName || null,
+      username: owner.customer?.user?.username || null,
+      transferredByUser: owner.transferredByUser,
+      startDate: owner.startDate,
+      endDate: owner.endDate,
+      isCurrentOwner: owner.endDate === null && owner.customerId === req.id,
+    }));
+
+    // Map job orders
+    const jobOrders = truck.jobOrders.map((jo) => {
+      const ownerAtCreation = owners.find(
+        (o) =>
+          new Date(o.startDate) <= new Date(jo.createdAt) &&
+          (!o.endDate || new Date(o.endDate) >= new Date(jo.createdAt))
+      );
+
+      const materialsTotal = jo.materials.reduce(
+        (sum, m) => sum + Number(m.price) * Number(m.quantity),
+        0
+      );
+
+      const totalBill = (Number(jo.labor) || 0) + materialsTotal;
+
+      return {
+        jobOrderId: jo.id,
+        jobOrderCode: jo.jobOrderCode,
+        customerId: ownerAtCreation?.customerId,
+        customerUserId: ownerAtCreation?.userId,
+        customerFullName: ownerAtCreation?.fullName,
+        customerUsername: ownerAtCreation?.username,
+        createdAt: jo.createdAt,
+        totalBill,
+        status: jo.status,
+      };
+    });
+
+    // Group job orders by status
+    const activeStatuses = ["pending", "ongoing", "completed", "forRelease"];
+    const activeJobOrders = jobOrders.filter((jo) =>
+      activeStatuses.includes(jo.status)
+    );
+    const archivedJobOrders = jobOrders.filter((jo) => jo.status === "archive");
+
+    const truckWithOwnersAndJobOrders = {
+      ...truck,
+      owners,
+      jobOrders: {
+        active: activeJobOrders,
+        archived: archivedJobOrders,
+      },
+      jobOrderSummary: {
+        activeCount: activeJobOrders.length,
+        archivedCount: archivedJobOrders.length,
+      },
+    };
+
+    return res.status(200).json({ data: truckWithOwnersAndJobOrders });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
 
 module.exports = {
   getAllMyTrucks,

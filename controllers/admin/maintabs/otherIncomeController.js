@@ -83,9 +83,17 @@ const editOtherIncome = async (req, res) => {
 
     const result = await prisma.$transaction(async (tx) => {
       const editedOtherIncome = needsApproval
-        ? await requestApproval('otherIncome', req.params.id, 'edit', {
-              ...updatedData,
-              createdByUser: req.username }, req.username, branchId || otherIncome.branchId)
+        ? await requestApproval(
+            "otherIncome",
+            req.params.id,
+            "edit",
+            {
+              ...otherIncomeData,
+              createdByUser: req.username,
+            },
+            req.username,
+            branchId || otherIncome.branchId
+          )
         : await tx.otherIncome.update({
             where: { id: otherIncome.id },
             data: otherIncomeData,

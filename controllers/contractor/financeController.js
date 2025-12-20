@@ -48,7 +48,7 @@ const getAllLabor = async (req, res) => {
       // 6️⃣ Compute total balance
       const totalBalance = totalCommission - totalLabor;
 
-      return { labors, totalBalance };
+      return { labors, totalBalance, totalLabor };
     });
 
     return res.status(200).json({ data: result });
