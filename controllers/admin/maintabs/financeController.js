@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
 const { branchFilter } = require("../../../utils/filters/branchFilter");
 
+
 // accrual basis
 const getRevenueProfitAccrual = async (req, res) => {
   try {

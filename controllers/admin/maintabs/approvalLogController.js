@@ -4,6 +4,8 @@ const { requestApproval, approveRequest, rejectRequest } = require("../../../uti
 const { logActivity } = require("../../../utils/services/activityService.js");
 const { enrichPayloadWithNames } = require("../../../utils/services/enrichPayloadService.js"); // Adjust path
 const { branchFilter } = require("../../../utils/filters/branchFilter"); 
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
+
 
 const getAllApprovalLogsOLDDD2 = async (req, res) => {
   try {
@@ -25,13 +27,18 @@ const getAllApprovalLogsOLDDD2 = async (req, res) => {
 const getAllApprovalLogs = async (req, res) => {
   try {
     const branch = req.query?.branch;
-    const pendingApprovalLogs = await prisma.approvalLog.findMany({
-      where: {
+    const where = {
         status: "pending",
         ...branchFilter("approvalLog", branch, req.branchIds),
-      },
+      };
+
+    const pendingApprovalLogs = await prisma.approvalLog.findMany({
+      where,
+      include: { branch: { select: { branchName: true } } },
       orderBy: { createdAt: "desc" },
     });
+    
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "approvalLog", where);
 
     // Define field mappings based on your schema
     const fieldMappings = {
@@ -111,7 +118,7 @@ const getAllApprovalLogs = async (req, res) => {
       })
     );
 
-    return res.status(200).json({ data: enrichedApprovalLogs });
+    return res.status(200).json({ data: enrichedApprovalLogs, lastUpdatedAt });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

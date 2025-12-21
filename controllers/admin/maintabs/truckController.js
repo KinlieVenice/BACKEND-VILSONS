@@ -5,6 +5,8 @@ const relationsChecker = require("../../../utils/services/relationsChecker");
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval");
 const deleteFile = require("../../../utils/services/imageDeleter.js");
 const { logActivity } = require("../../../utils/services/activityService.js");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
+
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -374,8 +376,15 @@ const getAllTrucks = async (req, res) => {
       return { trucks: trucksWithOwner };
     });
 
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "truck", where);
+
+
     return res.status(200).json({
-      data: { ...result, pagination: { totalItems, totalPages } },
+      data: {
+        ...result,
+        pagination: { totalItems, totalPages },
+        lastUpdatedAt,
+      },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

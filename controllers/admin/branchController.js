@@ -3,8 +3,7 @@ const prisma = new PrismaClient();
 const { requestApproval } = require("../../utils/services/approvalService");
 const checkPendingApproval = require("../../utils/services/checkPendingApproval");
 const { logActivity } = require("../../utils/services/activityService.js");
-
-
+const { getLastUpdatedAt } = require("../../utils/services/lastUpdatedService");
 /*
 branchName           String         @db.VarChar(100)
   description    String
@@ -244,6 +243,9 @@ const getAllBranches = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "otherIncome", where);
+
+
     totalItems = await prisma.branch.count({ where });
 
     if (limit) {
@@ -251,7 +253,7 @@ const getAllBranches = async (req, res) => {
     } 
 
     return res.status(201).json({
-      data: { branches, pagination: { totalItems, totalPages } },
+      data: { branches, pagination: { totalItems, totalPages }, lastUpdatedAt },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

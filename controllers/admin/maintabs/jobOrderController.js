@@ -12,6 +12,7 @@ const {logActivity} = require("../../../utils/services/activityService.js")
 const deleteFile = require("../../../utils/services/imageDeleter")
 const checkPendingApproval = require("../../../utils/services/checkPendingApproval")
 const parseArrayFields = require("../../../utils/services/parseArrayFields.js");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
 
 // "POST /"
 const createJobOrder = async (req, res) => {
@@ -1879,6 +1880,9 @@ const getAllJobOrders = async (req, res) => {
       },
       orderBy: { createdAt: "desc" },
     });
+    
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "jobOrder", where);
+
 
     // compute commissions & flatten output
     let result = jobOrders.map((job) => {
@@ -1952,6 +1956,7 @@ const getAllJobOrders = async (req, res) => {
         totalPages: limit ? Math.ceil(result.length / limit) : 1,
         currentPage: page || 1,
       },
+      lastUpdatedAt
     });
   } catch (err) {
     console.log(err.message);
@@ -2201,7 +2206,7 @@ const rejectJobOrderCompleted = async (req, res) => {
   }
 };
 
-const acceptJobOrderForRelease = async (req, res) => {
+const acceptJobOrderForReleaseOld = async (req, res) => {
   const { id } = req.params;
 
   if (!id) return res.status(400).json({ message: "ID is required" });
@@ -2246,6 +2251,105 @@ const acceptJobOrderForRelease = async (req, res) => {
         });
       }
     });
+
+    return res.status(200).json({ message, data: result });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const acceptJobOrderForRelease = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) return res.status(400).json({ message: "ID is required" });
+
+  try {
+    const jobOrder = await prisma.jobOrder.findFirst({
+      where: { id },
+      include: {
+        transactions: true,
+        materials: { select: { price: true, quantity: true } },
+      },
+    });
+
+    if (!jobOrder)
+      return res
+        .status(404)
+        .json({ message: `Job order with ID: ${id} not found` });
+
+    if (jobOrder.status !== "forRelease")
+      return res
+        .status(400)
+        .json({ message: "Job Order is not yet forRelease" });
+
+    // Calculate total bill and total transactions (similar to getAllJobOrders logic)
+    let totalMaterialCost = 0;
+    let totalTransactions = 0;
+
+    if (jobOrder.materials?.length) {
+      totalMaterialCost = jobOrder.materials.reduce(
+        (sum, m) => sum + Number(m.price) * Number(m.quantity),
+        0
+      );
+    }
+
+    if (jobOrder.transactions?.length) {
+      totalTransactions = jobOrder.transactions.reduce(
+        (sum, t) => sum + Number(t.amount),
+        0
+      );
+    }
+
+    const totalBill = Number(jobOrder.labor || 0) + Number(totalMaterialCost);
+
+    // Check if job order is fully paid
+    if (totalBill !== totalTransactions) {
+      return res.status(400).json({
+        message: "Job order still not fully paid, cannot be fully released",
+        data: {
+          totalBill,
+          totalTransactions,
+          balance: totalBill - totalTransactions,
+        },
+      });
+    }
+
+    const needsApproval = req.approval;
+    let message;
+
+    const jobOrderData = {
+      status: "archived",
+      updatedByUser: req.username,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      if (needsApproval) {
+        message = "Job order status awaiting approval";
+        return await requestApproval(
+          "jobOrder",
+          id,
+          "edit",
+          jobOrderData,
+          req.username,
+          jobOrder.branchId
+        );
+      } else {
+        message = "Job order status successfully updated";
+        return await tx.jobOrder.update({
+          where: { id: jobOrder.id },
+          data: jobOrderData,
+        });
+      }
+    });
+
+    await logActivity(
+      req.username,
+      needsApproval
+        ? `FOR APPROVAL: ${req.username} accepted Job Order ${jobOrder.jobOrderCode}`
+        : `${req.username} accepted Job Order ${jobOrder.jobOrderCode}`,
+      jobOrder.branchId
+    );
 
     return res.status(200).json({ message, data: result });
   } catch (err) {

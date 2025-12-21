@@ -4,6 +4,7 @@ const { branchFilter } = require("../../../utils/filters/branchFilter");
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
 const { requestApproval } = require("../../../utils/services/approvalService");
 const { logActivity } = require("../../../utils/services/activityService.js");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
 
 
 
@@ -199,6 +200,8 @@ const getAllEquipments = async (req, res) => {
         },
       });
 
+      const lastUpdatedAt = await getLastUpdatedAt(tx, "equipment", where);
+
       const equipmentsWithTotal = equipments.map((m) => ({
         ...m,
         totalAmount: Number(m.price) * Number(m.quantity),
@@ -209,10 +212,18 @@ const getAllEquipments = async (req, res) => {
         0
       );
 
-      return { equipmentsWithTotal, totalEquipmentsAmount } ;
+      return { equipmentsWithTotal, totalEquipmentsAmount, lastUpdatedAt };
     });
 
-    return res.status(201).json({ data: { equipments:result.equipmentsWithTotal, totalEquipmentsAmount: result.totalEquipmentsAmount } });
+    return res
+      .status(201)
+      .json({
+        data: {
+          equipments: result.equipmentsWithTotal,
+          totalEquipmentsAmount: result.totalEquipmentsAmount,
+          lastUpdatedAt: result.lastUpdatedAt
+        },
+      });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

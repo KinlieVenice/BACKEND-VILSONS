@@ -23,7 +23,7 @@ const {
   processMonthlyOverheads,
 } = require("./utils/services/schedulerService");
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("* 4 * * *", async () => {
   console.log("Running schedulers every 4 hours...");
 
   try {

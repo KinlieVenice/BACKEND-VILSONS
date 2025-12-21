@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
 const { requestApproval } = require("../../../utils/services/approvalService");
 const { logActivity } = require("../../../utils/services/activityService.js");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
 
 
 /*
@@ -60,8 +61,8 @@ const createOverhead = async (req, res) => {
 
 const editOverhead = async (req, res) => {
   const { description, amount, branchId, isMonthly, automated, remarks } = req.body;
-  if (!req?.params?.id || !remarks)
-    return res.status(400).json({ message: "ID and remarks are required" });
+  if (!req?.params?.id)
+    return res.status(400).json({ message: "ID is required" });
 
   try {
     const overhead = await prisma.overhead.findFirst({
@@ -185,6 +186,7 @@ const getAllOverheads = async (req, res) => {
 
   try {
     let overheads;
+    let lastUpdatedAt;
 
     if (isMonthly) {
       // Step 1: Get all overheads (without isMonthly filter first)
@@ -197,6 +199,9 @@ const getAllOverheads = async (req, res) => {
           createdAt: "desc", // Order by latest first
         },
       });
+
+      lastUpdatedAt = await getLastUpdatedAt(prisma, "overhead", where);
+
 
       // Step 2: Filter to get only the latest record for each description
       const uniqueOverheads = new Map();
@@ -237,11 +242,16 @@ const getAllOverheads = async (req, res) => {
           branch: { select: { id: true, branchName: true, address: true } },
         },
       });
+
+      lastUpdatedAt = await getLastUpdatedAt(prisma, "overhead", where);
+
     }
 
     const totalAmount = overheads.reduce((sum, o) => sum + Number(o.amount), 0);
 
-    return res.status(200).json({ data: { overheads, totalAmount } });
+    return res
+      .status(200)
+      .json({ data: { overheads, totalAmount, lastUpdatedAt } });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

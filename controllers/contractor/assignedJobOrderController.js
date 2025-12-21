@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getDateRangeFilter } = require("../../utils/filters/dateRangeFilter");
+const { getLastUpdatedAt } = require("../../utils/services/lastUpdatedService");
+
 
 // CONTRACTOR
 const getAllAssignedJobOrdersoLD = async (req, res) => {
@@ -170,6 +172,8 @@ const getAllAssignedJobOrders = async (req, res) => {
       where: { contractorId: contractor.id, ...where },
     });
     const totalPages = limit ? Math.ceil(totalItems / limit) : 1;
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "jobOrder", where);
+
 
     const jobOrders = await prisma.jobOrder.findMany({
       where: { contractorId: contractor.id, ...where },
@@ -222,6 +226,7 @@ const getAllAssignedJobOrders = async (req, res) => {
     return res.status(200).json({
       data: { jobOrders: result },
       pagination: { totalItems, totalPages, currentPage: page || 1 },
+      lastUpdatedAt,
     });
   } catch (err) {
     console.log(err.message);

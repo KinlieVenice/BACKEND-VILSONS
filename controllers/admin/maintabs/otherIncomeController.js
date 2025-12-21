@@ -4,6 +4,8 @@ const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
 const { branchFilter } = require("../../../utils/filters/branchFilter");
 const { requestApproval } = require("../../../utils/services/approvalService");
 const { logActivity } = require("../../../utils/services/activityService.js");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
+
 
 
 
@@ -193,6 +195,9 @@ const getAllOtherIncomes = async (req, res) => {
       },
       orderBy: { createdAt: "desc" },
     });
+    
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "otherIncome", where);
+
 
     const totalAmount = otherIncome.reduce((sum, inc) => sum + Number(inc.amount), 0);
 
@@ -202,10 +207,11 @@ const getAllOtherIncomes = async (req, res) => {
         totalAmount,
       },
       pagination: {
-          totalItems,
-          totalPages,
-          currentPage: page || 1,
+        totalItems,
+        totalPages,
+        currentPage: page || 1,
       },
+      lastUpdatedAt,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

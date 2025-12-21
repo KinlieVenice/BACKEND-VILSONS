@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
+
 
 const getAllMaterials = async (req, res) => {
   const search = req?.query?.search;
@@ -64,6 +66,7 @@ const getAllMaterials = async (req, res) => {
       data: {
         materials: result.materialsWithTotal,
         totalMaterialsAmount: result.totalMaterialsAmount,
+        lastUpdatedAt: result.lastUpdatedAt
       },
     });
   } catch (err) {

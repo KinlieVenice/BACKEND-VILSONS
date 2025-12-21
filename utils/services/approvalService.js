@@ -5,6 +5,8 @@ const getMainBaseRole = require("./getMainBaseRole"); // make sure this exists
 const generateJobOrderCode = require("./generateJobOrderCode");
 const deleteFile = require("./imageDeleter")
 const ROLES_LIST = require("../../constants/ROLES_LIST");
+const { logActivity } = require("./activityService.js");
+
 
 
 const requestApproval = async (tableName, recordId, actionType, payload, reqUser, branchId=null) => {
@@ -2046,6 +2048,13 @@ const approveRequest = async (requestId, updateUser) => {
 const rejectRequest = async (requestId, approveUser, responseComment = null) => {
   const request = await prisma.approvalLog.findUnique({ where: { id: requestId } })
   if (!request) throw new Error('Approval request not found');
+
+  await logActivity(
+    approveUser,
+    `${approveUser} rejected approval log ${requestId}`,
+    request.payload.branchId,
+    responseComment
+  );
 
   return prisma.approvalLog.update({
     where: { id: requestId },

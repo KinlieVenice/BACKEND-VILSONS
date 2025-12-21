@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 const { getMonthYear } = require("../../../utils/filters/monthYearFilter");
 const { logActivity } = require("../../../utils/services/activityService.js");
 const { requestApproval } = require("../../../utils/services/approvalService");
+const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
+
 
 
 const createTransactionOld = async (req, res) => {
@@ -358,7 +360,8 @@ const getAllTransactions = async (req, res) => {
       ...(page && limit ? { skip: (page - 1) * limit } : {}),
       ...(limit ? { take: limit } : {}),
     });
-
+    
+    const lastUpdatedAt = await getLastUpdatedAt(prisma, "transaction", where);
     const totalTransactions = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
     return res.status(200).json({
@@ -372,6 +375,7 @@ const getAllTransactions = async (req, res) => {
         totalPages,
         currentPage: page || 1,
       },
+      lastUpdatedAt
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
