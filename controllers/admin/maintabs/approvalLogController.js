@@ -183,7 +183,7 @@ const approveApprovalLog = async (req, res) => {
 const rejectApprovalLog = async (req, res) => {
   try {
     const { id } = req.params;
-    const { responseComment, remarks } = req.body;
+    const { responseComment } = req.body;
     const admin = req.username;
 
     const approvalLog = await prisma.approvalLog.findFirst({
@@ -226,8 +226,11 @@ const rejectApprovalLog = async (req, res) => {
 
     await logActivity(
       req.username,
-      `${req.username} rejected ${actionType === "edit" ? "an" : "a"} ${actionType} request from ${requestedByUser}`,
-      remarks
+      `${req.username} rejected ${
+        actionType === "edit" ? "an" : "a"
+      } ${actionType} request from ${requestedByUser}`,
+      payload.branchId,
+      responseComment
     );
 
     return res.status(200).json({ message: "Request rejected", result });

@@ -2049,13 +2049,6 @@ const rejectRequest = async (requestId, approveUser, responseComment = null) => 
   const request = await prisma.approvalLog.findUnique({ where: { id: requestId } })
   if (!request) throw new Error('Approval request not found');
 
-  await logActivity(
-    approveUser,
-    `${approveUser} rejected approval log ${requestId}`,
-    request.payload.branchId,
-    responseComment
-  );
-
   return prisma.approvalLog.update({
     where: { id: requestId },
     data: {
