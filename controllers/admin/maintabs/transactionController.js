@@ -7,38 +7,6 @@ const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService
 
 
 
-const createTransactionOld = async (req, res) => {
-    const { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
-
-    if (!jobOrderCode || !senderName || !amount || !mop || !status) return res.status(400).json({ message: "All jobOrderCode, senderName, amount, mop, status required"});
-
-    try {
-        const jobOrder = await prisma.jobOrder.findFirst({ where: { jobOrderCode }});
-        if (!jobOrder) return res.status(400).json({ message: "Job order not found" });
-
-        const needsApproval = req.approval;
-
-        const result = await prisma.$transaction(async (tx) => {
-            const phpAmount = amount;
-            const transactionData = {
-                jobOrderCode, senderName, amount: phpAmount, mop, status, 
-                referenceNumber: referenceNumber ?? null,
-                createdByUser: req.username,
-                updatedByUser: req.username
-            }
-            const transaction = needsApproval 
-            ? await requestApproval('transaction', null, 'create', transactionData, req.username)
-            : await tx.transaction.create({
-                data: transactionData
-            })
-            return transaction
-        })
-        return res.status(201).json({ message: "Transaction completed", result })
-    } catch (err) {
-        return res.status(500).json({ message: err.message })
-    }
-}
-
 const createTransaction = async (req, res) => {
   const { jobOrderCode, referenceNumber, senderName, amount, mop, status, branchId } = req.body;
 
@@ -125,43 +93,6 @@ const createTransaction = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
-const editTransactionOld = async (req, res) => {
-    let { jobOrderCode, referenceNumber, senderName, amount, mop, status } = req.body;
-    if (!req?.params?.id) return res.status(404).json({ message: "ID required"});
-
-    try {
-        const transaction = await prisma.transaction.findFirst({ where: { id: req.params.id } });
-        if (!transaction) return res.status(404).json({ message: "Transaction not found" });
-
-        const needsApproval = req.approval;
-         const result = await prisma.$transaction(async (tx) => {
-        
-            const transactionData = {
-                jobOrderCode: jobOrderCode ?? transaction.jobOrderCode,
-                senderName: senderName ?? transaction.senderName, 
-                referenceNumber: referenceNumber ?? transaction.referenceNumber,
-                amount: amount ?? transaction.amount, 
-                mop: mop ?? transaction.mop, 
-                status: status ?? transaction.status,
-                updatedByUser: req.username
-            }
-
-            const editedTransaction = needsApproval 
-             ? await requestApproval('transaction', req.params.id, 'edit', {
-              ...updatedData,
-              createdByUser: req.username }, req.username)
-            : await tx.transaction.update({
-                where: { id: transaction.id },
-                data: transactionData
-            })
-            return editedTransaction
-        })
-        return res.status(201).json({ message: "Transaction edit completed", result })
-    } catch (err) {
-        return res.status(500).json({ message: err.message })
-    }
-}
 
 const editTransaction = async (req, res) => {
   let { jobOrderCode, referenceNumber, senderName, amount, mop, status, branchId, remarks } = req.body;

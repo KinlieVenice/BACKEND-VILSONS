@@ -1,11 +1,34 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getMonthYear } = require("../../utils/filters/monthYearFilter");
 
 const getAllTransactions = async (req, res) => {
+  const search = req?.query?.search;
+  const { startDate, endDate } = getMonthYear(req.query.year, req.query.month);
+
+  let where = {
+    createdAt: {
+      gte: startDate,
+      lt: endDate,
+    },
+  };
+
+  // Search filter
+  if (search) {
+    const searchValue = search.trim().replace(/^["']|["']$/g, "");
+    where.OR = [
+      { jobOrderCode: { contains: searchValue } },
+      { senderName: { contains: searchValue } },
+      { referenceNumber: { contains: searchValue } },
+    ];
+  }
+
   try {
+    
     const result = await prisma.$transaction(async (tx) => {
       // 1️⃣ Find customer by userId
       const customer = await tx.customer.findFirst({
+        ...where,
         where: { userId: req.id },
         include: {
           jobOrders: {

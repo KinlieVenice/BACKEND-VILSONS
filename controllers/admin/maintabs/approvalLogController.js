@@ -6,24 +6,6 @@ const { enrichPayloadWithNames } = require("../../../utils/services/enrichPayloa
 const { branchFilter } = require("../../../utils/filters/branchFilter"); 
 const { getLastUpdatedAt } = require("../../../utils/services/lastUpdatedService");
 
-
-const getAllApprovalLogsOLDDD2 = async (req, res) => {
-  try {
-    const pendingApprovalLogs = await prisma.approvalLog.findMany({
-      where: {
-        status: "pending",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-    return res.status(200).json({ data: pendingApprovalLogs });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
-
-
 const getAllApprovalLogs = async (req, res) => {
   try {
     const branch = req.query?.branch;
@@ -123,23 +105,6 @@ const getAllApprovalLogs = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
-const approveApprovalLogOld = async (req, res) => {
-    const { id } = req.params;
-    const admin = req.username;
-
-    const result = await approveRequest(id, admin);
-    res.json({ message: 'Request approved', result });
-}
-
-const rejectApprovalLogOld = async (req, res) => {
-    const { id } = req.params;
-    const { responseComment } = req.body;
-    const admin = req.username;
-
-    const result = await rejectRequest(id, admin, responseComment);
-    res.json({ message: 'Request rejected', result });
-}
 
 const approveApprovalLog = async (req, res) => {
   try {

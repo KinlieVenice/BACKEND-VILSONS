@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getMonthYear } = require("../../utils/filters/monthYearFilter");
-
+const { branchFilter } = require("../../utils/filters/branchFilter");
 
 const getAllLabor = async (req, res) => {
   const search = req?.query?.search;
